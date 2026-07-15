@@ -1,0 +1,21 @@
+{
+  "name": "01backend-deployment",
+  "version": "1.0.0",
+  "description": "First file for practice",
+  "keywords": [
+    "Tech",
+    "Node",
+    "Express"
+  ],
+  "license": "ISC",
+  "author": "Salman",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
