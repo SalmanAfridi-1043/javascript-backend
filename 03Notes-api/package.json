@@ -1,0 +1,21 @@
+{
+  "name": "03notes-api",
+  "version": "1.0.0",
+  "description": "This is Notes API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --experimental-json-modules ./src/server.js"
+  },
+  "author": "Salman",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.9.1",
+    "nodemon": "^3.1.14"
+  }
+}
