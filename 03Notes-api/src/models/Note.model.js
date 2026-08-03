@@ -20,17 +20,17 @@ const noteSchema = new Schema(
       required: true,
     },
 
-    favorite: {
+    isFavorite: {
       type: Boolean,
       default: false,
     },
 
-    archived: {
+    isArchived: {
       type: Boolean,
       default: false,
     },
 
-    deleted: {
+    idDeleted: {
       type: Boolean,
       default: false,
     },
