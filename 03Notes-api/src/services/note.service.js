@@ -29,7 +29,16 @@ const createNoteService = async (noteData, userId) => {
   return note;
 };
 
-const getAllNotesService = async (userId, page, limit, sortBy, order) => {
+const getAllNotesService = async (
+  userId,
+  page,
+  limit,
+  sortBy,
+  order,
+  favorite,
+  archived,
+  search,
+) => {
   if (!userId) {
     throw new ApiError(400, "User id is required");
   }
@@ -43,6 +52,13 @@ const getAllNotesService = async (userId, page, limit, sortBy, order) => {
   limit = Number(limit) || 10;
   sortBy = sortBy || "createdAt";
   order = order || "desc";
+
+  //as re.query return string so converting to booleans
+  // verification/conversion check before adding to queryObject
+  favorite =
+    favorite === "true" ? true : favorite === "false" ? false : undefined;
+  archived =
+    archived === "true" ? true : archived === "false" ? false : undefined;
 
   const allowedSortFields = ["createdAt", "title"];
 
@@ -85,22 +101,26 @@ const getAllNotesService = async (userId, page, limit, sortBy, order) => {
   //   isDeleted: false,
   // });
 
+  const queryObject = {
+    owner: userId,
+    isDeleted: false,
+  };
+  if (favorite !== undefined) queryObject.isFavorite = favorite;
+  if (archived !== undefined) queryObject.isArchived = archived;
+
+  // to search for note if user gives its title
+  if (search && search.trim())
+    queryObject.title = {
+      $regex: search,
+      $options: "i",
+    };
+
   // below is the pro version. do the same as above does
   // its asynchronous means its running parallel coz of Promise.all()
   //Promise.all() -- use for multiple async tasks to save time
   const [notes, totalNotes] = await Promise.all([
-    Note.find({
-      owner: userId,
-      isDeleted: false,
-    })
-      .sort(sortObject)
-      .skip(skip)
-      .limit(limit),
-
-    Note.countDocuments({
-      owner: userId,
-      isDeleted: false,
-    }),
+    Note.find(queryObject).sort(sortObject).skip(skip).limit(limit),
+    Note.countDocuments(queryObject),
   ]);
 
   const totalPages = Math.ceil(totalNotes / limit);
