@@ -29,8 +29,9 @@ const createNote = async (req, res, next) => {
 const getAllNotes = async (req, res, next) => {
   try {
     const userId = req.user?._id;
+    const { page, limit, sortBy, order } = req.query;
 
-    const notes = await getAllNotesService(userId);
+    const notes = await getAllNotesService(userId, page, limit, sortBy, order);
 
     return res
       .status(200)

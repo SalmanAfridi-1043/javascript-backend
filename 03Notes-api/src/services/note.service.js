@@ -29,7 +29,7 @@ const createNoteService = async (noteData, userId) => {
   return note;
 };
 
-const getAllNotesService = async (userId) => {
+const getAllNotesService = async (userId, page, limit, sortBy, order) => {
   if (!userId) {
     throw new ApiError(400, "User id is required");
   }
@@ -38,13 +38,82 @@ const getAllNotesService = async (userId) => {
     throw new ApiError(400, "Invalid user id");
   }
 
-  // find -- measn find all with id, so it returns array of notes objects
-  const allNotes = await Note.find({
-    owner: userId,
-    idDeleted: false,
-  });
+  //convert to numbers and give default values if not provided
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
+  sortBy = sortBy || "createdAt";
+  order = order || "desc";
 
-  return allNotes;
+  const allowedSortFields = ["createdAt", "title"];
+
+  if (page < 1) {
+    throw new ApiError(400, "Invalid page value");
+  }
+
+  if (limit < 1 || limit > 100) {
+    throw new ApiError(400, "Invalid limit value");
+  }
+
+  // sorting validation
+  if (!allowedSortFields.includes(sortBy)) {
+    throw new ApiError(400, "Invalid sort field");
+  }
+
+  if (!["asc", "desc"].includes(order)) {
+    throw new ApiError(400, "Invalid order value");
+  }
+
+  const sortObject = {
+    [sortBy]: order === "desc" ? -1 : 1,
+  };
+
+  // skip find the point from where we should start and skip the previous counts
+  const skip = (page - 1) * limit;
+
+  // find -- measn find all with id, so it returns array of notes objects
+
+  // const notes = await Note.find({
+  //   owner: userId,
+  //   isDeleted: false,
+  // })
+  //   .sort(sortObject)
+  //   .skip(skip)
+  //   .limit(limit);
+
+  // const totalNotes = await Note.countDocuments({
+  //   owner: userId,
+  //   isDeleted: false,
+  // });
+
+  // below is the pro version. do the same as above does
+  // its asynchronous means its running parallel coz of Promise.all()
+  //Promise.all() -- use for multiple async tasks to save time
+  const [notes, totalNotes] = await Promise.all([
+    Note.find({
+      owner: userId,
+      isDeleted: false,
+    })
+      .sort(sortObject)
+      .skip(skip)
+      .limit(limit),
+
+    Note.countDocuments({
+      owner: userId,
+      isDeleted: false,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(totalNotes / limit);
+
+  return {
+    notes,
+    pagination: {
+      currentPage: page,
+      limit,
+      totalNotes,
+      totalPages,
+    },
+  };
 };
 
 const getNoteByIdService = async (noteId, userId) => {
