@@ -1,5 +1,5 @@
 import express from "express";
-import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/user", userRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Notes API is running" });

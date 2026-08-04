@@ -5,7 +5,7 @@ import {
   logoutUser,
   refreshAccessToken,
 } from "../controllers/user.controller.js";
-import {authMiddleware} from "../middleware/auth.middleware.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.post("/register", registerUser);

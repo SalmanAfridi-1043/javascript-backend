@@ -30,7 +30,7 @@ const noteSchema = new Schema(
       default: false,
     },
 
-    idDeleted: {
+    isDeleted: {
       type: Boolean,
       default: false,
     },
