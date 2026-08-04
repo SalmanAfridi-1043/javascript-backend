@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { isValidObjectId } from "mongoose";
 import { Note } from "../models/Note.model.js";
+import { validateQuery } from "../utils/validateQuery.js";
 
 const createNoteService = async (noteData, userId) => {
   const { title, content } = noteData;
@@ -29,16 +30,7 @@ const createNoteService = async (noteData, userId) => {
   return note;
 };
 
-const getAllNotesService = async (
-  userId,
-  page,
-  limit,
-  sortBy,
-  order,
-  favorite,
-  archived,
-  search,
-) => {
+const getAllNotesService = async (userId, queryOptions) => {
   if (!userId) {
     throw new ApiError(400, "User id is required");
   }
@@ -47,37 +39,8 @@ const getAllNotesService = async (
     throw new ApiError(400, "Invalid user id");
   }
 
-  //convert to numbers and give default values if not provided
-  page = Number(page) || 1;
-  limit = Number(limit) || 10;
-  sortBy = sortBy || "createdAt";
-  order = order || "desc";
-
-  //as re.query return string so converting to booleans
-  // verification/conversion check before adding to queryObject
-  favorite =
-    favorite === "true" ? true : favorite === "false" ? false : undefined;
-  archived =
-    archived === "true" ? true : archived === "false" ? false : undefined;
-
-  const allowedSortFields = ["createdAt", "title"];
-
-  if (page < 1) {
-    throw new ApiError(400, "Invalid page value");
-  }
-
-  if (limit < 1 || limit > 100) {
-    throw new ApiError(400, "Invalid limit value");
-  }
-
-  // sorting validation
-  if (!allowedSortFields.includes(sortBy)) {
-    throw new ApiError(400, "Invalid sort field");
-  }
-
-  if (!["asc", "desc"].includes(order)) {
-    throw new ApiError(400, "Invalid order value");
-  }
+  const { page, limit, sortBy, order, favorite, archived, search } =
+    validateQuery(queryOptions);
 
   const sortObject = {
     [sortBy]: order === "desc" ? -1 : 1,
@@ -109,11 +72,12 @@ const getAllNotesService = async (
   if (archived !== undefined) queryObject.isArchived = archived;
 
   // to search for note if user gives its title
-  if (search && search.trim())
+  if (search) {
     queryObject.title = {
       $regex: search,
       $options: "i",
     };
+  }
 
   // below is the pro version. do the same as above does
   // its asynchronous means its running parallel coz of Promise.all()
