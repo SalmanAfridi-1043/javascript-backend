@@ -1,9 +1,7 @@
-01Backend-deployment/.env
 01Backend-deployment/node_modules
 
 02FrontBack-connection/Backend/node_modules
 02FrontBack-connection/Frontend/node_modules
-02FrontBack-connection/Backend/.env
 
 03Notes-api/node_modules
 03Notes-api/.env
