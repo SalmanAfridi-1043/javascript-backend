@@ -2,20 +2,16 @@ import { ApiError } from "../utils/ApiError.js";
 import { isValidObjectId } from "mongoose";
 import { Note } from "../models/Note.model.js";
 import { validateQuery } from "../utils/validateQuery.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
+import { validateRequired } from "../utils/validateRequired.js";
 
 const createNoteService = async (noteData, userId) => {
   const { title, content } = noteData;
 
-  if (!title?.trim()) {
-    throw new ApiError(400, "Title is required");
-  }
-  if (!content?.trim()) {
-    throw new ApiError(400, "Content is required");
-  }
+  validateRequired(title?.trim(), "title");
+  validateRequired(content?.trim(), "content");
 
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(userId, "User");
 
   const note = await Note.create({
     title: title.trim(),
@@ -31,13 +27,9 @@ const createNoteService = async (noteData, userId) => {
 };
 
 const getAllNotesService = async (userId, queryOptions) => {
-  if (!userId) {
-    throw new ApiError(400, "User id is required");
-  }
+  validateRequired(userId, "userid");
 
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(userId, "User");
 
   const { page, limit, sortBy, order, favorite, archived, search } =
     validateQuery(queryOptions);
@@ -101,19 +93,11 @@ const getAllNotesService = async (userId, queryOptions) => {
 };
 
 const getNoteByIdService = async (noteId, userId) => {
-  if (!noteId) {
-    throw new ApiError(400, "Note id is required");
-  }
-  if (!userId) {
-    throw new ApiError(400, "User id is required");
-  }
+  validateRequired(noteId, "noteId");
+  validateRequired(userId, "userId");
 
-  if (!isValidObjectId(noteId)) {
-    throw new ApiError(400, "Invalid note id");
-  }
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(noteId, "Note");
+  validateObjectId(userId, "User");
 
   const note = await Note.findOne({
     _id: noteId,
@@ -135,12 +119,11 @@ const updateNoteService = async (updateData, noteId, userId) => {
     throw new ApiError(400, "Title or content is required");
   }
 
-  if (!isValidObjectId(noteId)) {
-    throw new ApiError(400, "Invalid note id ");
-  }
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id ");
-  }
+  validateRequired(noteId, "noteId");
+  validateRequired(userId, "userId");
+
+  validateObjectId(noteId, "Note");
+  validateObjectId(userId, "User");
 
   const note = await Note.findOne({
     _id: noteId,
@@ -165,13 +148,8 @@ const updateNoteService = async (updateData, noteId, userId) => {
 };
 
 const deleteNoteService = async (noteId, userId) => {
-  if (!isValidObjectId(noteId)) {
-    throw new ApiError(400, "Invalid note id");
-  }
-
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(noteId, "Note");
+  validateObjectId(userId, "User");
 
   const note = await Note.findOne({
     _id: noteId,
@@ -191,13 +169,8 @@ const deleteNoteService = async (noteId, userId) => {
 };
 
 const favoriteNoteService = async (noteId, userId) => {
-  if (!isValidObjectId(noteId)) {
-    throw new ApiError(400, "Invalid note id");
-  }
-
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(noteId, "Note");
+  validateObjectId(userId, "User");
 
   const note = await Note.findOne({
     _id: noteId,
@@ -229,13 +202,8 @@ const favoriteNoteService = async (noteId, userId) => {
 };
 
 const archiveNoteService = async (noteId, userId) => {
-  if (!isValidObjectId(noteId)) {
-    throw new ApiError(400, "Invalid note id");
-  }
-
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(noteId, "Note");
+  validateObjectId(userId, "User");
 
   const note = await Note.findOne({
     _id: noteId,
@@ -257,13 +225,11 @@ const archiveNoteService = async (noteId, userId) => {
 };
 
 const searchNotesService = async (userId, search) => {
-  if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid user id");
-  }
+  validateObjectId(userId, "User");
 
-  if (!search?.trim()) {
-    throw new ApiError(400, "Search content is required");
-  }
+  validateRequired(search?.trim(), "search");
+
+  search = search.trim();
 
   const searchedNotes = await Note.find({
     owner: userId,

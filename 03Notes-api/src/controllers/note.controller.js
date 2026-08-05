@@ -9,128 +9,89 @@ import {
   searchNotesService,
   updateNoteService,
 } from "../services/note.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-const createNote = async (req, res, next) => {
-  try {
-    const noteData = req.body;
-    const userId = req.user?._id;
+const createNote = asyncHandler(async (req, res, next) => {
+  const noteData = req.body;
+  const userId = req.user?._id;
 
-    const createdNote = await createNoteService(noteData, userId);
+  const createdNote = await createNoteService(noteData, userId);
 
-    return res
-      .status(201)
-      .json(new ApiResponse(201, createdNote, "Note created successfully"));
-  } catch (error) {
-    console.log("createNode Error: ", error);
-    next(error);
-  }
-};
+  return res
+    .status(201)
+    .json(new ApiResponse(201, createdNote, "Note created successfully"));
+});
 
-const getAllNotes = async (req, res, next) => {
-  try {
-    const userId = req.user?._id;
+const getAllNotes = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
 
-    const notes = await getAllNotesService(userId, req.query);
+  const notes = await getAllNotesService(userId, req.query);
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, notes, "All notes fetched successfully"));
-  } catch (error) {
-    console.log("getAllNotes error: ", error);
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse(200, notes, "All notes fetched successfully"));
+});
 
-const getNoteById = async (req, res, next) => {
-  try {
-    const { noteId } = req.params;
-    const userId = req.user?._id;
+const getNoteById = asyncHandler(async (req, res, next) => {
+  const { noteId } = req.params;
+  const userId = req.user?._id;
 
-    const note = await getNoteByIdService(noteId, userId);
+  const note = await getNoteByIdService(noteId, userId);
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, note, "Note fetched successfully"));
-  } catch (error) {
-    console.log("getNoteById error: ", error);
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse(200, note, "Note fetched successfully"));
+});
 
-const updateNote = async (req, res, next) => {
-  try {
-    const updateData = req.body;
-    const { noteId } = req.params;
-    const userId = req.user?._id;
+const updateNote = asyncHandler(async (req, res, next) => {
+  const updateData = req.body;
+  const { noteId } = req.params;
+  const userId = req.user?._id;
 
-    const updatedNote = await updateNoteService(updateData, noteId, userId);
+  const updatedNote = await updateNoteService(updateData, noteId, userId);
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, updatedNote, "Note updated successfully"));
-  } catch (error) {
-    console.log("updateNote error: ", error);
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedNote, "Note updated successfully"));
+});
 
-const deleteNote = async (req, res, next) => {
-  try {
-    const { noteId } = req.params;
-    const userId = req.user?._id;
+const deleteNote = asyncHandler(async (req, res, next) => {
+  const { noteId } = req.params;
+  const userId = req.user?._id;
 
-    const response = await deleteNoteService(noteId, userId);
+  const response = await deleteNoteService(noteId, userId);
 
-    return res.status(200).json(new ApiResponse(200, {}, response.message));
-  } catch (error) {
-    console.log("deleteNote error: ", error);
-    next(error);
-  }
-};
+  return res.status(200).json(new ApiResponse(200, {}, response.message));
+});
 
-const favoriteNote = async (req, res, next) => {
-  try {
-    const { noteId } = req.params;
-    const userId = req.user?._id;
+const favoriteNote = asyncHandler(async (req, res, next) => {
+  const { noteId } = req.params;
+  const userId = req.user?._id;
 
-    const response = await favoriteNoteService(noteId, userId);
+  const response = await favoriteNoteService(noteId, userId);
 
-    return res.status(200).json(new ApiResponse(200, {}, response.message));
-  } catch (error) {
-    console.log("favourateNote error: ", error.message);
-    next(error);
-  }
-};
+  return res.status(200).json(new ApiResponse(200, {}, response.message));
+});
 
-const archiveNote = async (req, res, next) => {
-  try {
-    const { noteId } = req.params;
-    const userId = req.user?._id;
+const archiveNote = asyncHandler(async (req, res, next) => {
+  const { noteId } = req.params;
+  const userId = req.user?._id;
 
-    const response = await archiveNoteService(noteId, userId);
+  const response = await archiveNoteService(noteId, userId);
 
-    return res.status(200).json(new ApiResponse(200, {}, response.message));
-  } catch (error) {
-    console.log("archiveNote error: ", error.message);
-    next(error);
-  }
-};
+  return res.status(200).json(new ApiResponse(200, {}, response.message));
+});
 
-const searchNotes = async (req, res, next) => {
-  try {
-    const userId = req.user?._id;
-    const search = req.query.search;
+const searchNotes = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+  const search = req.query.search;
 
-    const notes = await searchNotesService(userId, search);
+  const notes = await searchNotesService(userId, search);
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, notes, "Searched notes fetched successfylly"));
-  } catch (error) {
-    console.log("searchNotes error: ", error.message);
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse(200, notes, "Searched notes fetched successfylly"));
+});
 
 export {
   createNote,
