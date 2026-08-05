@@ -2,6 +2,7 @@ import express from "express";
 import userRoutes from "./routes/user.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
@@ -23,17 +24,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Notes API is running" });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  return res.status(statusCode).json({
-    success: false,
-    statusCode,
-    message,
-    errors: err.errors || [],
-  });
-});
+app.use(errorHandler);
 
 export default app;

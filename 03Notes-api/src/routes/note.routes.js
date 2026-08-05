@@ -14,20 +14,23 @@ import {
 
 const router = Router();
 
-router.post("/notes", authMiddleware, createNote);
+// as all note routes are protected and need authenticated user so we ll make it more simpler by first verify user identity before moving to any route
+router.use(authMiddleware);
 
-router.get("/notes", authMiddleware, getAllNotes);
+router.post("/notes", createNote);
 
-router.get("/notes/search-notes", authMiddleware, searchNotes);
+router.get("/notes", getAllNotes);
 
-router.get("/notes/:noteId", authMiddleware, getNoteById);
+router.get("/notes/search-notes", searchNotes);
 
-router.patch("/notes/:noteId", authMiddleware, updateNote);
+router.get("/notes/:noteId", getNoteById);
 
-router.delete("/notes/:noteId", authMiddleware, deleteNote);
+router.patch("/notes/:noteId", updateNote);
 
-router.patch("/notes/:noteId/favorite", authMiddleware, favoriteNote);
+router.delete("/notes/:noteId", deleteNote);
 
-router.patch("/notes/:noteId/archive", authMiddleware, archiveNote);
+router.patch("/notes/:noteId/favorite", favoriteNote);
+
+router.patch("/notes/:noteId/archive", archiveNote);
 
 export default router;
