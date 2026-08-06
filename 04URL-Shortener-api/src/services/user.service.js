@@ -1,5 +1,5 @@
 import { ApiError } from "../utils/ApiError.js";
-import { User, User } from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import { createSafeUser } from "../utils/sanitizeUser.js";
 import jwt, { decode } from "jsonwebtoken";
@@ -80,7 +80,7 @@ const refreshAccessTokenService = async (incomingRefreshToken) => {
   }
 
   // its return true if correct
-  const decodedToken = await jwt.verify(
+  const decodedToken = jwt.verify(
     incomingRefreshToken,
     process.env.REFRESH_TOKEN_SECRET,
   );
@@ -101,7 +101,44 @@ const refreshAccessTokenService = async (incomingRefreshToken) => {
 
   const newAccessToken = generateAccessToken(user?._id);
 
-  return { accessToken: newAccessToken };
+  //generating new refresh token for more security
+  const newRefreshToken = generateRefreshToken(user?._id);
+
+  user.refreshToken = newRefreshToken;
+  await user.save();
+
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 };
 
-export { registerUserService, loginUserService, refreshAccessTokenService };
+const logoutUserService = async (userId) => {
+  if (!userId) {
+    throw new ApiError(404, "User id not found");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        refreshToken: null,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!user) {
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  return {
+    success: true,
+  };
+};
+
+export {
+  registerUserService,
+  loginUserService,
+  refreshAccessTokenService,
+  logoutUserService,
+};
