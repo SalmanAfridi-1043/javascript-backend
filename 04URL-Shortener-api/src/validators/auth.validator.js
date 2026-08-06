@@ -66,4 +66,28 @@ const validateRegisterInput = (data) => {
   };
 };
 
-export { validateRegisterInput };
+const validateLoginInput = (data) => {
+  const { username, email, password } = data;
+
+  const normalizedUsername = username?.trim().toLowerCase() || null;
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+
+  //just wana return username or email if exists
+  const loginIdentifier = normalizedEmail || normalizedUsername;
+  const normalizedPassword = password?.trim();
+
+  if (!loginIdentifier) {
+    throw new ApiError(400, "Username or email is required");
+  }
+
+  if (!normalizedPassword) {
+    throw new ApiError(400, "Password is required");
+  }
+
+  return {
+    loginIdentifier,
+    password: normalizedPassword,
+  };
+};
+
+export { validateRegisterInput, validateLoginInput };

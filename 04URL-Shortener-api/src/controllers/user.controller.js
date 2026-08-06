@@ -11,5 +11,14 @@ const registerUser = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, user, "User registered successfully"));
 });
+const loginUser = asyncHandler(async (req, res, next) => {
+  const data = req.body;
+
+  const loggedInUser = await loginUserService(data);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+});
 
 export { registerUser };
