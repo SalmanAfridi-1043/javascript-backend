@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
+import { createSafeUser } from "../utils/sanitizeUser.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import {
   validateRegisterInput,
@@ -38,9 +39,7 @@ const registerUserService = async (data) => {
     password: hashedPassword,
   });
 
-  const safeUser = user.toObject();
-  delete safeUser.password;
-  delete safeUser.refreshToken;
+  const safeUser = createSafeUser(user);
 
   return safeUser;
 };
