@@ -68,9 +68,7 @@ const loginUserService = async (data) => {
   user.refreshToken = refreshToken;
   await user.save();
 
-  const safeUser = user.toObject();
-  delete safeUser.password;
-  delete safeUser.refreshToken;
+  const safeUser = createSafeUser(user);
 
   return { user: safeUser, accessToken, refreshToken };
 };

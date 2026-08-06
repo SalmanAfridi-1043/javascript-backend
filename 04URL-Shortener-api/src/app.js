@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+// routes import
+import { userRouter } from "./routes/user.routes.js";
+
 const app = express();
 
 app.use(
@@ -16,6 +19,10 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 // app.use(express.static("public"));
 app.use(cookieParser());
 
+// routes declaration
+app.use("/api/v1/user", userRouter);
+
+//Showing running message on /
 app.get("/", (req, res) => {
   res.json({ message: "URL Shortner API is running" });
 });
