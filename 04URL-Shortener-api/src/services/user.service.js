@@ -1,7 +1,8 @@
 import { ApiError } from "../utils/ApiError.js";
-import { User } from "../models/user.model.js";
+import { User, User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import { createSafeUser } from "../utils/sanitizeUser.js";
+import jwt, { decode } from "jsonwebtoken";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import {
   validateRegisterInput,
@@ -73,4 +74,34 @@ const loginUserService = async (data) => {
   return { user: safeUser, accessToken, refreshToken };
 };
 
-export { registerUserService, loginUserService };
+const refreshAccessTokenService = async (incomingRefreshToken) => {
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  // its return true if correct
+  const decodedToken = await jwt.verify(
+    incomingRefreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+  );
+
+  if (!decodedToken || !decodedToken.userId) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const user = await User.findById(decodedToken.userId);
+
+  if (!user) {
+    throw new ApiError(404, "User does not exist");
+  }
+
+  if (user.refreshToken !== incomingRefreshToken) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const newAccessToken = generateAccessToken(user?._id);
+
+  return { accessToken: newAccessToken };
+};
+
+export { registerUserService, loginUserService, refreshAccessTokenService };

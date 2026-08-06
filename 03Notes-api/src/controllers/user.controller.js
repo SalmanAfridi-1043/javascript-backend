@@ -30,10 +30,6 @@ const loginUser = asyncHandler(async (req, res, next) => {
 const refreshAccessToken = asyncHandler(async (req, res, next) => {
   const { refreshToken } = req.body;
 
-  if (!refreshToken) {
-    throw new ApiError(404, "Refresh Token is required");
-  }
-
   const accessToken = await refreshTokenService(refreshToken);
 
   return res
