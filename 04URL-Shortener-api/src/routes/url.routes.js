@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import {
   createUrl,
   deleteUrlById,
+  getUrlAnalytics,
   getUrlById,
   getUserUrls,
   redirectToOriginalUrl,
@@ -18,5 +19,6 @@ router.get("/urls", authMiddleware, getUserUrls);
 router.get("/urls/:urlId", authMiddleware, getUrlById);
 router.delete("/urls/:urlId", authMiddleware, deleteUrlById);
 router.patch("/urls/:urlId", authMiddleware, updateUrlById);
+router.patch("/urls/:urlId/analytics", authMiddleware, getUrlAnalytics);
 
 export { router };

@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createUrlService,
   deleteUrlByIdService,
+  getUrlAnalyticsService,
   getUrlByIdService,
   getUserUrlsService,
   redirectToOriginalUrlService,
@@ -73,6 +74,19 @@ const updateUrlById = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, updatedUrl, "URL updated successfully"));
 });
 
+const getUrlAnalytics = asyncHandler(async (req, res, next) => {
+  const { urlId } = req.params;
+  const userId = req.user?._id;
+
+  const urlAnalytics = await getUrlAnalyticsService(urlId, userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, urlAnalytics, "URL analytics fetched successfully"),
+    );
+});
+
 export {
   createUrl,
   redirectToOriginalUrl,
@@ -80,4 +94,5 @@ export {
   getUrlById,
   deleteUrlById,
   updateUrlById,
+  getUrlAnalytics,
 };

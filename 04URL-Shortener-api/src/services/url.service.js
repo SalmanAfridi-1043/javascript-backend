@@ -164,6 +164,30 @@ const updateUrlByIdService = async (urlId, userId, data) => {
   };
 };
 
+const getUrlAnalyticsService = async (urlId, userId) => {
+  validateRequired(urlId, "URL Id");
+  validateRequired(userId, "user Id");
+  validateObjectId(urlId, "URL");
+
+  const urlDocument = await Url.findOne({
+    _id: urlId,
+    owner: userId,
+  });
+
+  if (!urlDocument) {
+    throw new ApiError(404, "URL not found");
+  }
+
+  return {
+    originalUrl: urlDocument.originalUrl,
+    shortCode: urlDocument.shortCode,
+    clicks: urlDocument.clicks,
+    lastVisited: urlDocument.lastVisited,
+    expiresAt: urlDocument.expiresAt,
+    createdAt: urlDocument.createdAt,
+  };
+};
+
 export {
   createUrlService,
   redirectToOriginalUrlService,
@@ -171,4 +195,5 @@ export {
   getUrlByIdService,
   deleteUrlByIdService,
   updateUrlByIdService,
+  getUrlAnalyticsService,
 };
