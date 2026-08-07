@@ -1,5 +1,6 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 import {
   registerUserService,
   loginUserService,
@@ -22,9 +23,14 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   const loggedInUser = await loginUserService(data);
 
+  const { accessToken, refreshToken, user } = loggedInUser;
+
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
   return res
     .status(200)
-    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+    .json(new ApiResponse(200, { user }, "User logged in successfully"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res, next) => {
@@ -32,17 +38,23 @@ const refreshAccessToken = asyncHandler(async (req, res, next) => {
 
   const response = await refreshAccessTokenService(refreshToken);
 
+  const { accessToken, refreshToken } = response;
+
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
   return res
     .status(200)
-    .json(
-      new ApiResponse(200, response, "Access token refreshed successfully"),
-    );
+    .json(new ApiResponse(200, {}, "Access token refreshed successfully"));
 });
 
 const logoutUser = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
 
   const response = await logoutUserService(userId);
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
 
   return res
     .status(200)
