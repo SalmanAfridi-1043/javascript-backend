@@ -8,7 +8,9 @@ import { generateShortCode } from "../utils/generateShortCode.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 
-const createUrlService = async (originalUrl, expiresAt, userId) => {
+const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
+  const normalizedCustomCode = customCode?.trim();
+
   validateRequired(originalUrl, "URL");
 
   try {
@@ -20,9 +22,27 @@ const createUrlService = async (originalUrl, expiresAt, userId) => {
   validateRequired(userId, "user id");
 
   let code;
-  do {
-    code = generateShortCode();
-  } while (await Url.exists({ shortCode: code }));
+  const customCodeRegex = /^[a-zA-Z0-9_-]+$/;
+
+  if (normalizedCustomCode) {
+    if (!customCodeRegex.test(normalizedCustomCode)) {
+      throw new ApiError(400, "Only (a-z,A-Z,0-9,_,-) are acceptable");
+    }
+
+    if (normalizedCustomCode.length < 3 || normalizedCustomCode.length > 15) {
+      throw new ApiError(400, "Custom code must be 3-15 characters long");
+    }
+
+    if (await Url.exists({ shortCode: normalizedCustomCode })) {
+      throw new ApiError(409, "Custom code already exists");
+    }
+
+    code = normalizedCustomCode;
+  } else {
+    do {
+      code = generateShortCode();
+    } while (await Url.exists({ shortCode: code }));
+  }
 
   const createUrl = await Url.create({
     originalUrl: originalUrl?.trim(),

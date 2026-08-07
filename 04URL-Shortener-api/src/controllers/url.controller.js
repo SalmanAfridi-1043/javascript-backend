@@ -11,10 +11,15 @@ import {
 } from "../services/url.service.js";
 
 const createUrl = asyncHandler(async (req, res, next) => {
-  const { originalUrl, expiresAt } = req.body;
+  const { originalUrl, expiresAt, customCode } = req.body;
   const userId = req.user?._id;
 
-  const createdUrl = await createUrlService(originalUrl, expiresAt, userId);
+  const createdUrl = await createUrlService(
+    originalUrl,
+    expiresAt,
+    userId,
+    customCode,
+  );
 
   return res
     .status(200)
