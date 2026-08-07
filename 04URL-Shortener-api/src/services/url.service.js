@@ -89,7 +89,6 @@ const getUserUrlsService = async (userId) => {
 const getUrlByIdService = async (urlId, userId) => {
   validateRequired(urlId, "URL Id");
   validateRequired(userId, "user Id");
-
   validateObjectId(urlId, "URL");
 
   const urlDocument = await Url.findOne({
@@ -110,9 +109,30 @@ const getUrlByIdService = async (urlId, userId) => {
   };
 };
 
+const deleteUrlByIdService = async (urlId, userId) => {
+  validateRequired(urlId, "URL Id");
+  validateRequired(userId, "user Id");
+  validateObjectId(urlId, "URL");
+
+  const urlDocument = await Url.findOneAndDelete({
+    _id: urlId,
+    owner: userId,
+  });
+
+  if (!urlDocument) {
+    throw new ApiError(404, "URL not found");
+  }
+
+  return {
+    originalUrl: urlDocument.originalUrl,
+    shortCode: urlDocument.shortCode,
+  };
+};
+
 export {
   createUrlService,
   redirectToOriginalUrlService,
   getUserUrlsService,
   getUrlByIdService,
+  deleteUrlByIdService,
 };

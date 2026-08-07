@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createUrlService,
+  deleteUrlByIdService,
   getUrlByIdService,
   getUserUrlsService,
   redirectToOriginalUrlService,
@@ -48,4 +49,21 @@ const getUrlById = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, fetchedUrl, "URL fetched successfully"));
 });
 
-export { createUrl, redirectToOriginalUrl, getUserUrls, getUrlById };
+const deleteUrlById = asyncHandler(async (req, res, next) => {
+  const { urlId } = req.params;
+  const userId = req.user?._id;
+
+  const response = await deleteUrlByIdService(urlId, userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "URL deleted successfully"));
+});
+
+export {
+  createUrl,
+  redirectToOriginalUrl,
+  getUserUrls,
+  getUrlById,
+  deleteUrlById,
+};
