@@ -7,6 +7,7 @@ import { isValidObjectId } from "mongoose";
 import { generateShortCode } from "../utils/generateShortCode.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
+import { validateExpiresAt } from "../utils/validateExpiresAt.js";
 
 const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
   const normalizedOriginalUrl = originalUrl?.trim();
@@ -22,6 +23,8 @@ const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
 
   validateRequired(userId, "user id");
 
+  validateExpiresAt(expiresAt);
+
   // check if the original url and its code already exists to avoid duplication
   const existingUrl = await Url.findOne({
     originalUrl: normalizedOriginalUrl,
@@ -30,7 +33,7 @@ const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
   if (existingUrl) return existingUrl;
 
   let code;
-  const customCodeRegex = /^[a-zA-Z0-9_-]+$/;
+  const customCodeRegex = /^[a-zA-Z0-9_-]+$/; //to follow specific pattern
 
   if (normalizedCustomCode) {
     if (!customCodeRegex.test(normalizedCustomCode)) {
@@ -166,6 +169,8 @@ const updateUrlByIdService = async (urlId, userId, data) => {
   validateRequired(urlId, "URL Id");
   validateRequired(userId, "user Id");
   validateObjectId(urlId, "URL");
+
+  validateExpiresAt(normalizedExpiresAt);
 
   const updatedUrlDocument = await Url.findOne({
     _id: urlId,
