@@ -9,17 +9,25 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 
 const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
+  const normalizedOriginalUrl = originalUrl?.trim();
   const normalizedCustomCode = customCode?.trim();
 
-  validateRequired(originalUrl, "URL");
+  validateRequired(normalizedOriginalUrl, "URL");
 
   try {
-    new URL(originalUrl);
+    new URL(normalizedOriginalUrl);
   } catch (error) {
     throw new ApiError(400, "Invalid URL");
   }
 
   validateRequired(userId, "user id");
+
+  // check if the original url and its code already exists to avoid duplication
+  const existingUrl = await Url.findOne({
+    originalUrl: normalizedOriginalUrl,
+    owner: userId,
+  });
+  if (existingUrl) return existingUrl;
 
   let code;
   const customCodeRegex = /^[a-zA-Z0-9_-]+$/;
@@ -45,7 +53,7 @@ const createUrlService = async (originalUrl, expiresAt, userId, customCode) => {
   }
 
   const createUrl = await Url.create({
-    originalUrl: originalUrl?.trim(),
+    originalUrl: normalizedOriginalUrl,
     shortCode: code,
     owner: userId,
     expiresAt: expiresAt ?? null,
