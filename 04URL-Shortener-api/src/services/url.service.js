@@ -129,10 +129,46 @@ const deleteUrlByIdService = async (urlId, userId) => {
   };
 };
 
+const updateUrlByIdService = async (urlId, userId, data) => {
+  const { originalUrl, expiresAt } = data;
+
+  const normalizedOriginalUrl = originalUrl?.trim() || null;
+  const normalizedExpiresAt = expiresAt?.trim() || null;
+
+  validateRequired(urlId, "URL Id");
+  validateRequired(userId, "user Id");
+  validateObjectId(urlId, "URL");
+
+  const updatedUrlDocument = await Url.findOne({
+    _id: urlId,
+    owner: userId,
+  });
+
+  if (!updatedUrlDocument) {
+    throw new ApiError(404, "URL not found");
+  }
+
+  if (normalizedOriginalUrl) {
+    updatedUrlDocument.originalUrl = normalizedOriginalUrl;
+  }
+  if (normalizedExpiresAt) {
+    updatedUrlDocument.expiresAt = normalizedExpiresAt;
+  }
+
+  await updatedUrlDocument.save();
+
+  return {
+    originalUrl: updatedUrlDocument.originalUrl,
+    expiresAt: updatedUrlDocument.expiresAt,
+    updatedAt: updatedUrlDocument.updatedAt,
+  };
+};
+
 export {
   createUrlService,
   redirectToOriginalUrlService,
   getUserUrlsService,
   getUrlByIdService,
   deleteUrlByIdService,
+  updateUrlByIdService,
 };

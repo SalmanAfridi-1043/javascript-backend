@@ -6,6 +6,7 @@ import {
   getUrlById,
   getUserUrls,
   redirectToOriginalUrl,
+  updateUrlById,
 } from "../controllers/url.controller.js";
 
 const router = Router();
@@ -16,5 +17,6 @@ router.get("/redirect", redirectToOriginalUrl);
 router.get("/urls", authMiddleware, getUserUrls);
 router.get("/urls/:urlId", authMiddleware, getUrlById);
 router.delete("/urls/:urlId", authMiddleware, deleteUrlById);
+router.patch("/urls/:urlId", authMiddleware, updateUrlById);
 
 export { router };

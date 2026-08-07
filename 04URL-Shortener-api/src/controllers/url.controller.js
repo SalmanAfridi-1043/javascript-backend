@@ -6,6 +6,7 @@ import {
   getUrlByIdService,
   getUserUrlsService,
   redirectToOriginalUrlService,
+  updateUrlByIdService,
 } from "../services/url.service.js";
 
 const createUrl = asyncHandler(async (req, res, next) => {
@@ -60,10 +61,23 @@ const deleteUrlById = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "URL deleted successfully"));
 });
 
+const updateUrlById = asyncHandler(async (req, res, next) => {
+  const { urlId } = req.params;
+  const userId = req.user?._id;
+  const data = req.body;
+
+  const updatedUrl = await updateUrlByIdService(urlId, userId, data);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUrl, "URL updated successfully"));
+});
+
 export {
   createUrl,
   redirectToOriginalUrl,
   getUserUrls,
   getUrlById,
   deleteUrlById,
+  updateUrlById,
 };
