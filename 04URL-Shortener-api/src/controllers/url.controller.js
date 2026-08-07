@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createUrlService,
+  getUrlByIdService,
   getUserUrlsService,
   redirectToOriginalUrlService,
 } from "../services/url.service.js";
@@ -35,4 +36,16 @@ const getUserUrls = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, allUrls, "All URLs fetched successfully"));
 });
 
-export { createUrl, redirectToOriginalUrl, getUserUrls };
+const getUrlById = asyncHandler(async (req, res, next) => {
+  // const urlId = req.params?.urlId; // both are ok
+  const { urlId } = req.params;
+  const userId = req.user?._id;
+
+  const fetchedUrl = await getUrlByIdService(urlId, userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, fetchedUrl, "URL fetched successfully"));
+});
+
+export { createUrl, redirectToOriginalUrl, getUserUrls, getUrlById };

@@ -5,11 +5,11 @@ import { createSafeUser } from "../utils/sanitizeUser.js";
 import jwt, { decode } from "jsonwebtoken";
 import { isValidObjectId } from "mongoose";
 import { generateShortCode } from "../utils/generateShortCode.js";
+import { validateRequired } from "../utils/validateRequired.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const createUrlService = async (originalUrl, expiresAt, userId) => {
-  if (!originalUrl?.trim()) {
-    throw new ApiError(400, "URL is required");
-  }
+  validateRequired(originalUrl, "URL");
 
   try {
     new URL(originalUrl);
@@ -17,9 +17,7 @@ const createUrlService = async (originalUrl, expiresAt, userId) => {
     throw new ApiError(400, "Invalid URL");
   }
 
-  if (!userId) {
-    throw new ApiError(400, "User id is required");
-  }
+  validateRequired(userId, "user id");
 
   let code;
   do {
@@ -42,9 +40,7 @@ const createUrlService = async (originalUrl, expiresAt, userId) => {
 };
 
 const redirectToOriginalUrlService = async (shortCode) => {
-  if (!shortCode) {
-    throw new ApiError(400, "Short Code is required");
-  }
+  validateRequired(shortCode, "Short Code");
 
   const urlDocument = await Url.findOne({ shortCode });
 
@@ -72,9 +68,7 @@ const redirectToOriginalUrlService = async (shortCode) => {
 };
 
 const getUserUrlsService = async (userId) => {
-  if (!userId) {
-    throw new ApiError(401, "Unauthorized access");
-  }
+  validateRequired(userId, "user id");
 
   const allUrlsDocument = await Url.find({
     owner: userId,
@@ -92,4 +86,33 @@ const getUserUrlsService = async (userId) => {
   }));
 };
 
-export { createUrlService, redirectToOriginalUrlService, getUserUrlsService };
+const getUrlByIdService = async (urlId, userId) => {
+  validateRequired(urlId, "URL Id");
+  validateRequired(userId, "user Id");
+
+  validateObjectId(urlId, "URL");
+
+  const urlDocument = await Url.findOne({
+    _id: urlId,
+    owner: userId,
+  });
+
+  if (!urlDocument) {
+    throw new ApiError(404, "URL not found");
+  }
+
+  return {
+    originalUrl: urlDocument.originalUrl,
+    shortCode: urlDocument.shortCode,
+    clicks: urlDocument.clicks,
+    lastVisited: urlDocument.lastVisited,
+    createdAt: urlDocument.createdAt,
+  };
+};
+
+export {
+  createUrlService,
+  redirectToOriginalUrlService,
+  getUserUrlsService,
+  getUrlByIdService,
+};
