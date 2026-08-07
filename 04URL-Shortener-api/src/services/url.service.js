@@ -41,4 +41,34 @@ const createUrlService = async (originalUrl, expiresAt, userId) => {
   };
 };
 
-export { createUrlService };
+const redirectToOriginalUrlService = async (shortCode) => {
+  if (!shortCode) {
+    throw new ApiError(400, "Short Code is required");
+  }
+
+  const urlDocument = await Url.findOne({ shortCode });
+
+  if (!urlDocument) {
+    throw new ApiError(404, "Original URL not found");
+  }
+
+  if (urlDocument.expiresAt) {
+    if (new Date.now() > urlDocument.expiresAt) {
+      throw new ApiError(410, "URL expired");
+    }
+  }
+
+  //    better approach
+  //   if (urlDocument.expiresAt && new Date() > urlDocument.expiresAt) {
+  //     throw new ApiError(410, "URL expired");
+  //   }
+
+  urlDocument.clicks += 1;
+  urlDocument.lastVisited = new Date();
+
+  await urlDocument.save();
+
+  return { originalUrl: urlDocument.originalUrl };
+};
+
+export { createUrlService, redirectToOriginalUrlService };
