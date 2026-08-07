@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createUrlService,
+  getUserUrlsService,
   redirectToOriginalUrlService,
 } from "../services/url.service.js";
 
@@ -24,4 +25,14 @@ const redirectToOriginalUrl = asyncHandler(async (req, res, next) => {
   return res.redirect(302, originalUrl);
 });
 
-export { createUrl };
+const getUserUrls = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const allUrls = await getUserUrlsService(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allUrls, "All URLs fetched successfully"));
+});
+
+export { createUrl, redirectToOriginalUrl, getUserUrls };

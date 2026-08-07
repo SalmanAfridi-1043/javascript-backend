@@ -71,4 +71,25 @@ const redirectToOriginalUrlService = async (shortCode) => {
   return { originalUrl: urlDocument.originalUrl };
 };
 
-export { createUrlService, redirectToOriginalUrlService };
+const getUserUrlsService = async (userId) => {
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized access");
+  }
+
+  const allUrlsDocument = await Url.find({
+    owner: userId,
+  }).sort({ createdAt: -1 });
+
+  if (allUrlsDocument.length === 0) {
+    throw new ApiError(404, "No URL found");
+  }
+
+  return allUrlsDocument.map((document) => ({
+    originalUrl: document.originalUrl,
+    shortCode: document.shortCode,
+    clicks: document.clicks,
+    createdAt: document.createdAt,
+  }));
+};
+
+export { createUrlService, redirectToOriginalUrlService, getUserUrlsService };
