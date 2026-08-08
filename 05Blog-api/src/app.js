@@ -3,8 +3,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 // routes import
-import userRouter from "./routes/user.routes.js";
-import urlRouter from "./routes/url.routes.js";
 
 const app = express();
 
@@ -21,8 +19,6 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
 // routes declaration
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/url", urlRouter);
 
 //Showing running message on /
 app.get("/", (req, res) => {

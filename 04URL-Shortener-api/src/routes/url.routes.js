@@ -21,4 +21,4 @@ router.delete("/urls/:urlId", authMiddleware, deleteUrlById);
 router.patch("/urls/:urlId", authMiddleware, updateUrlById);
 router.patch("/urls/:urlId/analytics", authMiddleware, getUrlAnalytics);
 
-export { router };
+export default router;
