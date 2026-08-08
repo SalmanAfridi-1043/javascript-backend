@@ -5,6 +5,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   loginUserService,
+  logoutUserService,
   refreshAccessTokenService,
   registerUserService,
 } from "../services/auth.service.js";
@@ -54,4 +55,17 @@ const refreshAccessToken = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, {}, "Token refreshed successfully"));
 });
 
-export { registerUser, loginUser, refreshAccessToken };
+const logoutUser = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const response = await logoutUserService(userId);
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "User logged out successfully"));
+});
+
+export { registerUser, loginUser, refreshAccessToken, logoutUser };
