@@ -1,9 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   loginUserService,
+  refreshAccessTokenService,
   registerUserService,
 } from "../services/auth.service.js";
 
@@ -25,17 +27,31 @@ const registerUser = asyncHandler(async (req, res, next) => {
 const loginUser = asyncHandler(async (req, res, next) => {
   const data = req.body;
 
-  const loggedInUser = await loginUserService(data);
+  const response = await loginUserService(data);
+
+  const { accessToken, refreshToken, user } = response;
+
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+    .json(new ApiResponse(200, user, "User logged in successfully"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res, next) => {
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
-  
+  const response = await refreshAccessTokenService(refreshToken);
 
+  const { newAccessToken, newRefreshToken } = response;
+
+  res.cookie("accessToken", newAccessToken, cookieOptions);
+  res.cookie("refreshToken", newRefreshToken, cookieOptions);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Token refreshed successfully"));
 });
 
 export { registerUser, loginUser, refreshAccessToken };

@@ -107,7 +107,7 @@ const refreshAccessTokenService = async (incomingRefreshToken) => {
   user.refreshToken = newRefreshToken;
   await user.save();
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  return { newAccessToken, newRefreshToken };
 };
 
 const logoutUserService = async (userId) => {

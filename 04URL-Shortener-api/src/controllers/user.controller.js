@@ -34,14 +34,14 @@ const loginUser = asyncHandler(async (req, res, next) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res, next) => {
-  const { refreshToken } = req.cookies || req.body;
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   const response = await refreshAccessTokenService(refreshToken);
 
-  const { accessToken, refreshToken } = response;
+  const { newAccessToken, newRefreshToken } = response;
 
-  res.cookie("accessToken", accessToken, cookieOptions);
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie("accessToken", newAccessToken, cookieOptions);
+  res.cookie("refreshToken", newRefreshToken, cookieOptions);
 
   return res
     .status(200)
