@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-import { registerUserService } from "../services/auth.service.js";
+import {
+  loginUserService,
+  registerUserService,
+} from "../services/auth.service.js";
 
 const registerUser = asyncHandler(async (req, res, next) => {
   const data = req.body;
@@ -19,4 +22,20 @@ const registerUser = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(201, registeredUser, "User registered successfully"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res, next) => {
+  const data = req.body;
+
+  const loggedInUser = await loginUserService(data);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+});
+
+const refreshAccessToken = asyncHandler(async (req, res, next) => {
+
+  
+
+});
+
+export { registerUser, loginUser, refreshAccessToken };

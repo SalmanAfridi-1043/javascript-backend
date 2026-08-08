@@ -1,12 +1,13 @@
 import { ApiError } from "../utils/ApiError.js";
 
 const validateRegisterInput = (data) => {
-  const { fullName, username, email, password } = data;
+  const { fullName, username, email, password, bio } = data;
 
   const normalizedFullName = fullName?.trim();
   const normalizedUsername = username?.trim().toLowerCase();
   const normalizedEmail = email?.trim().toLowerCase();
   const normalizedPassword = password?.trim();
+  const normalizedBio = bio?.trim() || "";
 
   const usernameRegex = /^[a-zA-Z0-9_]+$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,6 +64,7 @@ const validateRegisterInput = (data) => {
     username: normalizedUsername,
     email: normalizedEmail,
     password: normalizedPassword,
+    bio: normalizedBio,
   };
 };
 
