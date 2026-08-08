@@ -6,6 +6,7 @@ import { validateRegisterInput } from "../validators/auth.validator.js";
 
 const registerUserService = async (data) => {
   const { fullName, username, email, password } = validateRegisterInput(data);
+  const avatar = data.avatar;
 
   const isUserExists = await User.findOne({
     $or: [{ username }, { email }],
@@ -25,6 +26,7 @@ const registerUserService = async (data) => {
     username,
     email,
     password: hashedPassword,
+    avatar,
   });
 
   const safeUser = userDocument.toObject();
