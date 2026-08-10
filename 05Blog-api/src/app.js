@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 // routes import
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
+import postRouter from "./routes/post.routes.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(cookieParser());
 // routes declaration
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/posts", postRouter);
 
 //Showing running message on /
 app.get("/", (req, res) => {

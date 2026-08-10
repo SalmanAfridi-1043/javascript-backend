@@ -1,11 +1,9 @@
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import bcrypt from "bcrypt";
 import { createSafeUser } from "../utils/sanitizeUser.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
-import jwt from "jsonwebtoken";
 import { Follow } from "../models/follow.model.js";
 import { Post } from "../models/post.model.js";
 

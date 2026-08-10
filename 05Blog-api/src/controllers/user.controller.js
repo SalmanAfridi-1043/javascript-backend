@@ -1,7 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   followUserService,
@@ -13,7 +12,6 @@ import {
   unfollowUserService,
   updateUserProfileService,
 } from "../services/user.service.js";
-import { useId } from "react";
 
 const getUserProfile = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
@@ -34,6 +32,7 @@ const updateUserProfile = asyncHandler(async (req, res, next) => {
   // so, if avatar exists, then cloudinary will be called.(below process shows this)
   let avatarPath;
   if (req.file) {
+    avatarPath = req.file.path;
     const cloudinaryUrl = await uploadOnCloudinary(
       avatarPath,
       "Blog-API/avatar",
