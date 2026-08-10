@@ -4,10 +4,13 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
   followUser,
+  unfollowUser,
   getUserByUsername,
   getUserFollowers,
+  getUserFollowing,
   getUserProfile,
   updateUserProfile,
+  getAllPosts,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -20,6 +23,7 @@ router.get("/:username", getUserByUsername);
 router.post("/:username/follow", followUser); //follow user based on username
 router.delete("/:username/follow", unfollowUser);
 router.get("/:username/followers", getUserFollowers);
-router.get("/:username/following", );
+router.get("/:username/following", getUserFollowing);
+router.get("/:username/posts", getAllPosts);
 
 export default router;

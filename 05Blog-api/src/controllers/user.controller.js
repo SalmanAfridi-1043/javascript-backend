@@ -5,6 +5,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   followUserService,
+  getAllPostsService,
   getUserByUsernameService,
   getUserFollowersService,
   getUserFollowingService,
@@ -111,6 +112,16 @@ const getUserFollowing = asyncHandler(async (req, res, next) => {
     );
 });
 
+const getAllPosts = asyncHandler(async (req, res, next) => {
+  const username = req.params?.username;
+
+  const allPosts = await getAllPostsService(username);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allPosts, "All posts fetched successfully"));
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -119,4 +130,5 @@ export {
   unfollowUser,
   getUserFollowers,
   getUserFollowing,
+  getAllPosts,
 };

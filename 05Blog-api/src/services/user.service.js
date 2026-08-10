@@ -7,6 +7,7 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import jwt from "jsonwebtoken";
 import { Follow } from "../models/follow.model.js";
+import { Post } from "../models/post.model.js";
 
 const getUserProfileService = async (userId) => {
   validateRequired(userId, "User id");
@@ -178,6 +179,24 @@ const getUserFollowingService = async (targetUsername) => {
   return result;
 };
 
+const getAllPostsService = async (username) => {
+  const normalizedTargetUsername = username?.trim().toLowerCase();
+
+  const targetUser = await User.findOne({ username: normalizedTargetUsername });
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const posts = await Post.find({
+    author: targetUser._id,
+  }).populate("author", "-password -refreshToken");
+  // populate - convert the user/objectId to actual user/object document. (used for details info)
+  // populate() = fetch the referenced document instead of only its ID.
+
+  return posts;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -186,4 +205,5 @@ export {
   unfollowUserService,
   getUserFollowersService,
   getUserFollowingService,
+  getAllPostsService,
 };
