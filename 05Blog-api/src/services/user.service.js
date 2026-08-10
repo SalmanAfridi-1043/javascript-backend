@@ -21,4 +21,41 @@ const getUserProfileService = async (userId) => {
   return safeProfile;
 };
 
-export { getUserProfileService };
+const updateUserProfileService = async (userId, data) => {
+  const { fullName, bio, avatar } = data;
+
+  validateObjectId(userId, "User");
+
+  const updateData = {}; // dynamic object to store only valid data (to avoid overwrite field with undefined)
+
+  if (!fullName !== undefined) {
+    updateData.fullName = fullName.trim();
+  }
+  if (!bio !== undefined) {
+    updateData.bio = bio.trim();
+  }
+  if (!avatar !== undefined) {
+    updateData.avatar = avatar;
+  }
+
+  const userProfile = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: updateData,
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!userProfile) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const safeProfile = createSafeUser(userProfile);
+  return safeProfile;
+};
+
+
+
+export { getUserProfileService, updateUserProfileService };

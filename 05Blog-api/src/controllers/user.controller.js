@@ -3,7 +3,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
-import { getUserProfileService } from "../services/user.service.js";
+import {
+  getUserProfileService,
+  updateUserProfileService,
+} from "../services/user.service.js";
+import { useId } from "react";
 
 const getUserProfile = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
@@ -17,4 +21,31 @@ const getUserProfile = asyncHandler(async (req, res, next) => {
     );
 });
 
-export { getUserProfile };
+const updateUserProfile = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id;
+  const data = req.body;
+
+  // so, if avatar exists, then cloudinary will be called.(below process shows this)
+  let avatarPath;
+  if (req.file) {
+    const cloudinaryUrl = await uploadOnCloudinary(
+      avatarPath,
+      "Blog-API/avatar",
+    );
+
+    avatarPath = cloudinaryUrl.secure_url;
+  }
+
+  const updatedProfile = await updateUserProfileService(userId, {
+    ...data,
+    ...(avatarPath && { avatar: avatarPath }), // only add if avatar exist else not
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedProfile, "User profile updated successfully"),
+    );
+});
+
+export { getUserProfile, updateUserProfile };
