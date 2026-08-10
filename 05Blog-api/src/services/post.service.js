@@ -51,4 +51,76 @@ const getSinglePostService = async (slug) => {
   return post;
 };
 
-export { createPostService, getSinglePostService };
+const updatePostService = async (authorId, slug, data) => {
+  const { title, content, category, tags, status, coverImage } = data;
+
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(slug, "Slug");
+  validateObjectId(authorId, "Author id");
+
+  const post = await Post.findOne({ slug: normalizedSlug });
+
+  if (!post) {
+    throw new ApiError(404, "No post found");
+  }
+
+  // authorization check
+  if (!post.author.equals(authorId)) {
+    throw new ApiError(403, "Unauthorized access");
+  }
+
+  // if title has changed, then slug must be changed
+  // if title is valid and post title != current title
+  if (title !== undefined && title.trim() !== post.title) {
+    const newSlug = slugify(title);
+
+    // checking existing post with slug
+    const existingPost = await Post.findOne({
+      slug: newSlug,
+      _id: { $ne: post._id },
+    });
+
+    if (existingPost) {
+      throw new ApiError(409, "A post with this title already exists");
+    }
+
+    post.slug = newSlug;
+    post.title = title.trim();
+  }
+
+  if (content !== undefined) {
+    if (!content.trim()) {
+      throw new ApiError(400, "Content cannot be empty");
+    }
+    post.content = content.trim();
+  }
+
+  if (category !== undefined) {
+    if (!category.trim()) {
+      throw new ApiError(400, "Category cannot be empty");
+    }
+    post.category = category.trim();
+  }
+
+  if (tags !== undefined) {
+    post.tags = tags;
+  }
+
+  if (status !== undefined) {
+    if (!["draft", "published"].includes(status)) {
+      throw new ApiError(400, "Invalid post status");
+    }
+    post.status = status;
+  }
+
+  if (coverImage !== undefined) {
+    post.coverImage = coverImage;
+  }
+
+  await post.save();
+
+  return post;
+};
+
+export { createPostService, getSinglePostService, updatePostService };
