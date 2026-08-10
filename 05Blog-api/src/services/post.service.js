@@ -35,4 +35,20 @@ const createPostService = async (authorId, data) => {
   return post;
 };
 
-export { createPostService };
+const getSinglePostService = async (slug) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+  validateRequired(normalizedSlug, "Slug");
+
+  const post = await Post.findOne({ slug: normalizedSlug }).populate(
+    "author",
+    "-password -refreshToken",
+  );
+
+  if (!post) {
+    throw new ApiError(404, "No post found");
+  }
+
+  return post;
+};
+
+export { createPostService, getSinglePostService };

@@ -2,9 +2,11 @@ import Router from "express";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
-import { createPost } from "../controllers/post.controller.js";
+import { createPost, getSinglePost } from "../controllers/post.controller.js";
 
 const router = Router();
+
+router.get("/:slug", getSinglePost); // its public post watching and dont need authMiddleware
 
 router.use(authMiddleware);
 
