@@ -3,6 +3,8 @@ import { upload } from "../middleware/multer.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
+  followUser,
+  getUserByUsername,
   getUserProfile,
   updateUserProfile,
 } from "../controllers/user.controller.js";
@@ -13,5 +15,7 @@ router.use(authMiddleware);
 
 router.get("/profile", getUserProfile);
 router.patch("/profile", upload.single("avatar"), updateUserProfile);
+router.get("/:username", getUserByUsername);
+router.post("/:username/follow", followUser); //follow user based on username
 
 export default router;

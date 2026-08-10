@@ -4,6 +4,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
+  followUserService,
+  getUserByUsernameService,
   getUserProfileService,
   updateUserProfileService,
 } from "../services/user.service.js";
@@ -48,4 +50,27 @@ const updateUserProfile = asyncHandler(async (req, res, next) => {
     );
 });
 
-export { getUserProfile, updateUserProfile };
+const getUserByUsername = asyncHandler(async (req, res, next) => {
+  const username = req.params.username;
+
+  const userProfile = await getUserByUsernameService(username);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, userProfile, "User profile fetched successfully"),
+    );
+});
+
+const followUser = asyncHandler(async (req, res, next) => {
+  const currentUserId = req.user?._id;
+  const targetUsername = req.params?.username; // to follow user on this username
+
+  const followedUser = await followUserService(currentUserId, targetUsername);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, followedUser, "User followed successfully"));
+});
+
+export { getUserProfile, updateUserProfile, getUserByUsername, followUser };

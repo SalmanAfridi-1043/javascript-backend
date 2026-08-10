@@ -6,6 +6,7 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import jwt from "jsonwebtoken";
+import { Follow } from "../models/follow.model.js";
 
 const getUserProfileService = async (userId) => {
   validateRequired(userId, "User id");
@@ -56,6 +57,57 @@ const updateUserProfileService = async (userId, data) => {
   return safeProfile;
 };
 
+const getUserByUsernameService = async (username) => {
+  const normalizedUsername = username?.trim().toLowerCase();
 
+  validateRequired(normalizedUsername, "Username");
 
-export { getUserProfileService, updateUserProfileService };
+  const user = await User.findOne({ username: normalizedUsername });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const safeUser = createSafeUser(user);
+
+  return safeUser;
+};
+
+const followUserService = async (currentUserId, targetUsername) => {
+  const normalizedTargetUsername = targetUsername?.trim().toLowerCase();
+
+  validateRequired(currentUserId, "User id");
+  validateRequired(normalizedTargetUsername, "Username");
+
+  const targetUser = await User.findOne({ username: normalizedTargetUsername });
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (currentUserId.equals(targetUser._id)) {
+    throw new ApiError(400, "User cannot follow itself");
+  }
+
+  const isAlreadyFollowed = await Follow.findOne({
+    follower: currentUserId,
+    following: targetUser._id,
+  });
+
+  if (isAlreadyFollowed) {
+    throw new ApiError(409, "Already following this user");
+  }
+
+  const followedUser = await Follow.create({
+    follower: currentUserId,
+    following: targetUser._id,
+  });
+
+  return followedUser;
+};
+
+export {
+  getUserProfileService,
+  updateUserProfileService,
+  getUserByUsernameService,
+  followUserService,
+};
