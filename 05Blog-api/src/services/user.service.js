@@ -153,6 +153,31 @@ const getUserFollowersService = async (targetUsername) => {
   return result;
 };
 
+const getUserFollowingService = async (targetUsername) => {
+  const normalizedTargetUsername = targetUsername?.trim().toLowerCase();
+
+  const targetUser = await User.findOne({ username: normalizedTargetUsername });
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const following = await Follow.find({
+    follower: targetUser._id,
+  }).populate("following", "-password -refreshToken");
+
+  if (!following.length) {
+    return [];
+  }
+
+  const result = following.map((eachFollowing) => ({
+    ...eachFollowing.toObject(),
+    follower: createSafeUser(eachFollowing.following),
+  }));
+
+  return result;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -160,4 +185,5 @@ export {
   followUserService,
   unfollowUserService,
   getUserFollowersService,
+  getUserFollowingService,
 };

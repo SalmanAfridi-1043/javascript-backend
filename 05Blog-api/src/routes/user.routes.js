@@ -20,5 +20,6 @@ router.get("/:username", getUserByUsername);
 router.post("/:username/follow", followUser); //follow user based on username
 router.delete("/:username/follow", unfollowUser);
 router.get("/:username/followers", getUserFollowers);
+router.get("/:username/following", );
 
 export default router;

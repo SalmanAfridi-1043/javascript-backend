@@ -7,6 +7,7 @@ import {
   followUserService,
   getUserByUsernameService,
   getUserFollowersService,
+  getUserFollowingService,
   getUserProfileService,
   unfollowUserService,
   updateUserProfileService,
@@ -98,6 +99,18 @@ const getUserFollowers = asyncHandler(async (req, res, next) => {
     );
 });
 
+const getUserFollowing = asyncHandler(async (req, res, next) => {
+  const targetUsername = req.params?.username;
+
+  const following = await getUserFollowingService(targetUsername);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, following, "User following fetched successfully"),
+    );
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -105,4 +118,5 @@ export {
   followUser,
   unfollowUser,
   getUserFollowers,
+  getUserFollowing,
 };
