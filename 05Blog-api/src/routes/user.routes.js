@@ -17,5 +17,6 @@ router.get("/profile", getUserProfile);
 router.patch("/profile", upload.single("avatar"), updateUserProfile);
 router.get("/:username", getUserByUsername);
 router.post("/:username/follow", followUser); //follow user based on username
+router.delete("/:username/follow", unfollowUser);
 
 export default router;

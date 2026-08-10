@@ -7,6 +7,7 @@ import {
   followUserService,
   getUserByUsernameService,
   getUserProfileService,
+  unfollowUserService,
   updateUserProfileService,
 } from "../services/user.service.js";
 import { useId } from "react";
@@ -73,4 +74,21 @@ const followUser = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, followedUser, "User followed successfully"));
 });
 
-export { getUserProfile, updateUserProfile, getUserByUsername, followUser };
+const unfollowUser = asyncHandler(async (req, res, next) => {
+  const currentUserId = req.user?._id;
+  const targetUsername = req.params?.username; // to follow user on this username
+
+  const response = await unfollowUserService(currentUserId, targetUsername);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "User unfollowed successfully"));
+});
+
+export {
+  getUserProfile,
+  updateUserProfile,
+  getUserByUsername,
+  followUser,
+  unfollowUser,
+};

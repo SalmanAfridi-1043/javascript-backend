@@ -105,9 +105,33 @@ const followUserService = async (currentUserId, targetUsername) => {
   return followedUser;
 };
 
+const unfollowUserService = async (currentUserId, targetUsername) => {
+  const normalizedTargetUsername = targetUsername?.trim().toLowerCase();
+
+  validateRequired(currentUserId, "User id");
+  validateRequired(normalizedTargetUsername, "Username");
+
+  const targetUser = await User.findOne({ username: normalizedTargetUsername });
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const followDocument = await Follow.findOneAndDelete({
+    follower: currentUserId,
+    following: targetUser._id,
+  });
+
+  if (!followDocument) {
+    throw new ApiError(404, "You are not following this user");
+  }
+
+  return { success: true };
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
   getUserByUsernameService,
   followUserService,
+  unfollowUserService,
 };
