@@ -128,10 +128,36 @@ const unfollowUserService = async (currentUserId, targetUsername) => {
   return { success: true };
 };
 
+const getUserFollowersService = async (targetUsername) => {
+  const normalizedTargetUsername = targetUsername?.trim().toLowerCase();
+
+  const targetUser = await User.findOne({ username: normalizedTargetUsername });
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const followers = await Follow.find({
+    following: targetUser._id,
+  }).populate("follower", "-password -refreshToken");
+
+  if (!followers.length) {
+    return [];
+  }
+
+  const result = followers.map((follow) => ({
+    ...follow.toObject(),
+    follower: createSafeUser(follow.follower),
+  }));
+
+  return result;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
   getUserByUsernameService,
   followUserService,
   unfollowUserService,
+  getUserFollowersService,
 };

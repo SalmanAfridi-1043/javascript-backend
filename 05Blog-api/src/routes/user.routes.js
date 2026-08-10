@@ -5,6 +5,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import {
   followUser,
   getUserByUsername,
+  getUserFollowers,
   getUserProfile,
   updateUserProfile,
 } from "../controllers/user.controller.js";
@@ -18,5 +19,6 @@ router.patch("/profile", upload.single("avatar"), updateUserProfile);
 router.get("/:username", getUserByUsername);
 router.post("/:username/follow", followUser); //follow user based on username
 router.delete("/:username/follow", unfollowUser);
+router.get("/:username/followers", getUserFollowers);
 
 export default router;

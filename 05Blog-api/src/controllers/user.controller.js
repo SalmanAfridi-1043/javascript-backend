@@ -6,6 +6,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 import {
   followUserService,
   getUserByUsernameService,
+  getUserFollowersService,
   getUserProfileService,
   unfollowUserService,
   updateUserProfileService,
@@ -85,10 +86,23 @@ const unfollowUser = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "User unfollowed successfully"));
 });
 
+const getUserFollowers = asyncHandler(async (req, res, next) => {
+  const targetUsername = req.params?.username;
+
+  const followers = await getUserFollowersService(targetUsername);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, followers, "User followers fetched successfully"),
+    );
+});
+
 export {
   getUserProfile,
   updateUserProfile,
   getUserByUsername,
   followUser,
   unfollowUser,
+  getUserFollowers,
 };
