@@ -5,10 +5,11 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {
   createPostService,
   getSinglePostService,
+  updatePostService,
 } from "../services/post.service.js";
 
 const createPost = asyncHandler(async (req, res, next) => {
-  const authorId = req.user?._id;
+  const authorId = req.user?._id; // for posts, slug is unique id
   const data = req.body;
 
   let coverImagePath;
@@ -43,4 +44,30 @@ const getSinglePost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, post, "Post fetched successfully"));
 });
 
-export { createPost, getSinglePost };
+const updatePost = asyncHandler(async (req, res, next) => {
+  const authorId = req.user?._id;
+  const slug = req.params?.slug; // slug - unique id for post
+  const data = req.body;
+
+  let coverImagePath;
+  if (req.file) {
+    coverImagePath = req.file?.path;
+    const cloudinaryUrl = await uploadOnCloudinary(
+      coverImagePath,
+      "Blog-API/image",
+    );
+
+    coverImagePath = cloudinaryUrl.secure_url;
+  }
+
+  const updatedPost = await updatePostService(authorId, slug, {
+    ...data,
+    ...(coverImagePath && { coverImage: coverImagePath }),
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedPost, "Post updated successfully"));
+});
+
+export { createPost, getSinglePost, updatePost };
