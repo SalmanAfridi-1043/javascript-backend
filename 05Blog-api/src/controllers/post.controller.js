@@ -7,6 +7,7 @@ import {
   createPostService,
   deletePostService,
   getAllPostsService,
+  getCommentsOnPostService,
   getPostsbyCategoryService,
   getSinglePostService,
   incrementPostViewsService,
@@ -187,6 +188,16 @@ const createCommentOnPost = asyncHandler(async (req, res, next) => {
     );
 });
 
+const getCommentsOnPost = asyncHandler(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const comments = await getCommentsOnPostService(slug);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comments, "All comments fetched successfully"));
+});
+
 export {
   createPost,
   getSinglePost,
@@ -199,4 +210,5 @@ export {
   likeAPost,
   unlikeAPost,
   createCommentOnPost,
+  getCommentsOnPost,
 };

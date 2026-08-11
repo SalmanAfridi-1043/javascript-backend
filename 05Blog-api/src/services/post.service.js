@@ -347,6 +347,33 @@ const createCommentOnPostService = async (
   return comment;
 };
 
+const getCommentsOnPostService = async (slug) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(slug, "Slug");
+
+  const post = await Post.findOne({
+    status: "published",
+    slug: normalizedSlug,
+  });
+
+  if (!post) {
+    throw new ApiError(404, "No post found");
+  }
+
+  const comments = await Comment.find({
+    post: post._id,
+  })
+    .populate("user", "-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  if (comments.length === 0) {
+    throw new ApiError(404, "Comments not found");
+  }
+
+  return comments;
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -359,4 +386,5 @@ export {
   likeAPostService,
   unlikeAPostService,
   createCommentOnPostService,
+  getCommentsOnPostService,
 };

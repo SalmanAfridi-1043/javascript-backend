@@ -7,6 +7,7 @@ import {
   createPost,
   deletePost,
   getAllPosts,
+  getCommentsOnPost,
   getPostsbyCategory,
   getSinglePost,
   incrementPostViews,
@@ -22,6 +23,7 @@ const router = Router();
 router.get("/:slug", getSinglePost); // its public post watching and dont need authMiddleware
 router.get("/", getAllPosts); // all public posts
 router.get("/category/:category", getPostsbyCategory); //posts based on category
+router.get("/:slug/comment", getCommentsOnPost); // public- all can watch/get the comment on post
 
 router.use(authMiddleware);
 
@@ -36,6 +38,6 @@ router.patch("/:slug/views", incrementPostViews); // public posts views incremen
 router.post("/:slug/like", likeAPost); // authenticated used can like a post
 router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
 
-router.post("/:slug/comment", createCommentOnPost); // authenticated used can like a post
+router.post("/:slug/comment", createCommentOnPost); // authenticated used can create comment
 
 export default router;
