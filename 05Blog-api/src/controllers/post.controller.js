@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {
   createCommentOnPostService,
   createPostService,
+  deleteCommentService,
   deletePostService,
   getAllPostsService,
   getCommentsOnPostService,
@@ -198,6 +199,17 @@ const getCommentsOnPost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, comments, "All comments fetched successfully"));
 });
 
+const deleteComment = asyncHandler(async (req, res, next) => {
+  const { commentId } = req.params;
+  const userId = req.user?._id;
+
+  const response = await deleteCommentService(userId, commentId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "comments deleted successfully"));
+});
+
 export {
   createPost,
   getSinglePost,
@@ -211,4 +223,5 @@ export {
   unlikeAPost,
   createCommentOnPost,
   getCommentsOnPost,
+  deleteComment,
 };

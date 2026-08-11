@@ -374,6 +374,24 @@ const getCommentsOnPostService = async (slug) => {
   return comments;
 };
 
+const deleteCommentService = async (userId, commentId) => {
+  validateRequired(userId, "User id");
+  validateRequired(commendId, "Comment id");
+
+  validateObjectId(commendId, "Comment");
+
+  const comment = await Comment.findOneAndDelete({
+    _id: commendId,
+    user: userId,
+  });
+
+  if (!comment) {
+    throw new ApiError(404, "No comment found");
+  }
+
+  return { success: true };
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -387,4 +405,5 @@ export {
   unlikeAPostService,
   createCommentOnPostService,
   getCommentsOnPostService,
+  deleteCommentService,
 };

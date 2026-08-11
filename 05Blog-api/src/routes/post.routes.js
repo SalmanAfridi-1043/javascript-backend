@@ -5,6 +5,7 @@ import { upload } from "../middleware/multer.middleware.js";
 import {
   createCommentOnPost,
   createPost,
+  deleteComment,
   deletePost,
   getAllPosts,
   getCommentsOnPost,
@@ -39,5 +40,7 @@ router.post("/:slug/like", likeAPost); // authenticated used can like a post
 router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
 
 router.post("/:slug/comment", createCommentOnPost); // authenticated used can create comment
+
+router.delete("/comments/:commentId", deleteComment);
 
 export default router;
