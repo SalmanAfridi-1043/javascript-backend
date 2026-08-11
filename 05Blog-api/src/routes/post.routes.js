@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
 import {
+  createCommentOnPost,
   createPost,
   deletePost,
   getAllPosts,
@@ -34,5 +35,7 @@ router.get("/search", searchPost);
 router.patch("/:slug/views", incrementPostViews); // public posts views incrementing
 router.post("/:slug/like", likeAPost); // authenticated used can like a post
 router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
+
+router.post("/:slug/comment", createCommentOnPost); // authenticated used can like a post
 
 export default router;

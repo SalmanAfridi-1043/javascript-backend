@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import {
+  createCommentOnPostService,
   createPostService,
   deletePostService,
   getAllPostsService,
@@ -162,6 +163,30 @@ const unlikeAPost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "Post unliked successfully"));
 });
 
+const createCommentOnPost = asyncHandler(async (req, res, next) => {
+  const { content, parentComment } = req.body;
+
+  const { slug } = req.params;
+  const userId = req.user._id;
+
+  const createdComment = await createCommentOnPostService(
+    userId,
+    slug,
+    content,
+    parentComment,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        201,
+        createdComment,
+        "Comment added on post successfully",
+      ),
+    );
+});
+
 export {
   createPost,
   getSinglePost,
@@ -173,4 +198,5 @@ export {
   getPostsbyCategory,
   likeAPost,
   unlikeAPost,
+  createCommentOnPost,
 };

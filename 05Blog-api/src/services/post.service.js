@@ -5,6 +5,7 @@ import { validateObjectId } from "../utils/validateObjectId.js";
 import { Post } from "../models/post.model.js";
 import { slugify } from "../utils/slugify.js";
 import { Like } from "../models/like.model.js";
+import { Comment } from "../models/comment.model.js";
 
 const createPostService = async (authorId, data) => {
   const { title, content, category, status, tags, coverImage } = data;
@@ -302,6 +303,50 @@ const unlikeAPostService = async (userId, slug) => {
   };
 };
 
+const createCommentOnPostService = async (
+  userId,
+  slug,
+  content,
+  parentComment,
+) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+  const normalizedContent = content?.trim();
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedSlug, "Slug");
+  validateRequired(content, "Content");
+
+  const post = await Post.findOne({
+    status: "published",
+    slug: normalizedSlug,
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  if (parentComment) {
+    // parentComment is an id of comment
+    const parent = await Comment.findOne({
+      _id: parentComment,
+      post: post._id,
+    });
+
+    if (!parent) {
+      throw new ApiError(404, "Parent comment not found");
+    }
+  }
+
+  const comment = await Comment.create({
+    content: normalizedContent,
+    user: userId,
+    post: post._id,
+    parentComment: parentComment || null,
+  });
+
+  return comment;
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -313,4 +358,5 @@ export {
   getPostsbyCategoryService,
   likeAPostService,
   unlikeAPostService,
+  createCommentOnPostService,
 };
