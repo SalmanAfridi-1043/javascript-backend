@@ -11,6 +11,7 @@ import {
   incrementPostViewsService,
   likeAPostService,
   searchPostService,
+  unlikeAPostService,
   updatePostService,
 } from "../services/post.service.js";
 
@@ -147,6 +148,20 @@ const likeAPost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, likedPost, "Post liked successfully"));
 });
 
+const unlikeAPost = asyncHandler(async (req, res, next) => {
+  // authenticated used can unlike a post
+
+  const userId = req.user._id;
+
+  const { slug } = req.params;
+
+  const response = await unlikeAPostService(userId, slug);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Post unliked successfully"));
+});
+
 export {
   createPost,
   getSinglePost,
@@ -157,4 +172,5 @@ export {
   incrementPostViews,
   getPostsbyCategory,
   likeAPost,
+  unlikeAPost,
 };

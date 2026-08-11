@@ -11,6 +11,7 @@ import {
   incrementPostViews,
   likeAPost,
   searchPost,
+  unlikeAPost,
   updatePost,
 } from "../controllers/post.controller.js";
 
@@ -32,5 +33,6 @@ router.delete("/:slug", deletePost);
 router.get("/search", searchPost);
 router.patch("/:slug/views", incrementPostViews); // public posts views incrementing
 router.post("/:slug/like", likeAPost); // authenticated used can like a post
+router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
 
 export default router;

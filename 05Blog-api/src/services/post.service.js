@@ -273,6 +273,35 @@ const likeAPostService = async (userId, slug) => {
   };
 };
 
+const unlikeAPostService = async (userId, slug) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedSlug, "Slug value");
+
+  const post = await Post.findOne({
+    slug: normalizedSlug,
+    status: "published",
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  const like = await Like.findOneAndDelete({
+    user: userId,
+    post: post._id,
+  });
+
+  if (!like) {
+    throw new ApiError(404, "Like not found");
+  }
+
+  return {
+    success: true,
+  };
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -283,4 +312,5 @@ export {
   incrementPostViewsService,
   getPostsbyCategoryService,
   likeAPostService,
+  unlikeAPostService,
 };
