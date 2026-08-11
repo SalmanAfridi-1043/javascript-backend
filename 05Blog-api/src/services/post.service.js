@@ -160,6 +160,7 @@ const getAllPostsService = async (status) => {
 const searchPostService = async (searchNode) => {
   validateRequired(searchNode, "Search value");
 
+  // case insensitive regex
   const searchRegex = new RegExp(searchNode, "i");
 
   const posts = await Post.find({
@@ -183,6 +184,34 @@ const searchPostService = async (searchNode) => {
   return posts;
 };
 
+const incrementPostViewsService = async (slug) => {
+  // public posts views updating opening
+
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(normalizedSlug, "Slug");
+
+  const post = await Post.findOneAndUpdate(
+    {
+      slug: normalizedSlug,
+    },
+    {
+      $inc: {
+        views: 1,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!post) {
+    throw new ApiError(404, "No post found");
+  }
+
+  return post;
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -190,4 +219,5 @@ export {
   deletePostService,
   getAllPostsService,
   searchPostService,
+  incrementPostViewsService,
 };

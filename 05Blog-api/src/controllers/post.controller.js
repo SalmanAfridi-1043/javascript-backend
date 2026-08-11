@@ -7,6 +7,7 @@ import {
   deletePostService,
   getAllPostsService,
   getSinglePostService,
+  incrementPostViewsService,
   searchPostService,
   updatePostService,
 } from "../services/post.service.js";
@@ -106,6 +107,18 @@ const searchPost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, posts, "Searched posts fetched successfully"));
 });
 
+const incrementPostViews = asyncHandler(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const incrementedPost = await incrementPostViewsService(slug);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, incrementedPost, "Post views updated successfully"),
+    );
+});
+
 export {
   createPost,
   getSinglePost,
@@ -113,4 +126,5 @@ export {
   deletePost,
   getAllPosts,
   searchPost,
+  incrementPostViews,
 };
