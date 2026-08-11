@@ -141,9 +141,26 @@ const deletePostService = async (authorId, slug) => {
   return { success: true };
 };
 
+const getAllPostsService = async (status) => {
+  // get all public posts who's status is published
+
+  const posts = await Post.find({
+    status: "published",
+  })
+    .populate("author", "-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  if (posts.length === 0) {
+    throw new ApiError(404, "No post found");
+  }
+
+  return posts;
+};
+
 export {
   createPostService,
   getSinglePostService,
   updatePostService,
   deletePostService,
+  getAllPostsService,
 };

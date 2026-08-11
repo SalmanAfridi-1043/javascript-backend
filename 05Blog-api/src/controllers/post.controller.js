@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {
   createPostService,
   deletePostService,
+  getAllPostsService,
   getSinglePostService,
   updatePostService,
 } from "../services/post.service.js";
@@ -82,4 +83,14 @@ const deletePost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "Post deleted successfully"));
 });
 
-export { createPost, getSinglePost, updatePost, deletePost };
+const getAllPosts = asyncHandler(async (req, res, next) => {
+  // get all posts whos status is published
+
+  const allPosts = await getAllPostsService();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allPosts, "All posts fetched successfully"));
+});
+
+export { createPost, getSinglePost, updatePost, deletePost, getAllPosts };
