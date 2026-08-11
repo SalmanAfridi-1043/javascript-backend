@@ -4,6 +4,7 @@ import { upload } from "../middleware/multer.middleware.js";
 
 import {
   createPost,
+  deletePost,
   getSinglePost,
   updatePost,
 } from "../controllers/post.controller.js";
@@ -16,5 +17,7 @@ router.use(authMiddleware);
 
 router.post("/create", upload.single("coverImage"), createPost);
 router.patch("/:slug", upload.single("coverImage"), updatePost);
+
+router.delete("/:slug", deletePost);
 
 export default router;

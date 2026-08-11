@@ -56,8 +56,8 @@ const updatePostService = async (authorId, slug, data) => {
 
   const normalizedSlug = slug?.trim().toLowerCase();
 
-  validateRequired(slug, "Slug");
-  validateObjectId(authorId, "Author id");
+  validateRequired(normalizedSlug, "Slug");
+  validateRequired(authorId, "Author id");
 
   const post = await Post.findOne({ slug: normalizedSlug });
 
@@ -123,4 +123,27 @@ const updatePostService = async (authorId, slug, data) => {
   return post;
 };
 
-export { createPostService, getSinglePostService, updatePostService };
+const deletePostService = async (authorId, slug) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(authorId, "Author id");
+  validateRequired(normalizedSlug, "Slug");
+
+  const post = await Post.findOneAndDelete({
+    slug: normalizedSlug,
+    author: authorId,
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  return { success: true };
+};
+
+export {
+  createPostService,
+  getSinglePostService,
+  updatePostService,
+  deletePostService,
+};

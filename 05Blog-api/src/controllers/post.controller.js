@@ -4,6 +4,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import {
   createPostService,
+  deletePostService,
   getSinglePostService,
   updatePostService,
 } from "../services/post.service.js";
@@ -70,4 +71,15 @@ const updatePost = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, updatedPost, "Post updated successfully"));
 });
 
-export { createPost, getSinglePost, updatePost };
+const deletePost = asyncHandler(async (req, res, next) => {
+  const authorId = req.user?._id;
+  const slug = req.params?.slug; // slug - unique id for post
+
+  const response = await deletePostService(authorId, slug);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Post deleted successfully"));
+});
+
+export { createPost, getSinglePost, updatePost, deletePost };
