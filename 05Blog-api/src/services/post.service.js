@@ -157,10 +157,37 @@ const getAllPostsService = async (status) => {
   return posts;
 };
 
+const searchPostService = async (searchNode) => {
+  validateRequired(searchNode, "Search value");
+
+  const searchRegex = new RegExp(searchNode, "i");
+
+  const posts = await Post.find({
+    status: "published",
+    $or: [
+      {
+        title: searchRegex,
+      },
+      {
+        content: searchRegex,
+      },
+    ],
+  })
+    .populate("author", "-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  if (posts.length === 0) {
+    throw new ApiError(404, "Posts not found");
+  }
+
+  return posts;
+};
+
 export {
   createPostService,
   getSinglePostService,
   updatePostService,
   deletePostService,
   getAllPostsService,
+  searchPostService,
 };

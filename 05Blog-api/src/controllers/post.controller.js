@@ -7,6 +7,7 @@ import {
   deletePostService,
   getAllPostsService,
   getSinglePostService,
+  searchPostService,
   updatePostService,
 } from "../services/post.service.js";
 
@@ -93,4 +94,23 @@ const getAllPosts = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, allPosts, "All posts fetched successfully"));
 });
 
-export { createPost, getSinglePost, updatePost, deletePost, getAllPosts };
+const searchPost = asyncHandler(async (req, res, next) => {
+  // searchNode is a value used to search post based on title or content
+  // like searchNode = "backend" - so we ll check both title and content for backend
+  const { searchNode } = req.query;
+
+  const posts = await searchPostService(searchNode);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, posts, "Searched posts fetched successfully"));
+});
+
+export {
+  createPost,
+  getSinglePost,
+  updatePost,
+  deletePost,
+  getAllPosts,
+  searchPost,
+};
