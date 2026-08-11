@@ -9,6 +9,7 @@ import {
   getPostsbyCategoryService,
   getSinglePostService,
   incrementPostViewsService,
+  likeAPostService,
   searchPostService,
   updatePostService,
 } from "../services/post.service.js";
@@ -132,6 +133,20 @@ const getPostsbyCategory = asyncHandler(async (req, res, next) => {
     );
 });
 
+const likeAPost = asyncHandler(async (req, res, next) => {
+  // authenticated used can like a post
+
+  const userId = req.user._id;
+
+  const { slug } = req.params;
+
+  const likedPost = await likeAPostService(userId, slug);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, likedPost, "Post liked successfully"));
+});
+
 export {
   createPost,
   getSinglePost,
@@ -141,4 +156,5 @@ export {
   searchPost,
   incrementPostViews,
   getPostsbyCategory,
+  likeAPost,
 };

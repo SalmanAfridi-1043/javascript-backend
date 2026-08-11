@@ -9,6 +9,7 @@ import {
   getPostsbyCategory,
   getSinglePost,
   incrementPostViews,
+  likeAPost,
   searchPost,
   updatePost,
 } from "../controllers/post.controller.js";
@@ -29,7 +30,7 @@ router.post("/create", upload.single("coverImage"), createPost);
 router.patch("/:slug", upload.single("coverImage"), updatePost);
 router.delete("/:slug", deletePost);
 router.get("/search", searchPost);
-
 router.patch("/:slug/views", incrementPostViews); // public posts views incrementing
+router.post("/:slug/like", likeAPost); // authenticated used can like a post
 
 export default router;

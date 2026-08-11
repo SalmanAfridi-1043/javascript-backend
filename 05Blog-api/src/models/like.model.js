@@ -2,12 +2,6 @@ import mongoose, { Schema, model } from "mongoose";
 
 const likeSchema = new Schema(
   {
-    content: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -18,12 +12,6 @@ const likeSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Post",
       required: true,
-    },
-
-    parentComment: {
-      type: Schema.Types.ObjectId,
-      ref: "Comment",
-      default: null,
     },
   },
   { timestamps: true },

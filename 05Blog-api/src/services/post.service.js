@@ -4,6 +4,7 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Post } from "../models/post.model.js";
 import { slugify } from "../utils/slugify.js";
+import { Like } from "../models/like.model.js";
 
 const createPostService = async (authorId, data) => {
   const { title, content, category, status, tags, coverImage } = data;
@@ -233,6 +234,45 @@ const getPostsbyCategoryService = async (category) => {
   return posts;
 };
 
+const likeAPostService = async (userId, slug) => {
+  const normalizedSlug = slug?.trim().toLowerCase();
+
+  validateRequired(userId, "Author id");
+  validateRequired(normalizedSlug, "Slug value");
+
+  const post = await Post.findOne({
+    slug: normalizedSlug,
+    status: "published",
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  const existingLike = await Like.findOne({
+    user: userId,
+    post: post._id,
+  });
+
+  if (existingLike) {
+    throw new ApiError(409, "Post already liked by user");
+  }
+
+  const like = await Like.create({
+    user: userId,
+    post: post._id,
+  });
+
+  if (!like) {
+    throw new ApiError(500, "Server failed while creating like");
+  }
+
+  return {
+    user: like.user,
+    success: true,
+  };
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -242,4 +282,5 @@ export {
   searchPostService,
   incrementPostViewsService,
   getPostsbyCategoryService,
+  likeAPostService,
 };
