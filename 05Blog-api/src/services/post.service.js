@@ -376,12 +376,12 @@ const getCommentsOnPostService = async (slug) => {
 
 const deleteCommentService = async (userId, commentId) => {
   validateRequired(userId, "User id");
-  validateRequired(commendId, "Comment id");
+  validateRequired(commentId, "Comment id");
 
-  validateObjectId(commendId, "Comment");
+  validateObjectId(commentId, "Comment");
 
   const comment = await Comment.findOneAndDelete({
-    _id: commendId,
+    _id: commentId,
     user: userId,
   });
 
@@ -390,6 +390,67 @@ const deleteCommentService = async (userId, commentId) => {
   }
 
   return { success: true };
+};
+
+const updateCommentService = async (userId, commentId, content) => {
+  const normalizedContent = content?.trim();
+
+  validateRequired(userId, "User id");
+  validateRequired(commentId, "Comment id");
+  validateRequired(normalizedContent, "Content");
+
+  validateObjectId(commentId, "Comment");
+
+  const comment = await Comment.findOneAndUpdate(
+    {
+      _id: commentId,
+      user: userId,
+    },
+    {
+      $set: {
+        content: normalizedContent,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!comment) {
+    throw new ApiError(404, "No comment found");
+  }
+
+  return comment;
+};
+
+const getParentCommentRepliesService = async (commentId) => {
+  validateRequired(commentId, "Comment id");
+
+  validateObjectId(commentId, "Comment");
+
+  const parent = await Comment.findById(commentId);
+
+  if (!parent) {
+    throw new ApiError(404, "Parent comment not found");
+  }
+
+  // if parent comment exists then
+  // get all replies to this parent comment
+  // Example ;
+  // Comment A → parentComment = null
+  // Reply B   → parentComment = 111
+  // Reply C   → parentComment = 111
+  const replies = await Comment.find({
+    parentComment: commentId,
+  })
+    .populate("user", "-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  if (replies.length === 0) {
+    return [];
+  }
+
+  return replies;
 };
 
 export {
@@ -406,4 +467,6 @@ export {
   createCommentOnPostService,
   getCommentsOnPostService,
   deleteCommentService,
+  updateCommentService,
+  getParentCommentRepliesService,
 };

@@ -8,13 +8,16 @@ import {
   deleteComment,
   deletePost,
   getAllPosts,
+  getCommentReplay,
   getCommentsOnPost,
+  getParentCommentReplies,
   getPostsbyCategory,
   getSinglePost,
   incrementPostViews,
   likeAPost,
   searchPost,
   unlikeAPost,
+  updateComment,
   updatePost,
 } from "../controllers/post.controller.js";
 
@@ -39,8 +42,10 @@ router.patch("/:slug/views", incrementPostViews); // public posts views incremen
 router.post("/:slug/like", likeAPost); // authenticated used can like a post
 router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
 
-router.post("/:slug/comment", createCommentOnPost); // authenticated used can create comment
+router.post("/:slug/comment", createCommentOnPost); // authenticated user can create comment
 
 router.delete("/comments/:commentId", deleteComment);
+router.patch("/comments/:commentId", updateComment);
+router.get("/comments/:commentId/replies", getParentCommentReplies);
 
 export default router;

@@ -9,12 +9,14 @@ import {
   deletePostService,
   getAllPostsService,
   getCommentsOnPostService,
+  getParentCommentRepliesService,
   getPostsbyCategoryService,
   getSinglePostService,
   incrementPostViewsService,
   likeAPostService,
   searchPostService,
   unlikeAPostService,
+  updateCommentService,
   updatePostService,
 } from "../services/post.service.js";
 
@@ -207,7 +209,30 @@ const deleteComment = asyncHandler(async (req, res, next) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, response, "comments deleted successfully"));
+    .json(new ApiResponse(200, response, "comment deleted successfully"));
+});
+
+const updateComment = asyncHandler(async (req, res, next) => {
+  const { content } = req.body;
+  const { commentId } = req.params;
+  const userId = req.user?._id;
+
+  const updatedComment = await updateCommentService(userId, commentId, content);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedComment, "comment updated successfully"));
+});
+
+const getParentCommentReplies = asyncHandler(async (req, res, next) => {
+  // commendId - parent comment id and we ll get all its replies
+  const { commentId } = req.params;
+
+  const replies = await getParentCommentRepliesService(commentId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, replies, "All replies fetched successfully"));
 });
 
 export {
@@ -224,4 +249,6 @@ export {
   createCommentOnPost,
   getCommentsOnPost,
   deleteComment,
+  updateComment,
+  getParentCommentReplies,
 };
