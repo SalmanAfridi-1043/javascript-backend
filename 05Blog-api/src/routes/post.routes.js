@@ -6,6 +6,7 @@ import {
   createPost,
   deletePost,
   getAllPosts,
+  getPostsbyCategory,
   getSinglePost,
   incrementPostViews,
   searchPost,
@@ -17,6 +18,7 @@ const router = Router();
 // public routes
 router.get("/:slug", getSinglePost); // its public post watching and dont need authMiddleware
 router.get("/", getAllPosts); // all public posts
+router.get("/category/:category", getPostsbyCategory); //posts based on category
 
 router.use(authMiddleware);
 

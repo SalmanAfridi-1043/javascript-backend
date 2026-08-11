@@ -212,6 +212,27 @@ const incrementPostViewsService = async (slug) => {
   return post;
 };
 
+const getPostsbyCategoryService = async (category) => {
+  // search public posts based on category
+
+  const normalizedCategory = category?.trim().toLowerCase();
+
+  validateRequired(normalizedCategory, "Category");
+
+  const posts = await Post.find({
+    status: "published",
+    category: normalizedCategory,
+  })
+    .populate("author", "-password -refreshToken")
+    .sort({ createdAt: -1 });
+
+  if (posts.length === 0) {
+    throw new ApiError(404, "No posts found");
+  }
+
+  return posts;
+};
+
 export {
   createPostService,
   getSinglePostService,
@@ -220,4 +241,5 @@ export {
   getAllPostsService,
   searchPostService,
   incrementPostViewsService,
+  getPostsbyCategoryService,
 };

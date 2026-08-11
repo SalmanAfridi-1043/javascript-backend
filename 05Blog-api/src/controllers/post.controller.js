@@ -6,6 +6,7 @@ import {
   createPostService,
   deletePostService,
   getAllPostsService,
+  getPostsbyCategoryService,
   getSinglePostService,
   incrementPostViewsService,
   searchPostService,
@@ -119,6 +120,18 @@ const incrementPostViews = asyncHandler(async (req, res, next) => {
     );
 });
 
+const getPostsbyCategory = asyncHandler(async (req, res, next) => {
+  const { category } = req.params;
+
+  const posts = await getPostsbyCategoryService(category);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, posts, "Posts with category fetched successfully"),
+    );
+});
+
 export {
   createPost,
   getSinglePost,
@@ -127,4 +140,5 @@ export {
   getAllPosts,
   searchPost,
   incrementPostViews,
+  getPostsbyCategory,
 };
