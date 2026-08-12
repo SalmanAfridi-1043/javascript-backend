@@ -10,8 +10,9 @@ import {
 
 const getMyNotifications = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
+  const { page, limit } = req.query;
 
-  const allNotifications = await getMyNotificationsService(userId);
+  const allNotifications = await getMyNotificationsService(userId, page, limit);
 
   return res
     .status(200)

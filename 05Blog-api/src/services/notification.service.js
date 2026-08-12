@@ -5,23 +5,55 @@ import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Notification } from "../models/notification.model.js";
 
-const getMyNotificationsService = async (userId) => {
+const getMyNotificationsService = async (userId, page, limit) => {
   validateRequired(userId, "User id");
+
+  page = Number(page) || 1;
+  limit = Number(limit) || 20;
+
+  if (page < 1) page = 1;
+  if (limit < 1) limit = 20;
+
+  const skip = (page - 1) * limit;
 
   // get all recieved notifications
   const receivedNotifications = await Notification.find({
-    recipient: userId,
+    recipient: userId, // recipient means reciever
   })
     .populate("sender", "-password -refreshToken")
     .populate("post")
     .populate("comment")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
   if (receivedNotifications.length === 0) {
-    return [];
+    return {
+      receivedNotifications: [],
+      pagination: {
+        currentPage: page,
+        limit,
+        totalNotifications: 0,
+        totalPages: 0,
+      },
+    };
   }
 
-  return receivedNotifications;
+  const totalNotifications = await Notification.countDocuments({
+    recipient: userId,
+  });
+
+  const totalPages = Math.ceil(totalNotifications / limit);
+
+  return {
+    receivedNotifications,
+    pagination: {
+      currentPage: page,
+      limit,
+      totalNotifications,
+      totalPages,
+    },
+  };
 };
 
 const markNotificationAsReadService = async (userId, notificationId) => {
