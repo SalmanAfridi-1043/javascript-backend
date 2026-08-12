@@ -5,6 +5,7 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";
+import { Notification } from "../models/notification.model.js";
 
 const createCommentOnPostService = async (
   userId,
@@ -47,6 +48,41 @@ const createCommentOnPostService = async (
     post: post._id,
     parentComment: parentComment || null,
   });
+
+  // Determine who should receive the notification:
+  // - If this is a reply → notify the parent comment's author else
+  // - If this is a normal comment → notify the post author
+  const recipient = parent ? parent.user : post.author;
+
+  // Don't create a notification if the user is notifying themselves
+  // Example:
+  // User A comments on their own post
+  // User A replies to their own comment
+  if (!recipient.equals(userId)) {
+    await Notification.create({
+      recipient, // User who should receive the notification
+      sender: userId, // User who created the comment/reply
+      type: "comment", // Notification type
+      post: post._id, // Related post
+      comment: comment._id, // The newly created comment
+    });
+  }
+
+  //   Normal comment:
+  // User A → comments → User B's post
+  //                     ↓
+  //               recipient = User B
+
+  // Reply:
+  // User A → replies → User B's comment
+  //                     ↓
+  //               recipient = User B
+
+  // recipient === userId? (if current user is the notification reviecer)
+  //      ↓
+  //     YES → No notification
+  //      ↓
+  //      NO → Create notification
 
   return comment;
 };

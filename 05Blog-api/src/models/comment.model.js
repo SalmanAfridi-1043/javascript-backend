@@ -20,6 +20,7 @@ const commentSchema = new Schema(
       required: true,
     },
 
+    // parent comment is itself a comment document which contains all fields
     parentComment: {
       type: Schema.Types.ObjectId,
       ref: "Comment",
