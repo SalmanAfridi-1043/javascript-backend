@@ -52,4 +52,31 @@ const markNotificationAsReadService = async (userId, notificationId) => {
   return notification;
 };
 
-export { getMyNotificationsService, markNotificationAsReadService };
+const markAllNotificationAsReadService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  // find all unread notifications and marked as read
+  // updateMany() returns modifiedCount=0 when no changes occure
+  const markedAllNotifications = await Notification.updateMany(
+    {
+      recipient: userId,
+      isRead: false,
+    },
+    {
+      $set: {
+        isRead: true,
+      },
+    },
+  );
+
+  return {
+    success: true,
+    markedReadCount: markedAllNotifications.modifiedCount,
+  };
+};
+
+export {
+  getMyNotificationsService,
+  markNotificationAsReadService,
+  markAllNotificationAsReadService,
+};

@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
   getMyNotificationsService,
+  markAllNotificationAsReadService,
   markNotificationAsReadService,
 } from "../services/notification.service.js";
 
@@ -42,4 +43,24 @@ const markNotificationAsRead = asyncHandler(async (req, res, next) => {
     );
 });
 
-export { getMyNotifications, markNotificationAsRead };
+const markAllNotificationAsRead = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const markedAllNotification = await markAllNotificationAsReadService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        markedAllNotification,
+        "Marked all notification as read successfully",
+      ),
+    );
+});
+
+export {
+  getMyNotifications,
+  markNotificationAsRead,
+  markAllNotificationAsRead,
+};
