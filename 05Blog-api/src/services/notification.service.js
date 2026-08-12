@@ -127,9 +127,36 @@ const deleteNotificationService = async (userId, notificationId) => {
   };
 };
 
+const getUnreadNotificationCountService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const unreadNotificationsCount = await Notification.countDocuments({
+    recipient: userId,
+    isRead: false,
+  });
+
+  return {
+    unreadCount: unreadNotificationsCount,
+  };
+};
+
+const notificationsCleanupService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const deletedNotification = await Notification.deleteMany({
+    recipient: userId,
+  });
+
+  return {
+    deletedCount: deletedNotification.deletedCount,
+  };
+};
+
 export {
   getMyNotificationsService,
   markNotificationAsReadService,
   markAllNotificationAsReadService,
   deleteNotificationService,
+  getUnreadNotificationCountService,
+  notificationsCleanupService,
 };

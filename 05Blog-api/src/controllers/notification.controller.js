@@ -4,8 +4,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import {
   deleteNotificationService,
   getMyNotificationsService,
+  getUnreadNotificationCountService,
   markAllNotificationAsReadService,
   markNotificationAsReadService,
+  notificationsCleanupService,
 } from "../services/notification.service.js";
 
 const getMyNotifications = asyncHandler(async (req, res, next) => {
@@ -72,9 +74,39 @@ const deleteNotification = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "Notification deleted successfully"));
 });
 
+const getUnreadNotificationCount = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const unreadCount = await getUnreadNotificationCountService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        unreadCount,
+        "Unread notifications fetched successfully",
+      ),
+    );
+});
+
+const notificationsCleanup = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const response = await notificationsCleanupService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, response, "Notification cleaned up successfully"),
+    );
+});
+
 export {
   getMyNotifications,
   markNotificationAsRead,
   markAllNotificationAsRead,
   deleteNotification,
+  getUnreadNotificationCount,
+  notificationsCleanup,
 };
