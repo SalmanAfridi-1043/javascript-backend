@@ -24,4 +24,32 @@ const getMyNotificationsService = async (userId) => {
   return receivedNotifications;
 };
 
-export { getMyNotificationsService };
+const markNotificationAsReadService = async (userId, notificationId) => {
+  validateRequired(userId, "User id");
+  validateRequired(notificationId, "Notification id");
+
+  validateObjectId(notificationId, "Notification");
+
+  const notification = await Notification.findOneAndUpdate(
+    {
+      _id: notificationId,
+      recipient: userId,
+    },
+    {
+      $set: {
+        isRead: true,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!notification) {
+    throw new ApiError(404, "Notification not found");
+  }
+
+  return notification;
+};
+
+export { getMyNotificationsService, markNotificationAsReadService };
