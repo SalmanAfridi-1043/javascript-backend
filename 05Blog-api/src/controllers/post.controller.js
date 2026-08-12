@@ -1,30 +1,28 @@
+// controllers/post.controller.js
+
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import {
-  createCommentOnPostService,
   createPostService,
-  deleteCommentService,
   deletePostService,
   getAllPostsService,
-  getCommentsOnPostService,
-  getParentCommentRepliesService,
   getPostsbyCategoryService,
   getSinglePostService,
   incrementPostViewsService,
   likeAPostService,
   searchPostService,
   unlikeAPostService,
-  updateCommentService,
   updatePostService,
 } from "../services/post.service.js";
 
 const createPost = asyncHandler(async (req, res, next) => {
-  const authorId = req.user?._id; // for posts, slug is unique id
+  const authorId = req.user?._id;
   const data = req.body;
 
   let coverImagePath;
+
   if (req.file) {
     coverImagePath = req.file.path;
 
@@ -33,7 +31,7 @@ const createPost = asyncHandler(async (req, res, next) => {
       "Blog-API/image",
     );
 
-    coverImagePath = cloudinaryUrl.secure_url;
+    coverImagePath = cloudinaryUrl?.secure_url;
   }
 
   const createdPost = await createPostService(authorId, {
@@ -42,8 +40,8 @@ const createPost = asyncHandler(async (req, res, next) => {
   });
 
   return res
-    .status(200)
-    .json(new ApiResponse(200, createdPost, "Post created successfully"));
+    .status(201)
+    .json(new ApiResponse(201, createdPost, "Post created successfully"));
 });
 
 const getSinglePost = asyncHandler(async (req, res, next) => {
@@ -58,18 +56,20 @@ const getSinglePost = asyncHandler(async (req, res, next) => {
 
 const updatePost = asyncHandler(async (req, res, next) => {
   const authorId = req.user?._id;
-  const slug = req.params?.slug; // slug - unique id for post
+  const slug = req.params?.slug;
   const data = req.body;
 
   let coverImagePath;
+
   if (req.file) {
-    coverImagePath = req.file?.path;
+    coverImagePath = req.file.path;
+
     const cloudinaryUrl = await uploadOnCloudinary(
       coverImagePath,
       "Blog-API/image",
     );
 
-    coverImagePath = cloudinaryUrl.secure_url;
+    coverImagePath = cloudinaryUrl?.secure_url;
   }
 
   const updatedPost = await updatePostService(authorId, slug, {
@@ -84,7 +84,7 @@ const updatePost = asyncHandler(async (req, res, next) => {
 
 const deletePost = asyncHandler(async (req, res, next) => {
   const authorId = req.user?._id;
-  const slug = req.params?.slug; // slug - unique id for post
+  const slug = req.params?.slug;
 
   const response = await deletePostService(authorId, slug);
 
@@ -94,8 +94,6 @@ const deletePost = asyncHandler(async (req, res, next) => {
 });
 
 const getAllPosts = asyncHandler(async (req, res, next) => {
-  // get all posts whos status is published
-
   const allPosts = await getAllPostsService();
 
   return res
@@ -104,8 +102,6 @@ const getAllPosts = asyncHandler(async (req, res, next) => {
 });
 
 const searchPost = asyncHandler(async (req, res, next) => {
-  // searchNode is a value used to search post based on title or content
-  // like searchNode = "backend" - so we ll check both title and content for backend
   const { searchNode } = req.query;
 
   const posts = await searchPostService(searchNode);
@@ -140,10 +136,7 @@ const getPostsbyCategory = asyncHandler(async (req, res, next) => {
 });
 
 const likeAPost = asyncHandler(async (req, res, next) => {
-  // authenticated used can like a post
-
-  const userId = req.user._id;
-
+  const userId = req.user?._id;
   const { slug } = req.params;
 
   const likedPost = await likeAPostService(userId, slug);
@@ -154,10 +147,7 @@ const likeAPost = asyncHandler(async (req, res, next) => {
 });
 
 const unlikeAPost = asyncHandler(async (req, res, next) => {
-  // authenticated used can unlike a post
-
-  const userId = req.user._id;
-
+  const userId = req.user?._id;
   const { slug } = req.params;
 
   const response = await unlikeAPostService(userId, slug);
@@ -165,74 +155,6 @@ const unlikeAPost = asyncHandler(async (req, res, next) => {
   return res
     .status(200)
     .json(new ApiResponse(200, response, "Post unliked successfully"));
-});
-
-const createCommentOnPost = asyncHandler(async (req, res, next) => {
-  const { content, parentComment } = req.body;
-
-  const { slug } = req.params;
-  const userId = req.user._id;
-
-  const createdComment = await createCommentOnPostService(
-    userId,
-    slug,
-    content,
-    parentComment,
-  );
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        201,
-        createdComment,
-        "Comment added on post successfully",
-      ),
-    );
-});
-
-const getCommentsOnPost = asyncHandler(async (req, res, next) => {
-  const { slug } = req.params;
-
-  const comments = await getCommentsOnPostService(slug);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, comments, "All comments fetched successfully"));
-});
-
-const deleteComment = asyncHandler(async (req, res, next) => {
-  const { commentId } = req.params;
-  const userId = req.user?._id;
-
-  const response = await deleteCommentService(userId, commentId);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, response, "comment deleted successfully"));
-});
-
-const updateComment = asyncHandler(async (req, res, next) => {
-  const { content } = req.body;
-  const { commentId } = req.params;
-  const userId = req.user?._id;
-
-  const updatedComment = await updateCommentService(userId, commentId, content);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, updatedComment, "comment updated successfully"));
-});
-
-const getParentCommentReplies = asyncHandler(async (req, res, next) => {
-  // commendId - parent comment id and we ll get all its replies
-  const { commentId } = req.params;
-
-  const replies = await getParentCommentRepliesService(commentId);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, replies, "All replies fetched successfully"));
 });
 
 export {
@@ -246,9 +168,4 @@ export {
   getPostsbyCategory,
   likeAPost,
   unlikeAPost,
-  createCommentOnPost,
-  getCommentsOnPost,
-  deleteComment,
-  updateComment,
-  getParentCommentReplies,
 };

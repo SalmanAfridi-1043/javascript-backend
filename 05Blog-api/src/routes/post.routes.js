@@ -3,49 +3,35 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
 import {
-  createCommentOnPost,
   createPost,
-  deleteComment,
   deletePost,
   getAllPosts,
-  getCommentReplay,
-  getCommentsOnPost,
-  getParentCommentReplies,
   getPostsbyCategory,
   getSinglePost,
   incrementPostViews,
   likeAPost,
   searchPost,
   unlikeAPost,
-  updateComment,
   updatePost,
 } from "../controllers/post.controller.js";
 
 const router = Router();
 
-// public routes
-router.get("/:slug", getSinglePost); // its public post watching and dont need authMiddleware
-router.get("/", getAllPosts); // all public posts
-router.get("/category/:category", getPostsbyCategory); //posts based on category
-router.get("/:slug/comment", getCommentsOnPost); // public- all can watch/get the comment on post
+// Public routes
+router.get("/", getAllPosts);
+router.get("/search", searchPost);
+router.get("/category/:category", getPostsbyCategory);
+router.get("/:slug", getSinglePost);
+router.patch("/:slug/views", incrementPostViews);
 
+// Protected routes
 router.use(authMiddleware);
 
-//static routes
-
-// dynamic routes
 router.post("/create", upload.single("coverImage"), createPost);
 router.patch("/:slug", upload.single("coverImage"), updatePost);
 router.delete("/:slug", deletePost);
-router.get("/search", searchPost);
-router.patch("/:slug/views", incrementPostViews); // public posts views incrementing
-router.post("/:slug/like", likeAPost); // authenticated used can like a post
-router.delete("/:slug/like", unlikeAPost); // authenticated used can unlike a post
 
-router.post("/:slug/comment", createCommentOnPost); // authenticated user can create comment
-
-router.delete("/comments/:commentId", deleteComment);
-router.patch("/comments/:commentId", updateComment);
-router.get("/comments/:commentId/replies", getParentCommentReplies);
+router.post("/:slug/like", likeAPost);
+router.delete("/:slug/like", unlikeAPost);
 
 export default router;
