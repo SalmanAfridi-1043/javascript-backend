@@ -27,6 +27,7 @@ const createCommentOnPostService = async (
     throw new ApiError(404, "Post not found");
   }
 
+  // parentComment is as mongoBD object ID of a comment
   if (parentComment) {
     validateObjectId(parentComment, "Parent comment");
 

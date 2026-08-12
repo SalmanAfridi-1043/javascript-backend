@@ -32,7 +32,7 @@ app.use("/api/v1/notifications", notificationRouter);
 
 //Showing running message on /
 app.get("/", (req, res) => {
-  res.json({ message: "URL Shortner API is running" });
+  res.json({ message: "Blog-API is running" });
 });
 
 export default app;
