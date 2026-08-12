@@ -25,11 +25,13 @@ const notificationSchema = new Schema(
     post: {
       type: Schema.Types.ObjectId,
       ref: "Post",
+      default: null,
     },
 
     comment: {
       type: Schema.Types.ObjectId,
       ref: "Comment",
+      default: null,
     },
 
     // is notification read or unread
