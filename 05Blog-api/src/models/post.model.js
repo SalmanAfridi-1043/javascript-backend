@@ -20,6 +20,7 @@ const postSchema = new Schema(
       trim: true,
     },
 
+    // post owner - who made the post
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",

@@ -6,6 +6,7 @@ import { Post } from "../models/post.model.js";
 import { slugify } from "../utils/slugify.js";
 import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
+import { Notification } from "../models/notification.model.js";
 
 const createPostService = async (authorId, data) => {
   const { title, content, category, status, tags, coverImage } = data;
@@ -264,9 +265,12 @@ const likeAPostService = async (userId, slug) => {
     post: post._id,
   });
 
-  if (!like) {
-    throw new ApiError(500, "Server failed while creating like");
-  }
+  const likedNotification = await Notification.create({
+    recipient: post.author,
+    sender: userId,
+    type: "like",
+    post: post._id,
+  });
 
   return {
     user: like.user,
