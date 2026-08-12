@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
+  deleteNotificationService,
   getMyNotificationsService,
   markAllNotificationAsReadService,
   markNotificationAsReadService,
@@ -59,8 +60,20 @@ const markAllNotificationAsRead = asyncHandler(async (req, res, next) => {
     );
 });
 
+const deleteNotification = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+  const { notificationId } = req.params;
+
+  const response = await deleteNotificationService(userId, notificationId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Notification deleted successfully"));
+});
+
 export {
   getMyNotifications,
   markNotificationAsRead,
   markAllNotificationAsRead,
+  deleteNotification,
 };

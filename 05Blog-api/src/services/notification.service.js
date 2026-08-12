@@ -75,8 +75,29 @@ const markAllNotificationAsReadService = async (userId) => {
   };
 };
 
+const deleteNotificationService = async (userId, notificationId) => {
+  validateRequired(userId, "User id");
+  validateRequired(notificationId, "Notification id");
+
+  validateObjectId(notificationId, "Notification");
+
+  const notification = await Notification.findOneAndDelete({
+    _id: notificationId,
+    recipient: userId,
+  });
+
+  if (!notification) {
+    throw new ApiError(404, "Notification not found");
+  }
+
+  return {
+    success: true,
+  };
+};
+
 export {
   getMyNotificationsService,
   markNotificationAsReadService,
   markAllNotificationAsReadService,
+  deleteNotificationService,
 };
