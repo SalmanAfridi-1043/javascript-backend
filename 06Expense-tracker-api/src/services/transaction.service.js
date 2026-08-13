@@ -46,4 +46,16 @@ const createTransactionService = async (userId, data) => {
   return transaction;
 };
 
-export { createTransactionService };
+const getAllTransactionsService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const allTransactions = await Transaction.find({
+    user: userId,
+  })
+    .populate("category")
+    .sort({ createdAt: -1 });
+
+  return allTransactions;
+};
+
+export { createTransactionService, getAllTransactionsService };

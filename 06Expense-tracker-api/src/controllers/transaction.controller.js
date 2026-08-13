@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
-import { createTransactionService } from "../services/transaction.service.js";
+import {
+  createTransactionService,
+  getAllTransactionsService,
+} from "../services/transaction.service.js";
 
 const createTransaction = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
@@ -17,4 +20,20 @@ const createTransaction = asyncHandler(async (req, res, next) => {
     );
 });
 
-export { createTransaction };
+const getAllTransactions = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+
+  const allTransactions = await getAllTransactionsService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        allTransactions,
+        "All transactions fetched successfully",
+      ),
+    );
+});
+
+export { createTransaction, getAllTransactions };
