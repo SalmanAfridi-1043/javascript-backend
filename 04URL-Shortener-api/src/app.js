@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 // routes import
 import userRouter from "./routes/user.routes.js";
@@ -28,5 +29,7 @@ app.use("/api/v1/url", urlRouter);
 app.get("/", (req, res) => {
   res.json({ message: "URL Shortner API is running" });
 });
+
+app.use(errorHandler);
 
 export default app;
