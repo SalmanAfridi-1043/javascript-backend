@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 // routes import
+import authRouter from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // routes declaration
+app.use("/api/v1/auth", authRouter);
 
 //Showing running message on /
 app.get("/", (req, res) => {
