@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 // routes import
 import authRouter from "./routes/auth.routes.js";
 import transactionRouter from "./routes/transaction.routes.js";
+import analyticsRouter from "./routes/analytics.routes.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(cookieParser());
 // routes declaration
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/transactions", transactionRouter);
+app.use("/api/v1/analytics", analyticsRouter);
 
 //Showing running message on /
 app.get("/", (req, res) => {
