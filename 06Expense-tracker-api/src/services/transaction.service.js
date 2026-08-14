@@ -6,6 +6,7 @@ import { Transaction } from "../models/transaction.model.js";
 import {
   validateTransactionData,
   validateTransactionUpdateData,
+  validateFilterParams,
 } from "../validators/transaction.validator.js";
 import { Category } from "../models/category.model.js";
 
@@ -49,12 +50,42 @@ const createTransactionService = async (userId, data) => {
   return transaction;
 };
 
-const getAllTransactionsService = async (userId) => {
+const getAllTransactionsService = async (userId, filterParameters) => {
+  const { type, categoryId, paymentMethod, from, to } =
+    validateFilterParams(filterParameters);
+
   validateRequired(userId, "User id");
 
-  const allTransactions = await Transaction.find({
+  // dynamic query for filtering
+  const query = {
     user: userId,
-  })
+  };
+  if (type !== undefined) query.type = type;
+  if (categoryId !== undefined) query.category = categoryId;
+  if (paymentMethod !== undefined) query.paymentMethod = paymentMethod;
+  if (from || to) {
+    query.date = {};
+
+    if (from) {
+      query.date.$gte = new Date(from);
+    }
+
+    if (to) {
+      query.date.$lte = new Date(to);
+    }
+  }
+  // $gte = greater than or equal to → >=
+  // $lte = less than or equal to → <=
+  // $gt = greater than → >
+  // $lt = less than → <
+
+  // date: {
+  //   $gte: from,
+  //   $lte: to
+  // }
+  // means: Find transactions where date is between from and to, including both dates.
+
+  const allTransactions = await Transaction.find(query)
     .populate("category")
     .sort({ createdAt: -1 });
 

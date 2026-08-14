@@ -194,4 +194,53 @@ const validateTransactionUpdateData = (data) => {
 
   return updateData;
 };
-export { validateTransactionData, validateTransactionUpdateData };
+
+const validateFilterParams = (filterParameters) => {
+  const { type, categoryId, paymentMethod, from, to } = filterParameters;
+
+  const normalizedType = type?.trim().toLowerCase();
+  const normalizedPaymentMethod = paymentMethod?.trim().toLowerCase();
+
+  if (normalizedType && !["income", "expense"].includes(normalizedType)) {
+    throw new ApiError(400, "Type must be income or expense");
+  }
+
+  if (categoryId) {
+    validateObjectId(categoryId, "Category");
+  }
+
+  if (
+    normalizedPaymentMethod &&
+    !["cash", "bank", "card", "wallet"].includes(normalizedPaymentMethod)
+  ) {
+    throw new ApiError(
+      400,
+      "Payment method must be cash, bank, card, or wallet",
+    );
+  }
+
+  if (from && isNaN(Date.parse(from))) {
+    throw new ApiError(400, "Invalid from date");
+  }
+
+  if (to && isNaN(Date.parse(to))) {
+    throw new ApiError(400, "Invalid to date");
+  }
+
+  if (from && to && new Date(from) > new Date(to)) {
+    throw new ApiError(400, "From date cannot be greater than to date");
+  }
+
+  return {
+    type: normalizedType,
+    categoryId,
+    paymentMethod: normalizedPaymentMethod,
+    from,
+    to,
+  };
+};
+export {
+  validateTransactionData,
+  validateTransactionUpdateData,
+  validateFilterParams,
+};
