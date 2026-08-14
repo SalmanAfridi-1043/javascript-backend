@@ -50,9 +50,11 @@ const createTransactionService = async (userId, data) => {
   return transaction;
 };
 
-const getAllTransactionsService = async (userId, filterParameters) => {
+const getAllTransactionsService = async (userId, filterParameters, search) => {
   const { type, categoryId, paymentMethod, from, to } =
     validateFilterParams(filterParameters);
+
+  const normalizedSearch = search.trim();
 
   validateRequired(userId, "User id");
 
@@ -84,6 +86,14 @@ const getAllTransactionsService = async (userId, filterParameters) => {
   //   $lte: to
   // }
   // means: Find transactions where date is between from and to, including both dates.
+
+  // to search for transaction using search parameter
+  if (normalizedSearch) {
+    query.$or = [
+      { notes: { $regex: normalizedSearch, $options: "i" } },
+      { description: { $regex: normalizedSearch, $options: "i" } },
+    ];
+  }
 
   const allTransactions = await Transaction.find(query)
     .populate("category")
