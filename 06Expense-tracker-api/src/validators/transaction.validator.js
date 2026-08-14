@@ -196,7 +196,8 @@ const validateTransactionUpdateData = (data) => {
 };
 
 const validateFilterParams = (filterParameters) => {
-  const { type, categoryId, paymentMethod, from, to } = filterParameters;
+  const { type, categoryId, paymentMethod, from, to, search, sortBy } =
+    filterParameters;
 
   const normalizedType = type?.trim().toLowerCase();
   const normalizedPaymentMethod = paymentMethod?.trim().toLowerCase();
@@ -231,14 +232,21 @@ const validateFilterParams = (filterParameters) => {
     throw new ApiError(400, "From date cannot be greater than to date");
   }
 
+  const normalizedSortBy = sortBy?.trim();
+  if (!["date", "-date", "amount", "-amount"].includes(normalizedSortBy)) {
+    throw new ApiError(400, "Sort transaction on date or amount only");
+  }
   return {
     type: normalizedType,
     categoryId,
     paymentMethod: normalizedPaymentMethod,
     from,
     to,
+    search: search?.trim(),
+    sortBy: normalizedSortBy,
   };
 };
+
 export {
   validateTransactionData,
   validateTransactionUpdateData,

@@ -50,11 +50,9 @@ const createTransactionService = async (userId, data) => {
   return transaction;
 };
 
-const getAllTransactionsService = async (userId, filterParameters, search) => {
-  const { type, categoryId, paymentMethod, from, to } =
+const getAllTransactionsService = async (userId, filterParameters) => {
+  const { type, categoryId, paymentMethod, from, to, search, sortBy } =
     validateFilterParams(filterParameters);
-
-  const normalizedSearch = search.trim();
 
   validateRequired(userId, "User id");
 
@@ -88,16 +86,35 @@ const getAllTransactionsService = async (userId, filterParameters, search) => {
   // means: Find transactions where date is between from and to, including both dates.
 
   // to search for transaction using search parameter
-  if (normalizedSearch) {
+  if (search) {
     query.$or = [
-      { notes: { $regex: normalizedSearch, $options: "i" } },
-      { description: { $regex: normalizedSearch, $options: "i" } },
+      { notes: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
     ];
   }
 
+  const sortObject = {};
+  if (sortBy === "date") {
+    sortObject.date = 1;
+  } else if (sortBy === "-date") {
+    sortObject.date = -1;
+  } else if (sortBy === "amount") {
+    sortObject.amount = 1;
+  } else if (sortBy === "-amount") {
+    sortObject.amount = -1;
+  } else {
+    sortObject.createdAt = -1;
+  }
+
+  // alternate of above but simple
+  // const sortObject = {
+  //   date: sortBy === "date" ? 1 : sortBy === "-date" ? -1 : undefined,
+  //   amount: sortBy === "amount" ? 1 : sortBy === "-amount" ? -1 : undefined,
+  // };
+
   const allTransactions = await Transaction.find(query)
     .populate("category")
-    .sort({ createdAt: -1 });
+    .sort(sortObject);
 
   // it returns [] if the its empty
   return allTransactions;
