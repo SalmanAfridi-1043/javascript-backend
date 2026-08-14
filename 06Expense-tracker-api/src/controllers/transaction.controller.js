@@ -25,11 +25,11 @@ const createTransaction = asyncHandler(async (req, res, next) => {
 
 const getAllTransactions = asyncHandler(async (req, res, next) => {
   const userId = req.user?._id;
-  const filterParameters = req.query;
+  const parameters = req.query;
 
   const allTransactions = await getAllTransactionsService(
     userId,
-    filterParameters,
+    parameters,
   );
 
   return res

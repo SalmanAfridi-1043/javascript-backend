@@ -195,9 +195,18 @@ const validateTransactionUpdateData = (data) => {
   return updateData;
 };
 
-const validateFilterParams = (filterParameters) => {
-  const { type, categoryId, paymentMethod, from, to, search, sortBy } =
-    filterParameters;
+const validateFilterParams = (parameters) => {
+  const {
+    type,
+    categoryId,
+    paymentMethod,
+    from,
+    to,
+    search,
+    sortBy,
+    page,
+    limit,
+  } = parameters;
 
   const normalizedType = type?.trim().toLowerCase();
   const normalizedPaymentMethod = paymentMethod?.trim().toLowerCase();
@@ -236,6 +245,10 @@ const validateFilterParams = (filterParameters) => {
   if (!["date", "-date", "amount", "-amount"].includes(normalizedSortBy)) {
     throw new ApiError(400, "Sort transaction on date or amount only");
   }
+
+  const normalizedPage = Number(page) || 1;
+  const normalizedLimit = Number(limit) || 10;
+
   return {
     type: normalizedType,
     categoryId,
@@ -244,6 +257,8 @@ const validateFilterParams = (filterParameters) => {
     to,
     search: search?.trim(),
     sortBy: normalizedSortBy,
+    page: normalizedPage,
+    limit: normalizedLimit,
   };
 };
 

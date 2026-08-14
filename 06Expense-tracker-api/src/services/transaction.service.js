@@ -50,9 +50,18 @@ const createTransactionService = async (userId, data) => {
   return transaction;
 };
 
-const getAllTransactionsService = async (userId, filterParameters) => {
-  const { type, categoryId, paymentMethod, from, to, search, sortBy } =
-    validateFilterParams(filterParameters);
+const getAllTransactionsService = async (userId, parameters) => {
+  const {
+    type,
+    categoryId,
+    paymentMethod,
+    from,
+    to,
+    search,
+    sortBy,
+    page,
+    limit,
+  } = validateFilterParams(parameters);
 
   validateRequired(userId, "User id");
 
@@ -65,11 +74,9 @@ const getAllTransactionsService = async (userId, filterParameters) => {
   if (paymentMethod !== undefined) query.paymentMethod = paymentMethod;
   if (from || to) {
     query.date = {};
-
     if (from) {
       query.date.$gte = new Date(from);
     }
-
     if (to) {
       query.date.$lte = new Date(to);
     }
@@ -93,6 +100,7 @@ const getAllTransactionsService = async (userId, filterParameters) => {
     ];
   }
 
+  // dynamic sorting object
   const sortObject = {};
   if (sortBy === "date") {
     sortObject.date = 1;
@@ -106,18 +114,36 @@ const getAllTransactionsService = async (userId, filterParameters) => {
     sortObject.createdAt = -1;
   }
 
-  // alternate of above but simple
+  // alternate of above
   // const sortObject = {
   //   date: sortBy === "date" ? 1 : sortBy === "-date" ? -1 : undefined,
   //   amount: sortBy === "amount" ? 1 : sortBy === "-amount" ? -1 : undefined,
   // };
 
+  // calculate skip
+  const skip = (page - 1) * limit;
+
   const allTransactions = await Transaction.find(query)
     .populate("category")
+    .skip(skip)
+    .limit(limit)
     .sort(sortObject);
 
+  const totalTransactions = await Transaction.countDocuments(query);
+  const totalPages = Math.ceil(totalTransactions / limit);
+  const hasNextPage = page < totalPages;
+  const hasPreviousPage = page > 1;
+
   // it returns [] if the its empty
-  return allTransactions;
+  return {
+    allTransactions,
+    total: totalTransactions,
+    page,
+    limit,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+  };
 };
 
 const getSingleTransactionService = async (userId, transactionId) => {
