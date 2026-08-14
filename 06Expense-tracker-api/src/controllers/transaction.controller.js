@@ -4,6 +4,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   createTransactionService,
+  deleteTransactionService,
   getAllTransactionsService,
   getSingleTransactionService,
   updateTransactionService,
@@ -73,9 +74,21 @@ const updateTransaction = asyncHandler(async (req, res, next) => {
     );
 });
 
+const deleteTransaction = asyncHandler(async (req, res, next) => {
+  const userId = req.user?._id;
+  const { transactionId } = req.params;
+
+  const response = await deleteTransactionService(userId, transactionId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Transaction deleted successfully"));
+});
+
 export {
   createTransaction,
   getAllTransactions,
   getSingleTransaction,
   updateTransaction,
+  deleteTransaction,
 };

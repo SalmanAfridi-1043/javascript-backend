@@ -174,9 +174,28 @@ const updateTransactionService = async (userId, transactionId, data) => {
   return transaction;
 };
 
+const deleteTransactionService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+
+  validateObjectId(transactionId, "Transaction");
+
+  const transaction = await Transaction.findOneAndDelete({
+    _id: transactionId,
+    user: userId, // ownership
+  });
+
+  if (!transaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  return { success: true };
+};
+
 export {
   createTransactionService,
   getAllTransactionsService,
   getSingleTransactionService,
   updateTransactionService,
+  deleteTransactionService,
 };

@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
   createTransaction,
+  deleteTransaction,
   getAllTransactions,
   getSingleTransaction,
   updateTransaction,
@@ -17,5 +18,6 @@ router.post("/", createTransaction);
 router.get("/", getAllTransactions);
 router.get("/:transactionId", getSingleTransaction);
 router.patch("/:transactionId", updateTransaction);
+router.delete("/:transactionId", deleteTransaction);
 
 export default router;
