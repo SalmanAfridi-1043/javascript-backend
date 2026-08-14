@@ -3,7 +3,10 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Transaction } from "../models/transaction.model.js";
-import { validateTransactionData } from "../validators/transaction.validator.js";
+import {
+  validateTransactionData,
+  validateTransactionUpdateData,
+} from "../validators/transaction.validator.js";
 import { Category } from "../models/category.model.js";
 
 const createTransactionService = async (userId, data) => {
@@ -55,7 +58,125 @@ const getAllTransactionsService = async (userId) => {
     .populate("category")
     .sort({ createdAt: -1 });
 
+  // it returns [] if the its empty
   return allTransactions;
 };
 
-export { createTransactionService, getAllTransactionsService };
+const getSingleTransactionService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+
+  validateObjectId(transactionId, "Transaction");
+
+  const transaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId, // ownership
+  })
+    .populate("user", "-password -refreshToken")
+    .populate("category");
+
+  if (!transaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  return transaction;
+};
+
+const updateTransactionService = async (userId, transactionId, data) => {
+  const {
+    type,
+    amount,
+    description,
+    categoryId,
+    paymentMethod,
+    date,
+    notes,
+    recurring,
+    frequency,
+  } = validateTransactionUpdateData(data);
+
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+
+  validateObjectId(transactionId, "Transaction");
+
+  const transaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId, // ownership
+  });
+
+  if (!transaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  // If the category changes but type isn't provided, you need to compare the category against the existing transaction type.
+  // If the type changes, you need to compare against the new type.
+  // os food amout must goes to expense not income.
+  // finalType = newType or oldType
+  const finalType = type ?? transaction.type;
+
+  // validating the category type and transaction type
+  if (categoryId !== undefined || type !== undefined) {
+    validateObjectId(categoryId, "Category");
+
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      throw new ApiError(404, "Category not found");
+    }
+
+    if (finalType !== category.type) {
+      throw new ApiError(400, "Category type does not match transaction type");
+    }
+  }
+
+  // Apply changes to transaction document data
+  if (type !== undefined) {
+    transaction.type = type;
+  }
+
+  if (amount !== undefined) {
+    transaction.amount = amount;
+  }
+
+  if (description !== undefined) {
+    transaction.description = description;
+  }
+
+  if (categoryId !== undefined) {
+    transaction.category = categoryId;
+  }
+
+  if (paymentMethod !== undefined) {
+    transaction.paymentMethod = paymentMethod;
+  }
+
+  if (date !== undefined) {
+    transaction.date = date;
+  }
+
+  if (notes !== undefined) {
+    transaction.notes = notes;
+  }
+
+  if (recurring !== undefined) {
+    transaction.recurring = recurring;
+    if (recurring === false) {
+      transaction.frequency = undefined;
+    } else if (frequency !== undefined) {
+      transaction.frequency = frequency;
+    }
+  } else if (frequency !== undefined) {
+    transaction.frequency = frequency;
+  }
+
+  await transaction.save();
+
+  return transaction;
+};
+
+export {
+  createTransactionService,
+  getAllTransactionsService,
+  getSingleTransactionService,
+  updateTransactionService,
+};
