@@ -333,9 +333,82 @@ const getCategorySpendingYearlyService = async (userId, year) => {
   return categorySpendingYearly;
 };
 
+const getTopSpendingCategoriesService = async (userId, year, limit) => {
+  const normalizedYear = Number(year);
+  const normalizedLimit = Number(limit) || 5;
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+  validateRequired(normalizedLimit, "Limit");
+
+  // = new Date(year, monthIndex , day)
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const topSpendingCategories = await Transaction.aggregate([
+    // match the transaction for user with expense only for required date
+    {
+      $match: {
+        user: userId,
+        type: "expense",
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // group the user transactions based on categories and find some of each
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$amount" },
+      },
+    },
+
+    // get category document instead of only category id
+    {
+      $lookup: {
+        from: "categories",
+        localField: "_id",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    // convert the lookup-result/array to object
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // select only required fields
+    {
+      $project: {
+        category: "$categoryDetails.name",
+        total: 1,
+      },
+    },
+
+    // sort by highest - lowest
+    {
+      $sort: {
+        total: -1,
+      },
+    },
+
+    // select the first categories user needed like (top 3 or 5)
+    {
+      $limit: normalizedLimit, // return only limited/mentioned/top categories user needed
+    },
+  ]);
+
+  return topSpendingCategories;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
   getMonthlyTrendsService,
   getCategorySpendingYearlyService,
+  getTopSpendingCategoriesService,
 };

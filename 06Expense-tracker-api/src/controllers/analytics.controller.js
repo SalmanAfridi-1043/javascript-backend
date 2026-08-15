@@ -7,6 +7,7 @@ import {
   getCategorySpendingYearlyService,
   getMonthlySummaryService,
   getMonthlyTrendsService,
+  getTopSpendingCategoriesService,
 } from "../services/analytics.service.js";
 
 const getMonthlySummary = asyncHandler(async (req, res) => {
@@ -81,9 +82,31 @@ const getCategorySpendingYearly = asyncHandler(async (req, res) => {
     );
 });
 
+const getTopSpendingCategories = asyncHandler(async (req, res) => {
+  const { year, limit } = req.query;
+  const userId = req.user._id;
+
+  const topSpendingCategories = await getTopSpendingCategoriesService(
+    userId,
+    year,
+    limit,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        topSpendingCategories,
+        "Top spending categories fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
   getMonthlyTrends,
   getCategorySpendingYearly,
+  getTopSpendingCategories,
 };
