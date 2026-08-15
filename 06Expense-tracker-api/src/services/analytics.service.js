@@ -687,6 +687,69 @@ const getHighestSpendingTransactionService = async (userId, year) => {
   return highestExpenseDetails;
 };
 
+const getSpendingByWeekdayService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const weeklySpendingDetailsPerYear = await Transaction.aggregate([
+    {
+      $match: {
+        user: userId,
+        type: "expense",
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    {
+      $group: {
+        // it calculates total spending for each weekday across the whole year,
+        //$dayOfWeek — extracts the weekday number from a MongoDB Date.
+
+        _id: { $dayOfWeek: "$date" },
+        total: { $sum: "$amount" }, // everyday amount sum
+      },
+    },
+
+    // selecting the week day with total expense only
+    {
+      $project: {
+        dayOfWeek: "$_id",
+        total: 1,
+      },
+    },
+
+    // sorting based on days like 1,2,3,4 etc
+    {
+      $sort: {
+        dayOfWeek: 1,
+      },
+    },
+  ]);
+
+  // expected output
+  //   [
+  //   { dayOfWeek: 1, total: 12000 }, // Sunday (all sundays out of 365 days)
+  //   { dayOfWeek: 2, total: 25000 }, // Monday (all Monday out of 365 days)
+  //   { dayOfWeek: 3, total: 18000 }, // Tuesday
+  //   { dayOfWeek: 4, total: 22000 }, // Wednesday
+  //   { dayOfWeek: 5, total: 15000 }, // Thursday
+  //   { dayOfWeek: 6, total: 30000 }, // Friday
+  //   { dayOfWeek: 7, total: 40000 }, // Saturday
+  // ]
+
+  // means : “Across this whole year, how much was spent on Sundays, Mondays, Tuesdays, etc.”
+
+  return weeklySpendingDetailsPerYear;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -698,4 +761,5 @@ export {
   getMonthlyBalanceTrendService,
   getAverageTransactionAmountService,
   getHighestSpendingTransactionService,
+  getSpendingByWeekdayService,
 };

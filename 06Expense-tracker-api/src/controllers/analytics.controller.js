@@ -11,6 +11,7 @@ import {
   getMonthlySummaryService,
   getMonthlyTrendsService,
   getPaymentMethodSummaryService,
+  getSpendingByWeekdayService,
   getTopSpendingCategoriesService,
   getYearlyTrendsSummaryService,
 } from "../services/analytics.service.js";
@@ -205,6 +206,23 @@ const getHighestSpendingTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const getSpendingByWeekday = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const weeklySpendingSummary = await getSpendingByWeekdayService(userId, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        weeklySpendingSummary,
+        "Weekly Spending summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -216,4 +234,5 @@ export {
   getMonthlyBalanceTrend,
   getAverageTransactionAmount,
   getHighestSpendingTransaction,
+  getSpendingByWeekday,
 };

@@ -10,6 +10,7 @@ import {
   getMonthlySummary,
   getMonthlyTrends,
   getPaymentMethodSummary,
+  getSpendingByWeekday,
   getTopSpendingCategories,
   getYearlyTrendsSummary,
 } from "../controllers/analytics.controller.js";
@@ -35,5 +36,8 @@ router.get("/monthly-balance-trend", getMonthlyBalanceTrend);
 // average income and average expense transaction amount for a given year.
 router.get("/average-transaction", getAverageTransactionAmount);
 router.get("/highest-expense", getHighestSpendingTransaction);
+
+// Find how much the user spends on each day of the week during a given year.
+router.get("/weekday-spending", getSpendingByWeekday);
 
 export default router;
