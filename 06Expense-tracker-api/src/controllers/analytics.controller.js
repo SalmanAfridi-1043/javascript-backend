@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
-import { getMonthlySummaryService } from "../services/analytics.service.js";
+import {
+  getCategorySpendingService,
+  getMonthlySummaryService,
+} from "../services/analytics.service.js";
 
 const getMonthlySummary = asyncHandler(async (req, res) => {
   const { month, year } = req.query;
@@ -21,4 +24,21 @@ const getMonthlySummary = asyncHandler(async (req, res) => {
     );
 });
 
-export { getMonthlySummary };
+const getCategorySpending = asyncHandler(async (req, res) => {
+  const { month, year } = req.query;
+  const userId = req.user._id;
+
+  const monthlySpending = await getCategorySpendingService(userId, month, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        monthlySpending,
+        "Monthly spending fetched successfully",
+      ),
+    );
+});
+
+export { getMonthlySummary, getCategorySpending };

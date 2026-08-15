@@ -55,4 +55,76 @@ const getMonthlySummaryService = async (userId, month, year) => {
   };
 };
 
-export { getMonthlySummaryService };
+const getCategorySpendingService = async (userId, month, year) => {
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  // The key pipeline to remember is:
+  // $match → $group → $lookup → $unwind → $project → $sort.
+  const monthlySpending = await Transaction.aggregate([
+    {
+      $match: {
+        user: userId,
+        type: "expense", //as we are calculating spending not earning
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$amount" },
+      },
+    },
+    // $lookup is basically MongoDB's way of saying like:
+    // "Take this ID and find the matching document in another collection."
+    {
+      $lookup: {
+        from: "categories",
+        localField: "_id",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    // $lookup returns an array, even when only one category matches.
+    // That's why we need $unwind to convert it to object/document.
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // $project:
+    // "What fields should my final result contain?"
+    // You can select/create the fields you want.
+    {
+      $project: {
+        _id: 0,
+        category: "$categoryDetails.name",
+        total: 1,
+      },
+    },
+
+    // Highest spending categories first
+    {
+      $sort: {
+        total: -1,
+      },
+    },
+
+    // The key pipeline to remember is:
+    // $match → $group → $lookup → $unwind → $project → $sort.
+  ]);
+
+  return monthlySpending;
+};
+
+export { getMonthlySummaryService, getCategorySpendingService };

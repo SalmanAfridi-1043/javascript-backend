@@ -1,7 +1,7 @@
 import Router from "express";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
-import { getMonthlySummary } from "../controllers/analytics.controller.js";
+import { getCategorySpending, getMonthlySummary } from "../controllers/analytics.controller.js";
 
 const router = Router();
 
@@ -9,5 +9,6 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get("/monthly", getMonthlySummary);
+router.get("/category-spending", getCategorySpending);
 
 export default router;
