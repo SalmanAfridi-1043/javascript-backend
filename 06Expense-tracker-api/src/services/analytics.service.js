@@ -750,6 +750,55 @@ const getSpendingByWeekdayService = async (userId, year) => {
   return weeklySpendingDetailsPerYear;
 };
 
+const getSpendingByPaymentMethodService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const paymentSpendingDetails = await Transaction.aggregate([
+    // filter user transactions
+    {
+      $match: {
+        user: userId,
+        type: "expense",
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // group by payment methods and find total sum per year
+    {
+      $group: {
+        _id: "$paymentMethod",
+        total: { $sum: "$amount" },
+      },
+    },
+
+    // return selected fields
+    {
+      $project: {
+        paymentMethod: "$_id",
+        total: 1,
+      },
+    },
+
+    // sort by highest - lowest
+    {
+      $sort: {
+        total: -1,
+      },
+    },
+  ]);
+
+  return paymentSpendingDetails;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -762,4 +811,5 @@ export {
   getAverageTransactionAmountService,
   getHighestSpendingTransactionService,
   getSpendingByWeekdayService,
+  getSpendingByPaymentMethodService,
 };

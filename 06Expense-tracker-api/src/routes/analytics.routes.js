@@ -10,6 +10,7 @@ import {
   getMonthlySummary,
   getMonthlyTrends,
   getPaymentMethodSummary,
+  getSpendingByPaymentMethod,
   getSpendingByWeekday,
   getTopSpendingCategories,
   getYearlyTrendsSummary,
@@ -39,5 +40,8 @@ router.get("/highest-expense", getHighestSpendingTransaction);
 
 // Find how much the user spends on each day of the week during a given year.
 router.get("/weekday-spending", getSpendingByWeekday);
+
+// Calculating the total expense for each payment method for a given year.
+router.get("/payment-method-spending", getSpendingByPaymentMethod);
 
 export default router;

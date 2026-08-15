@@ -11,6 +11,7 @@ import {
   getMonthlySummaryService,
   getMonthlyTrendsService,
   getPaymentMethodSummaryService,
+  getSpendingByPaymentMethodService,
   getSpendingByWeekdayService,
   getTopSpendingCategoriesService,
   getYearlyTrendsSummaryService,
@@ -223,6 +224,26 @@ const getSpendingByWeekday = asyncHandler(async (req, res) => {
     );
 });
 
+const getSpendingByPaymentMethod = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const paymentMethodSpendingAnnually = await getSpendingByPaymentMethodService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        paymentMethodSpendingAnnually,
+        "Payment method spending for whole year fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -235,4 +256,5 @@ export {
   getAverageTransactionAmount,
   getHighestSpendingTransaction,
   getSpendingByWeekday,
+  getSpendingByPaymentMethod,
 };
