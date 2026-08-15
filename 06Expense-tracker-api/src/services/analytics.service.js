@@ -522,6 +522,66 @@ const getYearlyTrendsSummaryService = async (userId, year) => {
   return yearlyTrendsSummary;
 };
 
+const getMonthlyBalanceTrendService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const monthlyBalanceSummary = await Transaction.aggregate([
+    {
+      $match: {
+        user: userId,
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // grouping based on each month for a year
+    {
+      $group: {
+        // $month - returns month numbers like 1,2,3,4 etc
+        _id: { $month: "$date" },
+
+        income: {
+          $sum: {
+            $cond: [{ $eq: ["$type", "income"] }, "$amount", 0],
+          },
+        },
+
+        expense: {
+          $sum: {
+            $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0],
+          },
+        },
+      },
+    },
+
+    {
+      $project: {
+        month: "$_id",
+        income: 1,
+        expense: 1,
+        balance: {
+          $subtract: ["$income", "$expense"],
+        },
+      },
+    },
+    {
+      $sort: {
+        month: 1,
+      },
+    },
+  ]);
+
+  return monthlyBalanceSummary;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -530,4 +590,5 @@ export {
   getTopSpendingCategoriesService,
   getPaymentMethodSummaryService,
   getYearlyTrendsSummaryService,
+  getMonthlyBalanceTrendService,
 };

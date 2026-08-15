@@ -5,6 +5,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 import {
   getCategorySpendingService,
   getCategorySpendingYearlyService,
+  getMonthlyBalanceTrendService,
   getMonthlySummaryService,
   getMonthlyTrendsService,
   getPaymentMethodSummaryService,
@@ -142,6 +143,26 @@ const getYearlyTrendsSummary = asyncHandler(async (req, res) => {
     );
 });
 
+const getMonthlyBalanceTrend = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const monthlyBalanceSummary = await getMonthlyBalanceTrendService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        monthlyBalanceSummary,
+        "Monthly balance summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -150,4 +171,5 @@ export {
   getTopSpendingCategories,
   getPaymentMethodSummary,
   getYearlyTrendsSummary,
+  getMonthlyBalanceTrend,
 };
