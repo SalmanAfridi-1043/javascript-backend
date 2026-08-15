@@ -7,6 +7,7 @@ import {
   getCategorySpendingYearlyService,
   getMonthlySummaryService,
   getMonthlyTrendsService,
+  getPaymentMethodSummaryService,
   getTopSpendingCategoriesService,
 } from "../services/analytics.service.js";
 
@@ -103,10 +104,31 @@ const getTopSpendingCategories = asyncHandler(async (req, res) => {
     );
 });
 
+const getPaymentMethodSummary = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const paymentMethodSummary = await getPaymentMethodSummaryService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        paymentMethodSummary,
+        "Payment method summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
   getMonthlyTrends,
   getCategorySpendingYearly,
   getTopSpendingCategories,
+  getPaymentMethodSummary,
 };

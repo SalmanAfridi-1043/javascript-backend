@@ -6,6 +6,7 @@ import {
   getCategorySpendingYearly,
   getMonthlySummary,
   getMonthlyTrends,
+  getPaymentMethodSummary,
   getTopSpendingCategories,
 } from "../controllers/analytics.controller.js";
 
@@ -19,5 +20,6 @@ router.get("/category-spending", getCategorySpending);
 router.get("/monthly-trend", getMonthlyTrends);
 router.get("/category-spending-yearly", getCategorySpendingYearly);
 router.get("/top-categories", getTopSpendingCategories);
+router.get("/payment-method-summary", getPaymentMethodSummary);
 
 export default router;

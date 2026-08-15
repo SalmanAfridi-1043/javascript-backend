@@ -405,10 +405,68 @@ const getTopSpendingCategoriesService = async (userId, year, limit) => {
   return topSpendingCategories;
 };
 
+const getPaymentMethodSummaryService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const paymentmethodSummary = await Transaction.aggregate([
+    {
+      $match: {
+        user: userId,
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: "$paymentMethod",
+
+        income: {
+          $sum: {
+            // here using type directly coz its transaction document field
+            $cond: [{ $eq: ["$type", "income"] }, "$amount", 0],
+          },
+        },
+
+        expense: {
+          $sum: {
+            $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0],
+          },
+        },
+      },
+    },
+
+    {
+      $project: {
+        paymentMethod: "$_id",
+        income: 1,
+        expense: 1,
+      },
+    },
+
+    {
+      $sort: {
+        paymentMethod: 1,
+      },
+    },
+  ]);
+
+  return paymentmethodSummary;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
   getMonthlyTrendsService,
   getCategorySpendingYearlyService,
   getTopSpendingCategoriesService,
+  getPaymentMethodSummaryService,
 };
