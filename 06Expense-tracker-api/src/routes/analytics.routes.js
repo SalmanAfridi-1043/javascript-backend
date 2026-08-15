@@ -2,6 +2,7 @@ import Router from "express";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
+  getAverageTransactionAmount,
   getCategorySpending,
   getCategorySpendingYearly,
   getMonthlyBalanceTrend,
@@ -29,5 +30,8 @@ router.get("/yearly-trend", getYearlyTrendsSummary);
 
 // income,expense and balance for each month of an year (Monthly Income vs Expense Comparison)
 router.get("/monthly-balance-trend", getMonthlyBalanceTrend);
+
+// average income and average expense transaction amount for a given year.
+router.get("/average-transaction", getAverageTransactionAmount);
 
 export default router;

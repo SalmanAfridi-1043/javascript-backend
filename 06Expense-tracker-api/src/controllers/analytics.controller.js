@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
+  getAverageTransactionAmountService,
   getCategorySpendingService,
   getCategorySpendingYearlyService,
   getMonthlyBalanceTrendService,
@@ -163,6 +164,26 @@ const getMonthlyBalanceTrend = asyncHandler(async (req, res) => {
     );
 });
 
+const getAverageTransactionAmount = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const averageTransactionSummary = await getAverageTransactionAmountService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        averageTransactionSummary,
+        "Average transaction summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -172,4 +193,5 @@ export {
   getPaymentMethodSummary,
   getYearlyTrendsSummary,
   getMonthlyBalanceTrend,
+  getAverageTransactionAmount,
 };

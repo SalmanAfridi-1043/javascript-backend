@@ -582,6 +582,47 @@ const getMonthlyBalanceTrendService = async (userId, year) => {
   return monthlyBalanceSummary;
 };
 
+const getAverageTransactionAmountService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const averageTransactionSummary = await Transaction.aggregate([
+    {
+      $match: {
+        user: userId,
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: "$type",
+
+        averageAmount: {
+          $avg: "$amount",
+        },
+      },
+    },
+
+    {
+      $project: {
+        type: "$_id",
+        averageAmount: 1,
+      },
+    },
+  ]);
+
+  return averageTransactionSummary;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -591,4 +632,5 @@ export {
   getPaymentMethodSummaryService,
   getYearlyTrendsSummaryService,
   getMonthlyBalanceTrendService,
+  getAverageTransactionAmountService,
 };
