@@ -462,6 +462,66 @@ const getPaymentMethodSummaryService = async (userId, year) => {
   return paymentmethodSummary;
 };
 
+const getYearlyTrendsSummaryService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const yearlyTrendsSummary = await Transaction.aggregate([
+    // filtering the user transactions only for required date
+    {
+      $match: {
+        user: userId,
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // no grouping needed coz calculating all yearly income and expense as a group
+    {
+      $group: {
+        _id: null,
+
+        income: {
+          // yearly income sum using transaction type
+          $sum: {
+            $cond: [{ $eq: ["$type", "income"] }, "$amount", 0],
+          },
+        },
+
+        expense: {
+          // yearly expense sum using transaction type
+          $sum: {
+            $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0],
+          },
+        },
+      },
+    },
+
+    // balance can't be calculated in group/above stage coz its just calculate there but having not its actual value for whole year. only the result of group will have yearly value. so calculating after the group return values/result
+    {
+      $project: {
+        _id: 0,
+        income: 1,
+        expense: 1,
+
+        // normal arthimatic is not allowed in mongoDB. u ve to used operators like sum etc
+        balance: {
+          $subtract: ["$income", "$expense"],
+        },
+      },
+    },
+  ]);
+
+  return yearlyTrendsSummary;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -469,4 +529,5 @@ export {
   getCategorySpendingYearlyService,
   getTopSpendingCategoriesService,
   getPaymentMethodSummaryService,
+  getYearlyTrendsSummaryService,
 };

@@ -9,6 +9,7 @@ import {
   getMonthlyTrendsService,
   getPaymentMethodSummaryService,
   getTopSpendingCategoriesService,
+  getYearlyTrendsSummaryService,
 } from "../services/analytics.service.js";
 
 const getMonthlySummary = asyncHandler(async (req, res) => {
@@ -124,6 +125,23 @@ const getPaymentMethodSummary = asyncHandler(async (req, res) => {
     );
 });
 
+const getYearlyTrendsSummary = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const yearlyTrendsSummary = await getYearlyTrendsSummaryService(userId, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        yearlyTrendsSummary,
+        "yearly trends summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -131,4 +149,5 @@ export {
   getCategorySpendingYearly,
   getTopSpendingCategories,
   getPaymentMethodSummary,
+  getYearlyTrendsSummary,
 };

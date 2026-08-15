@@ -8,6 +8,7 @@ import {
   getMonthlyTrends,
   getPaymentMethodSummary,
   getTopSpendingCategories,
+  getYearlyTrendsSummary,
 } from "../controllers/analytics.controller.js";
 
 const router = Router();
@@ -21,5 +22,6 @@ router.get("/monthly-trend", getMonthlyTrends);
 router.get("/category-spending-yearly", getCategorySpendingYearly);
 router.get("/top-categories", getTopSpendingCategories);
 router.get("/payment-method-summary", getPaymentMethodSummary);
+router.get("/yearly-trend", getYearlyTrendsSummary);
 
 export default router;
