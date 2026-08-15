@@ -3,7 +3,6 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Transaction } from "../models/transaction.model.js";
 import { Category } from "../models/category.model.js";
-import { Budget } from "../models/budget.model.js";
 
 const getMonthlySummaryService = async (userId, month, year) => {
   const normalizedMonth = Number(month);
