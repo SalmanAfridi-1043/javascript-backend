@@ -127,4 +127,150 @@ const getCategorySpendingService = async (userId, month, year) => {
   return monthlySpending;
 };
 
-export { getMonthlySummaryService, getCategorySpendingService };
+const getMonthlyTrendsService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  // const monthlyTrends = await Transaction.aggregate([
+  //   {
+  //     $match: {
+  //       user: userId,
+  //       date: {
+  //         $gte: startDate,
+  //         $lt: endDate,
+  //       },
+  //     },
+  //   },
+  //   {
+  //     $group: {
+  //       _id: {
+  //         // $month extracts the month number from your Date field
+  //         month: { $month: "$date" },
+  //         type: "$type",
+  //       },
+  //       total: { $sum: "$amount" },
+  //     },
+  //   },
+
+  //   {
+  //     // January → December (ascending order).
+  //     $sort: {
+  //       "$_id.month": 1, // as month is inside the id (grouped by category)
+  //     },
+  //   },
+  // ]);
+
+  // End result of above aggregation will look like this
+  // [
+  //   {
+  //     _id: { month: 1, type: "income" },
+  //     total: 5000
+  //   },
+  //   {
+  //     _id: { month: 1, type: "expense" },
+  //     total: 2000
+  //   }
+  // ]
+
+  // but we need output result like this.
+  // [
+  //   { month: 1, income: 5000, expense: 2000 },
+  //   { month: 2, income: 7000, expense: 3000 },
+  // ];
+
+  // sor formating the result
+  // const formattedTrends = monthlyTrends.reduce((result, item) => {
+  //   const month = item._id.month;
+  //   const type = item._id.type;
+
+  //   let monthData = result.find((item) => item.month === month);
+
+  //   if (!monthData) {
+  //     monthData = {
+  //       month,
+  //       income: 0,
+  //       expense: 0,
+  //     };
+
+  //     result.push(monthData);
+  //   }
+
+  //   monthData[type] = item.total;
+
+  //   return result;
+  // }, []);
+
+  const monthlyTrends = await Transaction.aggregate([
+    // 1. getting user transaction for the required year
+    {
+      $match: {
+        user: userId,
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+    // grouped by month+type and calculate sum of each type
+    {
+      $group: {
+        _id: {
+          month: { $month: "$date" },
+          type: "$type",
+        },
+        total: { $sum: "$amount" },
+      },
+    },
+
+    // group again by month only to find monthly income and expense in one object
+    {
+      $group: {
+        _id: "$_id.month",
+
+        income: {
+          $sum: {
+            $cond: [{ $eq: ["$_id.type", "income"] }, "$total", 0],
+          },
+        },
+
+        expense: {
+          $sum: {
+            $cond: [{ $eq: ["$_id.type", "expense"] }, "$total", 0],
+          },
+        },
+      },
+    },
+
+    // selecting only required fields
+    {
+      $project: {
+        _id: 0,
+        month: "$_id",
+        income: 1,
+        expense: 1,
+      },
+    },
+    // sorting by january - december
+    {
+      $sort: {
+        month: 1,
+      },
+    },
+  ]);
+
+  return {
+    year,
+    monthlyTrends,
+  };
+};
+
+export {
+  getMonthlySummaryService,
+  getCategorySpendingService,
+  getMonthlyTrendsService,
+};

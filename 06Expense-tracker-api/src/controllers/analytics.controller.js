@@ -5,6 +5,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 import {
   getCategorySpendingService,
   getMonthlySummaryService,
+  getMonthlyTrendsService,
 } from "../services/analytics.service.js";
 
 const getMonthlySummary = asyncHandler(async (req, res) => {
@@ -41,4 +42,22 @@ const getCategorySpending = asyncHandler(async (req, res) => {
     );
 });
 
-export { getMonthlySummary, getCategorySpending };
+// Income vs expense for each month of a given year.
+const getMonthlyTrends = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const monthlyTrends = await getMonthlyTrendsService(userId, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        monthlyTrends,
+        "Monthly trends fetched successfully",
+      ),
+    );
+});
+
+export { getMonthlySummary, getCategorySpending, getMonthlyTrends };
