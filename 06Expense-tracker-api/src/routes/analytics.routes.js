@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
   getCategorySpending,
+  getCategorySpendingYearly,
   getMonthlySummary,
   getMonthlyTrends,
 } from "../controllers/analytics.controller.js";
@@ -15,5 +16,6 @@ router.use(authMiddleware);
 router.get("/monthly", getMonthlySummary);
 router.get("/category-spending", getCategorySpending);
 router.get("/monthly-trend", getMonthlyTrends);
+router.get("/category-spending-yearly", getCategorySpendingYearly);
 
 export default router;

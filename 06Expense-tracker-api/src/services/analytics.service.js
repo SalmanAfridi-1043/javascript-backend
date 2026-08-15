@@ -269,8 +269,73 @@ const getMonthlyTrendsService = async (userId, year) => {
   };
 };
 
+const getCategorySpendingYearlyService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const categorySpendingYearly = await Transaction.aggregate([
+    // finding the user transactions for expense only with required year
+    {
+      $match: {
+        user: userId,
+        type: "expense",
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // group the user transactions on category to get monthly income + expense details
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$amount" },
+      },
+    },
+
+    // now fetching the actual category document based on the _id of group result
+    {
+      $lookup: {
+        from: "categories",
+        localField: "_id", // result of group has _id for category._id (in transaction)
+        foreignField: "_id", //actuall db ids for category document
+        as: "categoryDetails",
+      },
+    },
+
+    // lookup returns array so coverting to object/document
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // selecting only the required fields and ignoring the unwanted fields
+    {
+      $project: {
+        category: "$categoryDetails.name",
+        total: 1,
+      },
+    },
+
+    // sorting by highest - lowest spending
+    {
+      $sort: {
+        total: -1,
+      },
+    },
+  ]);
+
+  return categorySpendingYearly;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
   getMonthlyTrendsService,
+  getCategorySpendingYearlyService,
 };

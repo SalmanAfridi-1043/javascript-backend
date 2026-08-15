@@ -4,6 +4,7 @@ import { cookieOptions } from "../utils/cookieOptions.js";
 
 import {
   getCategorySpendingService,
+  getCategorySpendingYearlyService,
   getMonthlySummaryService,
   getMonthlyTrendsService,
 } from "../services/analytics.service.js";
@@ -60,4 +61,29 @@ const getMonthlyTrends = asyncHandler(async (req, res) => {
     );
 });
 
-export { getMonthlySummary, getCategorySpending, getMonthlyTrends };
+const getCategorySpendingYearly = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const categorySpendingYearly = await getCategorySpendingYearlyService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        categorySpendingYearly,
+        "Category spending yearly fetched successfully",
+      ),
+    );
+});
+
+export {
+  getMonthlySummary,
+  getCategorySpending,
+  getMonthlyTrends,
+  getCategorySpendingYearly,
+};
