@@ -40,4 +40,37 @@ const validateBudgetDataInput = (budgetData) => {
   };
 };
 
-export { validateBudgetDataInput };
+const validateBudgetFilters = (filters) => {
+  const { categoryId, month, year } = filters;
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  if (categoryId !== undefined) {
+    validateObjectId(categoryId, "Category");
+  }
+
+  if (normalizedMonth !== undefined) {
+    if (
+      !Number.isInteger(normalizedMonth) ||
+      normalizedMonth < 1 ||
+      normalizedMonth > 12
+    ) {
+      throw new ApiError(400, "Month must be between 1 and 12");
+    }
+  }
+
+  if (normalizedYear !== undefined) {
+    if (!Number.isInteger(normalizedYear) || normalizedYear < 2000) {
+      throw new ApiError(400, "Invalid year");
+    }
+  }
+
+  return {
+    categoryId,
+    month: normalizedMonth,
+    year: normalizedYear,
+  };
+};
+
+export { validateBudgetDataInput, validateBudgetFilters };

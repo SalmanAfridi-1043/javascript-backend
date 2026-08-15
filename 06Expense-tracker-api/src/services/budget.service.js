@@ -3,7 +3,11 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Category } from "../models/category.model.js";
 import { Budget } from "../models/budget.model.js";
-import { validateBudgetDataInput } from "../validators/budget.validator.js";
+
+import {
+  validateBudgetDataInput,
+  validateBudgetFilters,
+} from "../validators/budget.validator.js";
 
 const createBudgetService = async (userId, budgetData) => {
   validateRequired(userId, "User id");
@@ -43,4 +47,30 @@ const createBudgetService = async (userId, budgetData) => {
   return budget;
 };
 
-export { createBudgetService };
+const getAllBudgetsService = async (userId, filters) => {
+  validateRequired(userId, "User id");
+
+  const { categoryId, month, year } = validateBudgetFilters(filters);
+
+  // creating dynamic object for filters
+  const queryObject = {
+    user: userId,
+  };
+  if (categoryId !== undefined) {
+    queryObject.category = categoryId;
+  }
+  if (month !== undefined) {
+    queryObject.month = month;
+  }
+  if (year !== undefined) {
+    queryObject.year = year;
+  }
+
+  const allBudgets = await Budget.find(queryObject)
+    .populate("category")
+    .sort({ createdAt: -1 });
+
+  return allBudgets;
+};
+
+export { createBudgetService, getAllBudgetsService };
