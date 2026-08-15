@@ -623,6 +623,70 @@ const getAverageTransactionAmountService = async (userId, year) => {
   return averageTransactionSummary;
 };
 
+const getHighestSpendingTransactionService = async (userId, year) => {
+  const normalizedYear = Number(year);
+
+  validateRequired(userId, "User id");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, 0, 1);
+  const endDate = new Date(normalizedYear + 1, 0, 1);
+
+  const highestExpenseDetails = await Transaction.aggregate([
+    // filter user transactions for expense only with requried date
+    {
+      $match: {
+        user: userId,
+        type: "expense",
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+
+    // sort descendingly to get the highest on the top
+    {
+      $sort: {
+        amount: -1,
+      },
+    },
+
+    // get only the top one and ignore the rest of transactions coz we need highest transactoin only
+    {
+      $limit: 1,
+    },
+
+    // get the category details to know about name like food, traveling , shopping etc not just single category id
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    // convert lookup array/result to object/document
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // return only the selected fields needed and ignore the remainig
+    {
+      $project: {
+        amount: 1,
+        description: 1,
+        date: 1,
+        paymentMethod: 1,
+        category: "$categoryDetails.name",
+      },
+    },
+  ]);
+
+  return highestExpenseDetails;
+};
+
 export {
   getMonthlySummaryService,
   getCategorySpendingService,
@@ -633,4 +697,5 @@ export {
   getYearlyTrendsSummaryService,
   getMonthlyBalanceTrendService,
   getAverageTransactionAmountService,
+  getHighestSpendingTransactionService,
 };

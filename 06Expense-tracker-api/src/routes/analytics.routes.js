@@ -5,6 +5,7 @@ import {
   getAverageTransactionAmount,
   getCategorySpending,
   getCategorySpendingYearly,
+  getHighestSpendingTransaction,
   getMonthlyBalanceTrend,
   getMonthlySummary,
   getMonthlyTrends,
@@ -33,5 +34,6 @@ router.get("/monthly-balance-trend", getMonthlyBalanceTrend);
 
 // average income and average expense transaction amount for a given year.
 router.get("/average-transaction", getAverageTransactionAmount);
+router.get("/highest-expense", getHighestSpendingTransaction);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   getAverageTransactionAmountService,
   getCategorySpendingService,
   getCategorySpendingYearlyService,
+  getHighestSpendingTransactionService,
   getMonthlyBalanceTrendService,
   getMonthlySummaryService,
   getMonthlyTrendsService,
@@ -184,6 +185,26 @@ const getAverageTransactionAmount = asyncHandler(async (req, res) => {
     );
 });
 
+const getHighestSpendingTransaction = asyncHandler(async (req, res) => {
+  const { year } = req.query;
+  const userId = req.user._id;
+
+  const highestExpense = await getHighestSpendingTransactionService(
+    userId,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        highestExpense,
+        "Highest expense summary fetched successfully",
+      ),
+    );
+});
+
 export {
   getMonthlySummary,
   getCategorySpending,
@@ -194,4 +215,5 @@ export {
   getYearlyTrendsSummary,
   getMonthlyBalanceTrend,
   getAverageTransactionAmount,
+  getHighestSpendingTransaction,
 };
