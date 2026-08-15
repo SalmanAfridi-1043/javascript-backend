@@ -210,15 +210,15 @@ const getSpendingByWeekday = asyncHandler(async (req, res) => {
   const { year } = req.query;
   const userId = req.user._id;
 
-  const weeklySpendingSummary = await getSpendingByWeekdayService(userId, year);
+  const weeklySpendingPerYear = await getSpendingByWeekdayService(userId, year);
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        weeklySpendingSummary,
-        "Weekly Spending summary fetched successfully",
+        weeklySpendingPerYear,
+        "Weekly Spending summary for whole year fetched successfully",
       ),
     );
 });
