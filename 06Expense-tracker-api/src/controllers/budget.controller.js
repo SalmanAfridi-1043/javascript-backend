@@ -5,6 +5,7 @@ import {
   createBudgetService,
   deleteBudgetService,
   getAllBudgetsService,
+  getBudgetAlertsService,
   getBudgetComparisonService,
   getBudgetProgressService,
   getBudgetStatusService,
@@ -162,6 +163,19 @@ const getBudgetComparison = asyncHandler(async (req, res) => {
     );
 });
 
+const getBudgetAlerts = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { month, year } = req.query;
+
+  const budgetAlert = await getBudgetAlertsService(userId, month, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, budgetAlert, "Budget alert fetched successfully"),
+    );
+});
+
 export {
   createBudget,
   getAllBudgets,
@@ -173,4 +187,5 @@ export {
   getBudgetStatus,
   getBudgetSummary,
   getBudgetComparison,
+  getBudgetAlerts,
 };

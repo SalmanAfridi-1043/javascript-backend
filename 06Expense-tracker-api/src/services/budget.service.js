@@ -935,6 +935,168 @@ const getBudgetComparisonService = async (userId, month, year) => {
   return budgetComparison;
 };
 
+const getBudgetAlertsService = async (userId, month, year) => {
+  validateRequired(userId, "User id");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  const budgetAlerts = await Budget.aggregate([
+    // 1. Get budgets for the requested month/year
+    {
+      $match: {
+        user: userId,
+        month: normalizedMonth,
+        year: normalizedYear,
+      },
+    },
+
+    // 2. Find expense transactions for each budget
+    {
+      $lookup: {
+        from: "transactions",
+
+        let: {
+          budgetUser: "$user",
+          budgetCategory: "$category",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  // Same user
+                  { $eq: ["$user", "$$budgetUser"] },
+
+                  // Same category
+                  { $eq: ["$category", "$$budgetCategory"] },
+
+                  // Only expenses
+                  { $eq: ["$type", "expense"] },
+
+                  // Requested month
+                  { $gte: ["$date", startDate] },
+                  { $lt: ["$date", endDate] },
+                ],
+              },
+            },
+          },
+        ],
+
+        as: "transactionDetails",
+      },
+    },
+
+    // 3. Calculate actual spending
+    {
+      $project: {
+        category: 1,
+        budget: "$amount",
+
+        spent: {
+          $sum: "$transactionDetails.amount",
+        },
+      },
+    },
+
+    // 4. Calculate percentage used
+    {
+      $project: {
+        category: 1,
+        budget: 1,
+        spent: 1,
+
+        percentageUsed: {
+          $multiply: [
+            {
+              $divide: ["$spent", "$budget"],
+            },
+            100,
+          ],
+        },
+      },
+    },
+
+    // 5. Determine alert/status
+    {
+      $project: {
+        category: 1,
+        budget: 1,
+        spent: 1,
+        percentageUsed: 1,
+
+        status: {
+          $switch: {
+            branches: [
+              {
+                // Less than 75%
+                case: {
+                  $lt: ["$percentageUsed", 75],
+                },
+                then: "under_budget",
+              },
+
+              {
+                // 75% - 100%
+                case: {
+                  $lte: ["$percentageUsed", 100],
+                },
+                then: "near_limit",
+              },
+            ],
+
+            // More than 100%
+            default: "over_budget",
+          },
+        },
+      },
+    },
+
+    // 6. Get category name
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    // 7. Convert category array to object
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // 8. Final response
+    {
+      $project: {
+        _id: 0,
+        category: "$categoryDetails.name",
+        budget: 1,
+        spent: 1,
+        percentageUsed: 1,
+        status: 1,
+      },
+    },
+
+    // 9. Show most critical budgets first
+    {
+      $sort: {
+        percentageUsed: -1,
+      },
+    },
+  ]);
+
+  return budgetAlerts;
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
@@ -946,4 +1108,5 @@ export {
   getBudgetStatusService,
   getBudgetSummaryService,
   getBudgetComparisonService,
+  getBudgetAlertsService,
 };
