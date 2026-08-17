@@ -174,6 +174,7 @@ const deleteBudgetService = async (userId, budgetId) => {
 
   return { success: true };
 };
+
 const getBudgetVsActualSpendingService = async (
   userId,
   budgetId,
@@ -299,6 +300,126 @@ const getBudgetVsActualSpendingService = async (
   return budgetVsActualSummary;
 };
 
+const getBudgetProgressService = async (userId, month, year) => {
+  validateRequired(userId, "User id");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  const budgetProgressSummary = await Budget.aggregate([
+    // 1. Get all budgets of this user for the requested month/year
+    {
+      $match: {
+        user: userId,
+        month: normalizedMonth,
+        year: normalizedYear,
+      },
+    },
+
+    // 2. Find expense transactions belonging to each budget
+    {
+      $lookup: {
+        from: "transactions",
+
+        // Values from the current Budget document
+        let: {
+          budgetUser: "$user",
+          budgetCategory: "$category",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  // Same user
+                  { $eq: ["$user", "$$budgetUser"] },
+
+                  // Same category
+                  { $eq: ["$category", "$$budgetCategory"] },
+
+                  // Only expenses
+                  { $eq: ["$type", "expense"] },
+
+                  // Transaction belongs to requested month
+                  { $gte: ["$date", startDate] },
+                  { $lt: ["$date", endDate] },
+                ],
+              },
+            },
+          },
+        ],
+
+        as: "transactionDetails",
+      },
+    },
+
+    // 3. Calculate actual spending
+    {
+      $project: {
+        category: 1,
+        budget: "$amount",
+
+        spent: {
+          $sum: "$transactionDetails.amount",
+        },
+      },
+    },
+
+    // 4. Calculate remaining amount and percentage used
+    {
+      $project: {
+        category: 1,
+        budget: 1,
+        spent: 1,
+
+        remaining: {
+          $subtract: ["$budget", "$spent"],
+        },
+
+        percentageUsed: {
+          $multiply: [{ $divide: ["$spent", "$budget"] }, 100],
+        },
+      },
+    },
+
+    // 5. Get category details
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    // 6. Convert category array into object
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // 7. Final response
+    {
+      $project: {
+        _id: 0,
+        category: "$categoryDetails.name",
+        budget: 1,
+        spent: 1,
+        remaining: 1,
+        percentageUsed: 1,
+      },
+    },
+  ]);
+
+  return budgetProgressSummary;
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
@@ -306,4 +427,5 @@ export {
   updateBudgetService,
   deleteBudgetService,
   getBudgetVsActualSpendingService,
+  getBudgetProgressService,
 };
