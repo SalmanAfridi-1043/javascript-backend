@@ -73,4 +73,21 @@ const getAllBudgetsService = async (userId, filters) => {
   return allBudgets;
 };
 
-export { createBudgetService, getAllBudgetsService };
+const getSingleBudgetService = async (userId, budgetId) => {
+  validateRequired(userId, "User id ");
+  validateRequired(budgetId, "Budget id ");
+  validateObjectId(budgetId, "Budget");
+
+  const budget = await Budget.findOne({
+    _id: budgetId,
+    user: userId,
+  }).populate("category");
+
+  if (!budget) {
+    throw new ApiError(404, "Budget not found");
+  }
+
+  return budget;
+};
+
+export { createBudgetService, getAllBudgetsService, getSingleBudgetService };
