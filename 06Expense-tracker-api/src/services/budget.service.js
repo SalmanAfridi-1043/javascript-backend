@@ -157,9 +157,27 @@ const updateBudgetService = async (userId, budgetId, data) => {
   return budget;
 };
 
+const deleteBudgetService = async (userId, budgetId) => {
+  validateRequired(userId, "User id ");
+  validateRequired(budgetId, "Budget id ");
+  validateObjectId(budgetId, "Budget");
+
+  const budget = await Budget.findOneAndDelete({
+    _id: budgetId,
+    user: userId,
+  });
+
+  if (!budget) {
+    throw new ApiError(404, "Budget not found");
+  }
+
+  return { success: true };
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
   getSingleBudgetService,
   updateBudgetService,
+  deleteBudgetService,
 };

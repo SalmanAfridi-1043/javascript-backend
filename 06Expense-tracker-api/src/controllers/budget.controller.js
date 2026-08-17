@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
   createBudgetService,
+  deleteBudgetService,
   getAllBudgetsService,
   getSingleBudgetService,
   updateBudgetService,
@@ -53,4 +54,21 @@ const updateBudget = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedBudget, "Budget updated successfully"));
 });
 
-export { createBudget, getAllBudgets, getSingleBudget, updateBudget };
+const deleteBudget = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { budgetId } = req.params;
+
+  const response = await deleteBudgetService(userId, budgetId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Budget deleted successfully"));
+});
+
+export {
+  createBudget,
+  getAllBudgets,
+  getSingleBudget,
+  updateBudget,
+  deleteBudget,
+};

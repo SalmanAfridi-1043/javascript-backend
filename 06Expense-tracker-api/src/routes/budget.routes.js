@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 
 import {
   createBudget,
+  deleteBudget,
   getAllBudgets,
   getSingleBudget,
   updateBudget,
@@ -17,5 +18,7 @@ router.get("/", getAllBudgets);
 router.get("/:budgetId", getSingleBudget);
 
 router.patch("/:budgetId", updateBudget);
+
+router.delete("/:budgetId", deleteBudget);
 
 export default router;
