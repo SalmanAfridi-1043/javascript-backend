@@ -420,6 +420,127 @@ const getBudgetProgressService = async (userId, month, year) => {
   return budgetProgressSummary;
 };
 
+const getBudgetStatusService = async (userId, month, year) => {
+  validateRequired(userId, "User id");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  const budgetStatus = await Budget.aggregate([
+    {
+      $match: {
+        user: userId,
+        month: normalizedMonth,
+        year: normalizedYear,
+      },
+    },
+
+    {
+      $lookup: {
+        from: "transactions",
+
+        let: {
+          budgetUser: "$user",
+          budgetCategory: "$category",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$user", "$$budgetUser"] },
+                  { $eq: ["$category", "$$budgetCategory"] },
+                  { $eq: ["$type", "expense"] },
+                  { $gte: ["$date", startDate] },
+                  { $lt: ["$date", endDate] },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      as: "transactionDetails",
+    },
+
+    {
+      $project: {
+        category: 1,
+        budget: "$amount",
+        spent: { $sum: "$transactionDetails.amount" },
+      },
+    },
+
+    {
+      $project: {
+        category: 1,
+        budget: 1,
+        spent: 1,
+
+        remaining: {
+          $subtract: ["$budget", "$spent"],
+        },
+
+        percentageUsed: {
+          $multiply: [{ $divide: ["$spent", "$budget"] }, 100],
+        },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    {
+      $project: {
+        category: "$categoryDetails.name",
+        budget: 1,
+        spent: 1,
+        percentageUsed: 1,
+
+        status: {
+          $switch: {
+            branches: [
+              {
+                case: {
+                  $lte: ["$percentageUsed", "75"],
+                },
+                then: "under_budget",
+              },
+
+              {
+                case: {
+                  $lte: ["$percentageUsed", "100"],
+                },
+                then: "near_limit",
+              },
+            ],
+
+            default: "over_budget",
+          },
+        },
+      },
+    },
+  ]);
+
+  return budgetStatus;
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
@@ -428,4 +549,5 @@ export {
   deleteBudgetService,
   getBudgetVsActualSpendingService,
   getBudgetProgressService,
+  getBudgetStatusService,
 };

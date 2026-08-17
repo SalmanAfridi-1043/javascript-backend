@@ -6,6 +6,7 @@ import {
   deleteBudgetService,
   getAllBudgetsService,
   getBudgetProgressService,
+  getBudgetStatusService,
   getBudgetVsActualSpendingService,
   getSingleBudgetService,
   updateBudgetService,
@@ -95,12 +96,7 @@ const getBudgetProgress = asyncHandler(async (req, res) => {
   const { budgetId } = req.params;
   const { month, year } = req.query;
 
-  const budgetProgress = await getBudgetProgressService(
-    userId,
-    budgetId,
-    month,
-    year,
-  );
+  const budgetProgress = await getBudgetProgressService(userId, month, year);
 
   return res
     .status(200)
@@ -113,6 +109,19 @@ const getBudgetProgress = asyncHandler(async (req, res) => {
     );
 });
 
+const getBudgetStatus = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { month, year } = req.query;
+
+  const budgetStatus = await getBudgetStatusService(userId, month, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, budgetStatus, "Budget status fetched successfully"),
+    );
+});
+
 export {
   createBudget,
   getAllBudgets,
@@ -121,4 +130,5 @@ export {
   deleteBudget,
   getBudgetVsActualSpending,
   getBudgetProgress,
+  getBudgetStatus,
 };

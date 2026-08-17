@@ -6,6 +6,7 @@ import {
   deleteBudget,
   getAllBudgets,
   getBudgetProgress,
+  getBudgetStatus,
   getBudgetVsActualSpending,
   getSingleBudget,
   updateBudget,
@@ -26,5 +27,7 @@ router.delete("/:budgetId", deleteBudget);
 router.get("/vs-actual", getBudgetVsActualSpending);
 
 router.get("/progress", getBudgetProgress);
+
+router.get("/status", getBudgetStatus);
 
 export default router;
