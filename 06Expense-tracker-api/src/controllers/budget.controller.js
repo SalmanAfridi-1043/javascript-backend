@@ -7,6 +7,7 @@ import {
   getAllBudgetsService,
   getBudgetProgressService,
   getBudgetStatusService,
+  getBudgetSummaryService,
   getBudgetVsActualSpendingService,
   getSingleBudgetService,
   updateBudgetService,
@@ -122,6 +123,23 @@ const getBudgetStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const getBudgetSummary = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { month, year } = req.query;
+
+  const budgetSummary = await getBudgetSummaryService(userId, month, year);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        budgetSummary,
+        "Budget summary fetched successfully",
+      ),
+    );
+});
+
 export {
   createBudget,
   getAllBudgets,
@@ -131,4 +149,5 @@ export {
   getBudgetVsActualSpending,
   getBudgetProgress,
   getBudgetStatus,
+  getBudgetSummary,
 };

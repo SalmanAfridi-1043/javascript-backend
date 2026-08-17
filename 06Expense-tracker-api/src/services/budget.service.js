@@ -518,14 +518,14 @@ const getBudgetStatusService = async (userId, month, year) => {
             branches: [
               {
                 case: {
-                  $lte: ["$percentageUsed", "75"],
+                  $lte: ["$percentageUsed", 80],
                 },
                 then: "under_budget",
               },
 
               {
                 case: {
-                  $lte: ["$percentageUsed", "100"],
+                  $lte: ["$percentageUsed", 100],
                 },
                 then: "near_limit",
               },
@@ -541,6 +541,100 @@ const getBudgetStatusService = async (userId, month, year) => {
   return budgetStatus;
 };
 
+const getBudgetSummaryService = async (userId, month, year) => {
+  validateRequired(userId, "User id");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  const budgetSummary = await Budget.aggregate([
+    {
+      $match: {
+        user: userId,
+        month: normalizedMonth,
+        year: normalizedYear,
+      },
+    },
+
+    {
+      $lookup: {
+        from: "transactions",
+
+        let: {
+          budgetUser: "$user",
+          budgetCategory: "$category",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$user", "$budgetUser"] },
+                  { $eq: ["$category", "$budgetCategory"] },
+                  { $eq: ["$type", "expense"] },
+                  { $gte: ["$date", startDate] },
+                  { $lt: ["$date", endDate] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "transactionDetails",
+      },
+    },
+
+    {
+      $project: {
+        budget: "$amount",
+        spent: { $sum: "$transactionDetails.amount" },
+      },
+    },
+
+    {
+      $group: {
+        // _id: null means:Put everything into one single group.
+        _id: null,
+        totalBudget: { $sum: "$budget" },
+        totalSpent: { $sum: "$spent" },
+      },
+    },
+
+    // returning the final values
+    {
+      $project: {
+        totalBudget: 1,
+        totalSpent: 1,
+
+        totalRemaining: {
+          $subtract: ["$totalBudget", "$totalSpent"],
+        },
+
+        percentageUsed: {
+          $multiply: [{ $divide: ["$totalSpent", "$totalBudget"] }, 100],
+        },
+      },
+    },
+  ]);
+
+  if (budgetSummary.length === 0) {
+    return {
+      totalBudget: 0,
+      totalSpent: 0,
+      totalRemaining: 0,
+      percentageUsed: 0,
+    };
+  }
+
+  return budgetSummary[0];
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
@@ -550,4 +644,5 @@ export {
   getBudgetVsActualSpendingService,
   getBudgetProgressService,
   getBudgetStatusService,
+  getBudgetSummaryService,
 };

@@ -7,6 +7,7 @@ import {
   getAllBudgets,
   getBudgetProgress,
   getBudgetStatus,
+  getBudgetSummary,
   getBudgetVsActualSpending,
   getSingleBudget,
   updateBudget,
@@ -29,5 +30,7 @@ router.get("/vs-actual", getBudgetVsActualSpending);
 router.get("/progress", getBudgetProgress);
 
 router.get("/status", getBudgetStatus);
+
+router.get("/summary", getBudgetSummary);
 
 export default router;
