@@ -5,6 +5,7 @@ import {
   createBudget,
   deleteBudget,
   getAllBudgets,
+  getBudgetVsActualSpending,
   getSingleBudget,
   updateBudget,
 } from "../controllers/budget.controller.js";
@@ -20,5 +21,7 @@ router.get("/:budgetId", getSingleBudget);
 router.patch("/:budgetId", updateBudget);
 
 router.delete("/:budgetId", deleteBudget);
+
+router.get("/vs-actual", getBudgetVsActualSpending);
 
 export default router;

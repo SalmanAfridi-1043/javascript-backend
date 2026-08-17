@@ -3,6 +3,7 @@ import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Category } from "../models/category.model.js";
 import { Budget } from "../models/budget.model.js";
+import { Transaction } from "../models/transaction.model.js";
 
 import {
   validateBudgetDataInput,
@@ -173,6 +174,130 @@ const deleteBudgetService = async (userId, budgetId) => {
 
   return { success: true };
 };
+const getBudgetVsActualSpendingService = async (
+  userId,
+  budgetId,
+  month,
+  year,
+) => {
+  validateRequired(userId, "User id");
+  validateRequired(budgetId, "Budget id");
+  validateObjectId(budgetId, "Budget");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  // 1. Start and end of the requested month
+  const startDate = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const endDate = new Date(normalizedYear, normalizedMonth, 1);
+
+  const budgetVsActualSummary = await Budget.aggregate([
+    // 2. Find the specific budget belonging to this user
+    {
+      $match: {
+        _id: budgetId,
+        user: userId,
+        month: normalizedMonth,
+        year: normalizedYear,
+      },
+    },
+
+    // 3. Find transactions belonging to this budget's
+    //    user + category + month/year
+    {
+      $lookup: {
+        from: "transactions",
+
+        // Values taken from the current Budget document
+        let: {
+          budgetUser: "$user",
+          budgetCategory: "$category",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  // Transaction belongs to same user
+                  { $eq: ["$user", "$$budgetUser"] },
+
+                  // Transaction belongs to same category
+                  { $eq: ["$category", "$$budgetCategory"] },
+
+                  // Only expenses count as spending
+                  { $eq: ["$type", "expense"] },
+
+                  // Transaction date is inside the requested month
+                  { $gte: ["$date", startDate] },
+                  { $lt: ["$date", endDate] },
+                ],
+              },
+            },
+          },
+        ],
+
+        as: "transactions",
+      },
+    },
+
+    // 4. Calculate actual spending from matched transactions
+    {
+      $project: {
+        _id: 1,
+        category: 1,
+        budget: "$amount",
+
+        spent: {
+          $sum: "$transactions.amount",
+        },
+      },
+    },
+
+    // 5. Calculate remaining budget
+    {
+      $project: {
+        category: 1,
+        budget: 1,
+        spent: 1,
+
+        remaining: {
+          $subtract: ["$budget", "$spent"],
+        },
+      },
+    },
+
+    // 6. Get category name
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
+    },
+
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // 7. Final response shape
+    {
+      $project: {
+        _id: 0, // ignore id
+        category: "$categoryDetails.name",
+        budget: 1,
+        spent: 1,
+        remaining: 1,
+      },
+    },
+  ]);
+
+  return budgetVsActualSummary;
+};
 
 export {
   createBudgetService,
@@ -180,4 +305,5 @@ export {
   getSingleBudgetService,
   updateBudgetService,
   deleteBudgetService,
+  getBudgetVsActualSpendingService,
 };

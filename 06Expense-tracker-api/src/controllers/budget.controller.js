@@ -5,6 +5,7 @@ import {
   createBudgetService,
   deleteBudgetService,
   getAllBudgetsService,
+  getBudgetVsActualSpendingService,
   getSingleBudgetService,
   updateBudgetService,
 } from "../services/budget.service.js";
@@ -65,10 +66,34 @@ const deleteBudget = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, response, "Budget deleted successfully"));
 });
 
+const getBudgetVsActualSpending = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { budgetId } = req.params;
+  const { month, year } = req.query;
+
+  const budgetVsActualSummary = await getBudgetVsActualSpendingService(
+    userId,
+    budgetId,
+    month,
+    year,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        budgetVsActualSummary,
+        "Budget vs actual details fetched successfully",
+      ),
+    );
+});
+
 export {
   createBudget,
   getAllBudgets,
   getSingleBudget,
   updateBudget,
   deleteBudget,
+  getBudgetVsActualSpending,
 };
