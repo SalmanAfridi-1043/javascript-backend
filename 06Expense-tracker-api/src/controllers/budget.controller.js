@@ -5,6 +5,7 @@ import {
   createBudgetService,
   getAllBudgetsService,
   getSingleBudgetService,
+  updateBudgetService,
 } from "../services/budget.service.js";
 
 const createBudget = asyncHandler(async (req, res) => {
@@ -40,4 +41,16 @@ const getSingleBudget = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, budget, "Budget fetched successfully"));
 });
 
-export { createBudget, getAllBudgets, getSingleBudget };
+const updateBudget = asyncHandler(async (req, res) => {
+  const data = req.body;
+  const userId = req.user._id;
+  const { budgetId } = req.params;
+
+  const updatedBudget = await updateBudgetService(userId, budgetId, data);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedBudget, "Budget updated successfully"));
+});
+
+export { createBudget, getAllBudgets, getSingleBudget, updateBudget };

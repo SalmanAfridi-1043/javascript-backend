@@ -73,4 +73,53 @@ const validateBudgetFilters = (filters) => {
   };
 };
 
-export { validateBudgetDataInput, validateBudgetFilters };
+const validateBudgetUpdateData = (data) => {
+  const { amount, month, year, categoryId } = data;
+
+  const normalizedAmount = Number(amount);
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  if (categoryId !== undefined) {
+    validateObjectId(categoryId, "Category");
+  }
+
+  if (normalizedAmount !== undefined) {
+    if (
+      !Number.isInteger(normalizedAmount) ||
+      !Number.isFinite(normalizedAmount) ||
+      normalizedAmount < 0
+    ) {
+      throw new ApiError(400, "Enter positive finite amount value");
+    }
+  }
+
+  if (normalizedMonth !== undefined) {
+    if (
+      !Number.isInteger(normalizedMonth) ||
+      normalizedMonth < 1 ||
+      normalizedMonth > 12
+    ) {
+      throw new ApiError(400, "Month must be between 1 and 12");
+    }
+  }
+
+  if (normalizedYear !== undefined) {
+    if (!Number.isInteger(normalizedYear) || normalizedYear < 2000) {
+      throw new ApiError(400, "Invalid year");
+    }
+  }
+
+  return {
+    categoryId,
+    amount: normalizedAmount,
+    month: normalizedMonth,
+    year: normalizedYear,
+  };
+};
+
+export {
+  validateBudgetDataInput,
+  validateBudgetFilters,
+  validateBudgetUpdateData,
+};
