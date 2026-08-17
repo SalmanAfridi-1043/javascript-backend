@@ -5,6 +5,7 @@ import {
   createBudget,
   deleteBudget,
   getAllBudgets,
+  getBudgetComparison,
   getBudgetProgress,
   getBudgetStatus,
   getBudgetSummary,
@@ -32,5 +33,7 @@ router.get("/progress", getBudgetProgress);
 router.get("/status", getBudgetStatus);
 
 router.get("/summary", getBudgetSummary);
+
+router.get("/comparison", getBudgetComparison);
 
 export default router;

@@ -635,6 +635,306 @@ const getBudgetSummaryService = async (userId, month, year) => {
   return budgetSummary[0];
 };
 
+const getBudgetComparisonService = async (userId, month, year) => {
+  validateRequired(userId, "User id");
+
+  const normalizedMonth = Number(month);
+  const normalizedYear = Number(year);
+
+  validateRequired(normalizedMonth, "Month");
+  validateRequired(normalizedYear, "Year");
+
+  // Current month date range
+  const currentStart = new Date(normalizedYear, normalizedMonth - 1, 1);
+  const currentEnd = new Date(normalizedYear, normalizedMonth, 1);
+
+  // Previous month date range
+  const previousStart = new Date(normalizedYear, normalizedMonth - 2, 1);
+  const previousEnd = currentStart;
+
+  /*
+    We also need the previous month's budget month/year.
+
+    JavaScript Date automatically handles January:
+    month = 1
+    month - 2 = -1
+    → December of previous year
+  */
+  const previousDate = new Date(normalizedYear, normalizedMonth - 2, 1);
+  const previousMonth = previousDate.getMonth() + 1;
+  const previousYear = previousDate.getFullYear();
+
+  const budgetComparison = await Budget.aggregate([
+    // =========================================================
+    // 1. Create two separate results:
+    //    currentMonth + previousMonth
+    // =========================================================
+    {
+      $facet: {
+        // =====================================================
+        // CURRENT MONTH
+        // =====================================================
+        currentMonth: [
+          {
+            $match: {
+              user: userId,
+              month: normalizedMonth,
+              year: normalizedYear,
+            },
+          },
+
+          // Find transactions belonging to each budget
+          {
+            $lookup: {
+              from: "transactions",
+
+              let: {
+                budgetUser: "$user",
+                budgetCategory: "$category",
+              },
+
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: ["$user", "$$budgetUser"],
+                        },
+                        {
+                          $eq: ["$category", "$$budgetCategory"],
+                        },
+                        {
+                          $eq: ["$type", "expense"],
+                        },
+                        {
+                          $gte: ["$date", currentStart],
+                        },
+                        {
+                          $lt: ["$date", currentEnd],
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+
+              as: "currentTransactionDetails",
+            },
+          },
+
+          // Calculate current spending
+          {
+            $project: {
+              category: 1,
+              currentBudget: "$amount",
+              currentSpend: {
+                $sum: "$currentTransactionDetails.amount",
+              },
+            },
+          },
+        ],
+
+        // =====================================================
+        // PREVIOUS MONTH
+        // =====================================================
+        previousMonth: [
+          {
+            $match: {
+              user: userId,
+              month: previousMonth,
+              year: previousYear,
+            },
+          },
+
+          // Find previous month's transactions
+          {
+            $lookup: {
+              from: "transactions",
+
+              let: {
+                budgetUser: "$user",
+                budgetCategory: "$category",
+              },
+
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: ["$user", "$$budgetUser"],
+                        },
+                        {
+                          $eq: ["$category", "$$budgetCategory"],
+                        },
+                        {
+                          $eq: ["$type", "expense"],
+                        },
+                        {
+                          $gte: ["$date", previousStart],
+                        },
+                        {
+                          $lt: ["$date", previousEnd],
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+
+              as: "previousTransactionDetails",
+            },
+          },
+
+          // Calculate previous spending
+          {
+            $project: {
+              category: 1,
+              previousBudget: "$amount",
+              previousSpend: {
+                $sum: "$previousTransactionDetails.amount",
+              },
+            },
+          },
+        ],
+      },
+    },
+
+    // =========================================================
+    // 2. Combine currentMonth with previousMonth
+    // =========================================================
+    {
+      $project: {
+        comparison: {
+          $map: {
+            input: "$currentMonth",
+            as: "current",
+
+            in: {
+              category: "$$current.category",
+
+              currentBudget: "$$current.currentBudget",
+              currentSpend: "$$current.currentSpend",
+
+              /*
+                Find the previous month's document
+                having the SAME category.
+              */
+              previous: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$previousMonth",
+                      as: "previous",
+
+                      cond: {
+                        $eq: ["$$previous.category", "$$current.category"],
+                      },
+                    },
+                  },
+
+                  // Take first matching category
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+
+    // =========================================================
+    // 3. Flatten the previous object and calculate change
+    // =========================================================
+    {
+      $unwind: {
+        path: "$comparison",
+      },
+    },
+
+    {
+      $project: {
+        _id: 0,
+
+        category: "$comparison.category",
+
+        currentBudget: "$comparison.currentBudget",
+        currentSpend: "$comparison.currentSpend",
+
+        previousBudget: "$comparison.previous.previousBudget",
+        previousSpend: "$comparison.previous.previousSpend",
+
+        spendingChange: {
+          $cond: [
+            {
+              $gt: ["$comparison.previous.previousSpend", 0],
+            },
+
+            {
+              $multiply: [
+                {
+                  $divide: [
+                    {
+                      $subtract: [
+                        "$comparison.currentSpend",
+                        "$comparison.previous.previousSpend",
+                      ],
+                    },
+
+                    "$comparison.previous.previousSpend",
+                  ],
+                },
+
+                100,
+              ],
+            },
+
+            0,
+          ],
+        },
+      },
+    },
+
+    // =========================================================
+    // 4. Get category name
+    // =========================================================
+    {
+      $lookup: {
+        from: "categories",
+
+        localField: "category",
+        foreignField: "_id",
+
+        as: "categoryDetails",
+      },
+    },
+
+    {
+      $unwind: "$categoryDetails",
+    },
+
+    // =========================================================
+    // 5. Final response
+    // =========================================================
+    {
+      $project: {
+        category: "$categoryDetails.name",
+
+        currentBudget: 1,
+        currentSpend: 1,
+
+        previousBudget: 1,
+        previousSpend: 1,
+
+        spendingChange: 1,
+      },
+    },
+  ]);
+
+  return budgetComparison;
+};
+
 export {
   createBudgetService,
   getAllBudgetsService,
@@ -645,4 +945,5 @@ export {
   getBudgetProgressService,
   getBudgetStatusService,
   getBudgetSummaryService,
+  getBudgetComparisonService,
 };
