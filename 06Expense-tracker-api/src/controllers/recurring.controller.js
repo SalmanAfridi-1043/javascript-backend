@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
+  getSingleRecurringTransactionService,
 } from "../services/recurring.service.js";
 
 const createRecurringTransaction = asyncHandler(async (req, res) => {
@@ -38,4 +39,28 @@ const getAllRecurringTransactions = asyncHandler(async (req, res) => {
     );
 });
 
-export { createRecurringTransaction, getAllRecurringTransactions };
+const getSingleRecurringTransaction = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const recurringTransaction = await getSingleRecurringTransactionService(
+    userId,
+    transactionId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        recurringTransaction,
+        "Transaction recurring fetched successfully",
+      ),
+    );
+});
+
+export {
+  createRecurringTransaction,
+  getAllRecurringTransactions,
+  getSingleRecurringTransaction,
+};

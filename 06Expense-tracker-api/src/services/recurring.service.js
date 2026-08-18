@@ -78,7 +78,26 @@ const getAllRecurringTransactionsService = async (userId, recurringFilters) => {
   return allRecurrings;
 };
 
+const getSingleRecurringTransactionService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const recurringTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  }).populate("category");
+
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Recurring transaction not found");
+  }
+
+  return recurringTransaction;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
+  getSingleRecurringTransactionService,
 };
