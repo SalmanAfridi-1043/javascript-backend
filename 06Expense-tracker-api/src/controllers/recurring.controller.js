@@ -7,6 +7,7 @@ import {
   generateNextRecurringTransactionService,
   getAllRecurringTransactionsService,
   getNextOccurrenceService,
+  getRecurringTransactionHistoryService,
   getSingleRecurringTransactionService,
   toggleRecurringTransactionService,
   updateRecurringTransactionService,
@@ -166,6 +167,24 @@ const generateNextRecurringTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const getRecurringTransactionHistory = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const recurringTransactionHistory =
+    await getRecurringTransactionHistoryService(userId, transactionId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        recurringTransactionHistory,
+        "Recurring transaction history generated successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
@@ -175,4 +194,5 @@ export {
   toggleRecurringTransaction,
   getNextOccurrence,
   generateNextRecurringTransaction,
+  getRecurringTransactionHistory,
 };

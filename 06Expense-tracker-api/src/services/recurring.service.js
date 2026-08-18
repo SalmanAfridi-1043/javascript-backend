@@ -276,6 +276,39 @@ const generateNextRecurringTransactionService = async (
   return nextOccuringTransaction;
 };
 
+const getRecurringTransactionHistoryService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  // find the parent/original transactoins first , then use it as a refrence
+  const originalTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  });
+
+  if (!originalTransaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  // get all generated/child transactions from the original/parent
+  const generatedTransactions = await Transaction.find({
+    user: userId,
+    recurring: true,
+    recurringTransactionId: originalTransaction._id,
+  })
+    .populate("user", "-password -refreshToken")
+    .populate("category")
+    .sort({ date: -1 });
+
+  if (generatedTransactions.length === 0) {
+    throw new ApiError(404, "No recurring transactions found");
+  }
+
+  return generatedTransactions;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
@@ -285,4 +318,5 @@ export {
   toggleRecurringTransactionService,
   getNextOccurrenceService,
   generateNextRecurringTransactionService,
+  getRecurringTransactionHistoryService,
 };

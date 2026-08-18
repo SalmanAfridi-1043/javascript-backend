@@ -7,6 +7,7 @@ import {
   generateNextRecurringTransaction,
   getAllRecurringTransactions,
   getNextOccurrence,
+  getRecurringTransactionHistory,
   getSingleRecurringTransaction,
   toggleRecurringTransaction,
   updateRecurringTransaction,
@@ -33,5 +34,8 @@ router.get("/:transactionId/next-occurrence", getNextOccurrence);
 
 // Take an existing recurring/repeating transaction and create its next occurrence.
 router.get("/:transactionId/generate-next", generateNextRecurringTransaction);
+
+// find all recurring/repeating transactions generated from parent/original one
+router.get("/:transactionId/history", getRecurringTransactionHistory);
 
 export default router;
