@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
   createRecurringTransactionService,
+  deleteRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
   updateRecurringTransactionService,
@@ -82,9 +83,30 @@ const updateRecurringTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const deleteRecurringTransaction = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const response = await deleteRecurringTransactionService(
+    userId,
+    transactionId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        response,
+        "Recurring transaction deleted successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
   getSingleRecurringTransaction,
   updateRecurringTransaction,
+  deleteRecurringTransaction,
 };

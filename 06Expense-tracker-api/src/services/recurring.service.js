@@ -166,9 +166,28 @@ const updateRecurringTransactionService = async (
   return recurringTransaction;
 };
 
+const deleteRecurringTransactionService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const recurringTransaction = await Transaction.findOneAndDelete({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  });
+
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Recurring Transaction not found");
+  }
+
+  return { success: true };
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
   updateRecurringTransactionService,
+  deleteRecurringTransactionService,
 };
