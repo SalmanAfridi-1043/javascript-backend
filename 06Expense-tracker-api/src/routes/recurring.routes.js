@@ -4,6 +4,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import {
   createRecurringTransaction,
   deleteRecurringTransaction,
+  generateNextRecurringTransaction,
   getAllRecurringTransactions,
   getNextOccurrence,
   getSingleRecurringTransaction,
@@ -29,5 +30,8 @@ router.patch("/:transactionId/toggle", toggleRecurringTransaction);
 
 // It returns the next date when the recurring transaction should occur.
 router.get("/:transactionId/next-occurrence", getNextOccurrence);
+
+// Take an existing recurring/repeating transaction and create its next occurrence.
+router.get("/:transactionId/generate-next", generateNextRecurringTransaction);
 
 export default router;

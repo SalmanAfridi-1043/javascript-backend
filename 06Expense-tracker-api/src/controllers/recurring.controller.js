@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import {
   createRecurringTransactionService,
   deleteRecurringTransactionService,
+  generateNextRecurringTransactionService,
   getAllRecurringTransactionsService,
   getNextOccurrenceService,
   getSingleRecurringTransactionService,
@@ -145,6 +146,26 @@ const getNextOccurrence = asyncHandler(async (req, res) => {
     );
 });
 
+const generateNextRecurringTransaction = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const nextTransaction = await generateNextRecurringTransactionService(
+    userId,
+    transactionId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        nextTransaction,
+        "Next occurrence transaction generated successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
@@ -153,4 +174,5 @@ export {
   deleteRecurringTransaction,
   toggleRecurringTransaction,
   getNextOccurrence,
+  generateNextRecurringTransaction,
 };

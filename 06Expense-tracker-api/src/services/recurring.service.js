@@ -230,6 +230,44 @@ const getNextOccurrenceService = async (userId, transactionId) => {
   return nextDate;
 };
 
+const generateNextRecurringTransactionService = async (
+  userId,
+  transactionId,
+) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const recurringTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  });
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  const date = recurringTransaction.date;
+  const frequency = recurringTransaction.frequency;
+
+  const nextDate = calculateNextOccurrence(date, frequency);
+
+  const nextOccuringTransaction = await Transaction.create({
+    user: userId,
+    type: recurringTransaction.type,
+    category: recurringTransaction.category,
+    amount: recurringTransaction.amount,
+    description: recurringTransaction.description,
+    paymentMethod: recurringTransaction.paymentMethod,
+    date: nextDate,
+    notes: recurringTransaction.notes,
+    recurring: true,
+    frequency: recurringTransaction.frequency,
+  });
+
+  return nextOccuringTransaction;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
@@ -238,4 +276,5 @@ export {
   deleteRecurringTransactionService,
   toggleRecurringTransactionService,
   getNextOccurrenceService,
+  generateNextRecurringTransactionService,
 };
