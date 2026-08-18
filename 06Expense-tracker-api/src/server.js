@@ -4,6 +4,8 @@ dotenv.config({ path: "./.env" });
 import connectDB from "./config/db.config.js";
 import app from "./app.js";
 
+import "./schedulers/recurringTransaction.scheduler.js";
+
 const PORT = process.env.PORT || 3000;
 
 connectDB()

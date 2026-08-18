@@ -309,6 +309,55 @@ const getRecurringTransactionHistoryService = async (userId, transactionId) => {
   return generatedTransactions;
 };
 
+const processRecurringTransactionsService = async () => {
+  const allRecurringTransactions = await Transaction.find({
+    recurring: true,
+  });
+
+  const generatedTransactions = [];
+
+  for (const transaction of allRecurringTransactions) {
+    const nextDate = calculateNextOccurrence(
+      transaction.date,
+      transaction.frequency,
+    );
+
+    // Check if this occurrence was already generated
+    const existingTransaction = await Transaction.findOne({
+      recurringTransactionId: transaction._id,
+      date: nextDate,
+    });
+
+    // Already generated → skip
+    if (existingTransaction) {
+      continue;
+    }
+
+    //if not then Generate next occurrence
+    const nextTransaction = await Transaction.create({
+      user: transaction.user,
+      type: transaction.type,
+      category: transaction.category,
+      amount: transaction.amount,
+      description: transaction.description,
+      paymentMethod: transaction.paymentMethod,
+      date: nextDate,
+      notes: transaction.notes,
+      recurring: true,
+      frequency: transaction.frequency,
+      recurringTransactionId: transaction._id,
+    });
+
+    // Move parent transaction forward
+    transaction.date = nextDate;
+    await transaction.save();
+
+    generatedTransactions.push(nextTransaction);
+  }
+
+  return generatedTransactions;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
@@ -319,4 +368,5 @@ export {
   getNextOccurrenceService,
   generateNextRecurringTransactionService,
   getRecurringTransactionHistoryService,
+  processRecurringTransactionsService,
 };
