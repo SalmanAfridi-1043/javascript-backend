@@ -309,6 +309,7 @@ const getRecurringTransactionHistoryService = async (userId, transactionId) => {
   return generatedTransactions;
 };
 
+// an auto executed service by backend to generate the recurring transactions
 const processRecurringTransactionsService = async () => {
   // 1. Get all active recurring transactions
   const allRecurringTransactions = await Transaction.find({
