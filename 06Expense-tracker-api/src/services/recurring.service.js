@@ -238,6 +238,8 @@ const generateNextRecurringTransactionService = async (
   validateRequired(transactionId, "Transaction id");
   validateObjectId(transactionId, "Transaction");
 
+  // original transaction (we ll use it to create its recurring/child transaction)
+  // it should be same in DB. so strickly no change is allowed here
   const recurringTransaction = await Transaction.findOne({
     _id: transactionId,
     user: userId,
@@ -252,6 +254,8 @@ const generateNextRecurringTransactionService = async (
 
   const nextDate = calculateNextOccurrence(date, frequency);
 
+  // transaction generated from original one for recurrence/repeatitions
+  // this will generate each time (repeatedly) when user wana repeat a specific transctions with its frequency (daily,monthl,weekly or yearly)
   const nextOccuringTransaction = await Transaction.create({
     user: userId,
     type: recurringTransaction.type,
@@ -263,7 +267,11 @@ const generateNextRecurringTransactionService = async (
     notes: recurringTransaction.notes,
     recurring: true,
     frequency: recurringTransaction.frequency,
+    recurringTransactionId: recurringTransaction._id,
   });
+
+  // all the generated transactions will have its source/origin using the original transaction refrence (recurringTransactionId: recurringTransaction._id,)
+  //it helps to keep track of its parent/original transaction
 
   return nextOccuringTransaction;
 };

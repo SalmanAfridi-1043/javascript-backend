@@ -58,6 +58,13 @@ const transactionSchema = new Schema(
       type: String,
       enum: ["daily", "weekly", "monthly", "yearly"],
     },
+
+    // used as reference to the source from which the recurring/repeatition transactions generated
+    recurringTransactionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+      default: null,
+    },
   },
   { timestamps: true },
 );
