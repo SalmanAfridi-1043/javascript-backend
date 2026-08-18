@@ -7,6 +7,7 @@ import { Transaction } from "../models/transaction.model.js";
 import {
   validateRecurringData,
   validateRecurringFilters,
+  validateRecurringUpdateData,
 } from "../validators/recurring.validator.js";
 
 const createRecurringTransactionService = async (userId, data) => {
@@ -96,8 +97,78 @@ const getSingleRecurringTransactionService = async (userId, transactionId) => {
   return recurringTransaction;
 };
 
+const updateRecurringTransactionService = async (
+  userId,
+  transactionId,
+  updateData,
+) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const {
+    amount,
+    description,
+    categoryId,
+    paymentMethod,
+    date,
+    frequency,
+    notes,
+  } = validateRecurringUpdateData(updateData);
+
+  const recurringTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  });
+
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Recurring Transaction not found");
+  }
+
+  // if wana change category, then transaction and category type must be  same
+  if (categoryId !== undefined) {
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      throw new ApiError(404, "Category not found");
+    }
+    if (category.type !== recurringTransaction.type) {
+      throw new ApiError(400, "Invalid type");
+    }
+  }
+
+  // updating only given data.
+  if (amount !== undefined) {
+    recurringTransaction.amount = amount;
+  }
+  if (description !== undefined) {
+    recurringTransaction.description = description;
+  }
+  if (categoryId !== undefined) {
+    recurringTransaction.category = categoryId;
+  }
+  if (paymentMethod !== undefined) {
+    recurringTransaction.paymentMethod = paymentMethod;
+  }
+  if (date !== undefined) {
+    recurringTransaction.date = date;
+  }
+  if (frequency !== undefined) {
+    recurringTransaction.frequency = frequency;
+  }
+  if (notes !== undefined) {
+    recurringTransaction.notes = notes;
+  }
+
+  await recurringTransaction.save();
+  await recurringTransaction.populate("category");
+
+  return recurringTransaction;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
+  updateRecurringTransactionService,
 };

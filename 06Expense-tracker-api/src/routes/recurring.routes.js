@@ -5,6 +5,7 @@ import {
   createRecurringTransaction,
   getAllRecurringTransactions,
   getSingleRecurringTransaction,
+  updateRecurringTransaction,
 } from "../controllers/recurring.controller.js";
 
 const router = Router();
@@ -16,5 +17,7 @@ router.post("/create", createRecurringTransaction);
 router.get("/", getAllRecurringTransactions);
 
 router.get("/:transactionId", getSingleRecurringTransaction);
+
+router.patch("/:transactionId", updateRecurringTransaction);
 
 export default router;

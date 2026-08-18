@@ -113,4 +113,73 @@ const validateRecurringFilters = (recurringFilters) => {
   };
 };
 
-export { validateRecurringData, validateRecurringFilters };
+const validateRecurringUpdateData = (updateData) => {
+  const {
+    amount,
+    description,
+    categoryId,
+    paymentMethod,
+    date,
+    frequency,
+    notes,
+  } = updateData;
+
+  const normalizedDescription = description?.trim();
+  const normalizedPaymentMethod = paymentMethod?.trim().toLowerCase();
+  const normalizedNotes = notes?.trim();
+  const normalizedFrequency = frequency?.trim().toLowerCase();
+
+  if (amount !== undefined) {
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+      throw new ApiError(400, "Enter a valid positive amount");
+    }
+  }
+
+  if (categoryId !== undefined) {
+    validateObjectId(categoryId, "Category");
+  }
+
+  if (normalizedPaymentMethod !== undefined) {
+    if (!["cash", "bank", "card", "wallet"].includes(normalizedPaymentMethod)) {
+      throw new ApiError(
+        400,
+        "Payment method must be cash, bank, card, or wallet",
+      );
+    }
+  }
+
+  let parsedDate;
+  if (date !== undefined) {
+    parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new ApiError(400, "Enter a valid date");
+    }
+  }
+
+  if (normalizedFrequency !== undefined) {
+    if (
+      !["daily", "weekly", "monthly", "yearly"].includes(normalizedFrequency)
+    ) {
+      throw new ApiError(
+        400,
+        "Frequency must be daily, weekly, monthly, or yearly",
+      );
+    }
+  }
+
+  return {
+    amount,
+    description: normalizedDescription,
+    categoryId,
+    paymentMethod: normalizedPaymentMethod,
+    date: parsedDate,
+    frequency: normalizedFrequency,
+    notes: normalizedNotes,
+  };
+};
+
+export {
+  validateRecurringData,
+  validateRecurringFilters,
+  validateRecurringUpdateData,
+};

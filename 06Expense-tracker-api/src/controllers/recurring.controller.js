@@ -5,6 +5,7 @@ import {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
+  updateRecurringTransactionService,
 } from "../services/recurring.service.js";
 
 const createRecurringTransaction = asyncHandler(async (req, res) => {
@@ -59,8 +60,31 @@ const getSingleRecurringTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const updateRecurringTransaction = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+  const updateData = req.body;
+
+  const updatedRecurring = await updateRecurringTransactionService(
+    userId,
+    transactionId,
+    updateData,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedRecurring,
+        "Recurring transaction updated successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
   getSingleRecurringTransaction,
+  updateRecurringTransaction,
 };
