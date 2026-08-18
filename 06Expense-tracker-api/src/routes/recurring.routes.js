@@ -5,6 +5,7 @@ import {
   createRecurringTransaction,
   deleteRecurringTransaction,
   getAllRecurringTransactions,
+  getNextOccurrence,
   getSingleRecurringTransaction,
   toggleRecurringTransaction,
   updateRecurringTransaction,
@@ -25,5 +26,8 @@ router.patch("/:transactionId", updateRecurringTransaction);
 router.delete("/:transactionId", deleteRecurringTransaction);
 
 router.patch("/:transactionId/toggle", toggleRecurringTransaction);
+
+// It returns the next date when the recurring transaction should occur.
+router.get("/:transactionId/next-occurrence", getNextOccurrence);
 
 export default router;

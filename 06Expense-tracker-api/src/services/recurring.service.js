@@ -8,6 +8,7 @@ import {
   validateRecurringData,
   validateRecurringFilters,
   validateRecurringUpdateData,
+  calculateNextOccurrence,
 } from "../validators/recurring.validator.js";
 
 const createRecurringTransactionService = async (userId, data) => {
@@ -206,6 +207,29 @@ const toggleRecurringTransactionService = async (userId, transactionId) => {
   return recurringTransaction;
 };
 
+const getNextOccurrenceService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const recurringTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+    recurring: true,
+  });
+
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  const date = recurringTransaction.date;
+  const frequency = recurringTransaction.frequency;
+
+  const nextDate = calculateNextOccurrence(date, frequency);
+
+  return nextDate;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
@@ -213,4 +237,5 @@ export {
   updateRecurringTransactionService,
   deleteRecurringTransactionService,
   toggleRecurringTransactionService,
+  getNextOccurrenceService,
 };

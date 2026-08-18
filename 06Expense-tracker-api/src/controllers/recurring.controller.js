@@ -5,6 +5,7 @@ import {
   createRecurringTransactionService,
   deleteRecurringTransactionService,
   getAllRecurringTransactionsService,
+  getNextOccurrenceService,
   getSingleRecurringTransactionService,
   toggleRecurringTransactionService,
   updateRecurringTransactionService,
@@ -124,6 +125,26 @@ const toggleRecurringTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const getNextOccurrence = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const nextOccurrenceDetails = await getNextOccurrenceService(
+    userId,
+    transactionId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        nextOccurrenceDetails,
+        "Next transaction occurrnce details fetched successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
@@ -131,4 +152,5 @@ export {
   updateRecurringTransaction,
   deleteRecurringTransaction,
   toggleRecurringTransaction,
+  getNextOccurrence,
 };

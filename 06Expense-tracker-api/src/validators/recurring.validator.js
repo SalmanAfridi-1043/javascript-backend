@@ -178,8 +178,37 @@ const validateRecurringUpdateData = (updateData) => {
   };
 };
 
+const calculateNextOccurrence = (date, frequency) => {
+  const nextDate = new Date(date);
+
+  let currentDate = nextDate.getDate();
+  let month = nextDate.getMonth();
+  let year = nextDate.getFullYear();
+
+  if (frequency === "daily") {
+    currentDate += 1;
+    nextDate.setDate(currentDate);
+  }
+  if (frequency === "weekly") {
+    currentDate += 7;
+    nextDate.setDate(currentDate);
+  }
+  if (frequency === "monthly") {
+    month += 1;
+    nextDate.setMonth(month);
+  }
+  if (frequency === "yearly") {
+    year += 1;
+    nextDate.setFullYear(year);
+  }
+
+  return nextDate;
+};
+
 export {
   validateRecurringData,
   validateRecurringFilters,
   validateRecurringUpdateData,
+  calculateNextOccurrence,
+  calculateNextOccurrence,
 };
