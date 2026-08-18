@@ -6,6 +6,7 @@ import {
   deleteRecurringTransaction,
   getAllRecurringTransactions,
   getSingleRecurringTransaction,
+  toggleRecurringTransaction,
   updateRecurringTransaction,
 } from "../controllers/recurring.controller.js";
 
@@ -22,5 +23,7 @@ router.get("/:transactionId", getSingleRecurringTransaction);
 router.patch("/:transactionId", updateRecurringTransaction);
 
 router.delete("/:transactionId", deleteRecurringTransaction);
+
+router.patch("/:transactionId/toggle", toggleRecurringTransaction);
 
 export default router;

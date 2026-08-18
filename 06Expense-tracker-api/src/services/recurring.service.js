@@ -184,10 +184,33 @@ const deleteRecurringTransactionService = async (userId, transactionId) => {
   return { success: true };
 };
 
+const toggleRecurringTransactionService = async (userId, transactionId) => {
+  validateRequired(userId, "User id");
+  validateRequired(transactionId, "Transaction id");
+  validateObjectId(transactionId, "Transaction");
+
+  const recurringTransaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+  });
+
+  if (!recurringTransaction) {
+    throw new ApiError(404, "Transaction not found");
+  }
+
+  // get current recurring state and then toggle it
+  const toggledState = !recurringTransaction.recurring;
+  recurringTransaction.recurring = toggledState;
+  await recurringTransaction.save();
+
+  return recurringTransaction;
+};
+
 export {
   createRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
   updateRecurringTransactionService,
   deleteRecurringTransactionService,
+  toggleRecurringTransactionService,
 };

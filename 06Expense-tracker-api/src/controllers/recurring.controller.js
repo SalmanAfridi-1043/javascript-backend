@@ -6,6 +6,7 @@ import {
   deleteRecurringTransactionService,
   getAllRecurringTransactionsService,
   getSingleRecurringTransactionService,
+  toggleRecurringTransactionService,
   updateRecurringTransactionService,
 } from "../services/recurring.service.js";
 
@@ -103,10 +104,31 @@ const deleteRecurringTransaction = asyncHandler(async (req, res) => {
     );
 });
 
+const toggleRecurringTransaction = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { transactionId } = req.params;
+
+  const updatedRecurringTransaction = await toggleRecurringTransactionService(
+    userId,
+    transactionId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedRecurringTransaction,
+        "Recurring transaction toggled successfully",
+      ),
+    );
+});
+
 export {
   createRecurringTransaction,
   getAllRecurringTransactions,
   getSingleRecurringTransaction,
   updateRecurringTransaction,
   deleteRecurringTransaction,
+  toggleRecurringTransaction,
 };
