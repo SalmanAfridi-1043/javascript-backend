@@ -4,7 +4,10 @@ import { validateObjectId } from "../utils/validateObjectId.js";
 import { Category } from "../models/category.model.js";
 import { Transaction } from "../models/transaction.model.js";
 
-import { validateRecurringData } from "../validators/recurring.validator.js";
+import {
+  validateRecurringData,
+  validateRecurringFilters,
+} from "../validators/recurring.validator.js";
 
 const createRecurringTransactionService = async (userId, data) => {
   validateRequired(userId, "User id");
@@ -48,4 +51,34 @@ const createRecurringTransactionService = async (userId, data) => {
   return transaction;
 };
 
-export { createRecurringTransactionService };
+const getAllRecurringTransactionsService = async (userId, recurringFilters) => {
+  validateRequired(userId, "User id");
+
+  const { type, frequency } = validateRecurringFilters(recurringFilters);
+
+  const filterObject = {
+    user: userId,
+    recurring: true,
+  };
+  if (type !== undefined) {
+    filterObject.type = type;
+  }
+  if (frequency !== undefined) {
+    filterObject.frequency = frequency;
+  }
+
+  const allRecurrings = await Transaction.find(filterObject)
+    .populate("category")
+    .sort({ createdAt: -1 });
+
+  if (allRecurrings.length === 0) {
+    throw new ApiError(404, "No recurring transactions found");
+  }
+
+  return allRecurrings;
+};
+
+export {
+  createRecurringTransactionService,
+  getAllRecurringTransactionsService,
+};

@@ -84,4 +84,33 @@ const validateRecurringData = (data) => {
   };
 };
 
-export { validateRecurringData };
+const validateRecurringFilters = (recurringFilters) => {
+  const { type, frequency } = recurringFilters;
+
+  const normalizedType = type?.trim().toLowerCase();
+  const normalizedFrequency = frequency?.trim().toLowerCase();
+
+  if (normalizedType !== undefined) {
+    if (!["income", "expense"].includes(normalizedType)) {
+      throw new ApiError(400, "Type can be income or expense");
+    }
+  }
+
+  if (normalizedFrequency !== undefined) {
+    if (
+      !["daily", "weekly", "monthly", "yearly"].includes(normalizedFrequency)
+    ) {
+      throw new ApiError(
+        400,
+        "Frequency must be daily, weekly, monthly, or yearly",
+      );
+    }
+  }
+
+  return {
+    type: normalizedType,
+    frequency: normalizedFrequency,
+  };
+};
+
+export { validateRecurringData, validateRecurringFilters };
