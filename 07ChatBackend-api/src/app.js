@@ -16,7 +16,7 @@ app.use(
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public"));
+app.use(express.static("public")); // a temp place for image to be stored
 app.use(cookieParser());
 
 // routes declaration
