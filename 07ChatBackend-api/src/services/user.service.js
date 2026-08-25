@@ -116,4 +116,30 @@ const updateUserProfileService = async (userId, updateData) => {
   return safeUser;
 };
 
-export { getUserByIdService, searchUsersService, updateUserProfileService };
+const updateUserAvatarService = async (userId, avatar) => {
+  validateRequired(userId, "User id");
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        avatar,
+      },
+    },
+    { new: true, runValidators: true },
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const safeUser = createSafeUser(user);
+  return safeUser;
+};
+
+export {
+  getUserByIdService,
+  searchUsersService,
+  updateUserProfileService,
+  updateUserAvatarService,
+};

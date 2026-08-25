@@ -29,13 +29,13 @@ const updateUserProfileService = async (userId, data) => {
 
   const updateData = {}; // dynamic object to store only valid data (to avoid overwrite field with undefined)
 
-  if (!fullName !== undefined) {
+  if (fullName !== undefined) {
     updateData.fullName = fullName.trim();
   }
-  if (!bio !== undefined) {
+  if (bio !== undefined) {
     updateData.bio = bio.trim();
   }
-  if (!avatar !== undefined) {
+  if (avatar !== undefined) {
     updateData.avatar = avatar;
   }
 
