@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {
   getUserByIdService,
   searchUsersService,
+  updateUserProfileService,
 } from "../services/user.service.js";
 
 const getUserById = asyncHandler(async (req, res) => {
@@ -27,4 +28,15 @@ const searchUsers = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, users, "All users fetched successfully"));
 });
 
-export { getUserById, searchUsers };
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const updateData = req.body;
+
+  const updatedUser = await updateUserProfileService(userId, updateData);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+});
+
+export { getUserById, searchUsers, updateUserProfile };

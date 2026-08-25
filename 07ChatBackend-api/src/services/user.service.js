@@ -6,7 +6,11 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import jwt from "jsonwebtoken";
-import { validateSearchData } from "../validators/user.validator.js";
+
+import {
+  validateSearchData,
+  validateUpdateData,
+} from "../validators/user.validator.js";
 
 const getUserByIdService = async (userId) => {
   validateRequired(userId, "user id");
@@ -56,4 +60,60 @@ const searchUsersService = async (searchData) => {
   };
 };
 
-export { getUserByIdService, searchUsersService };
+const updateUserProfileService = async (userId, updateData) => {
+  validateRequired(userId, "user id");
+  const { fullName, username, email } = validateUpdateData(updateData);
+
+  // check if username already exists
+  if (username !== undefined) {
+    const isUsernameExists = await User.findOne({
+      username,
+      _id: { $ne: userId }, // exclude the current user (ne- not equal to)
+    });
+    if (isUsernameExists) {
+      throw new ApiError(409, "Username already exists");
+    }
+  }
+
+  // check if email already exists
+  if (email !== undefined) {
+    const isEmailExists = await User.findOne({
+      email,
+      _id: { $ne: userId }, // exclude the current user (ne- not equal to)
+    });
+    if (isEmailExists) {
+      throw new ApiError(409, "Email already exists");
+    }
+  }
+
+  const updateObject = {};
+  if (fullName !== undefined) updateObject.fullName = fullName;
+  if (username !== undefined) updateObject.username = username;
+  if (email !== undefined) updateObject.email = email;
+
+  // prevent empty update. coz it can cause $set:{} which undefined all the fields
+  if (Object.keys(updateObject).length === 0) {
+    throw new ApiError(400, "No fields to update");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: updateObject,
+    },
+    {
+      new: true,
+      runValidators: true, // it runs the mongoose schema validation during update
+    },
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const safeUser = createSafeUser(user);
+
+  return safeUser;
+};
+
+export { getUserByIdService, searchUsersService, updateUserProfileService };
