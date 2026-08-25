@@ -4,7 +4,11 @@ import { createSafeUser } from "../utils/sanitizeUser.js";
 import { validateRequired } from "../utils/validateRequired.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { Conversation } from "../models/conversation.model.js";
-import { validateParticipantIds } from "../validators/conversation.validator.js";
+import { Message } from "../models/message.model.js";
+import {
+  validateParticipantIds,
+  validatePaginationData,
+} from "../validators/conversation.validator.js";
 
 const createDirectConversationService = async (currentUserId, targetUserId) => {
   validateRequired(currentUserId, "Current user id");
@@ -61,7 +65,7 @@ const getConversationService = async (currentUserId, conversationId) => {
 
   const conversation = await Conversation.findOne({
     _id: conversationId,
-    participants: currentUserId,
+    participants: currentUserId, // this is done by the authorization middleware.
   })
     .populate("participants")
     .populate("lastMessage");
@@ -120,9 +124,48 @@ const createGroupConversationService = async (
   return conversation;
 };
 
+const getConversationMessagesService = async (
+  conversationId,
+  paginationData,
+) => {
+  validateRequired(conversationId, "Conversation id");
+  validateObjectId(conversationId, "conversation");
+
+  const { page, limit } = validatePaginationData(paginationData);
+  const skip = (page - 1) * limit;
+
+  // as the authorization middleware has confirmed that conversation exists and the user is authorizaed so no need to find conversation and check if exists
+
+  const allMessages = await Message.find({
+    conversation: conversationId,
+  })
+    .populate("sender")
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const total = await Message.countDocuments({
+    conversation: conversation._id,
+  });
+
+  const pages = Math.ceil(total / limit);
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    allMessages,
+    total,
+    pages,
+    limit,
+    previousPage,
+    nextPage,
+  };
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
   getConversationService,
   createGroupConversationService,
+  getConversationMessagesService,
 };

@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import {
   createDirectConversationService,
   createGroupConversationService,
+  getConversationMessagesService,
   getConversationService,
   getUserConversationsService,
 } from "../services/conversation.service.js";
@@ -73,9 +74,26 @@ const createGroupConversation = asyncHandler(async (req, res) => {
     );
 });
 
+const getConversationMessages = asyncHandler(async (req, res) => {
+  const { conversationId } = req.params;
+  const paginationData = req.query;
+
+  const allMessages = await getConversationMessagesService(
+    conversationId,
+    paginationData,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, allMessages, "All messages fetched successfully"),
+    );
+});
+
 export {
   createDirectConversation,
   getUserConversations,
   getConversation,
   createGroupConversation,
+  getConversationMessages,
 };

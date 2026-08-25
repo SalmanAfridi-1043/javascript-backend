@@ -10,4 +10,32 @@ const validateParticipantIds = (ids, fieldName = "IDs") => {
   });
 };
 
-export { validateParticipantIds };
+const validatePaginationData = (paginationData) => {
+  const { page, limit } = paginationData;
+
+  const normalizedPage = Number(page) || 1;
+  const normalizedLimit = Number(limit) || 10;
+
+  if (
+    (normalizedPage && !Number.isFinite(normalizedPage)) ||
+    !Number.isInteger(normalizedPage) ||
+    normalizedPage < 1
+  ) {
+    throw new ApiError(400, "Enter valid positive page number");
+  }
+
+  if (
+    (normalizedLimit && !Number.isFinite(normalizedLimit)) ||
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1
+  ) {
+    throw new ApiError(400, "Enter valid positive limit number");
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
+export { validateParticipantIds, validatePaginationData };
