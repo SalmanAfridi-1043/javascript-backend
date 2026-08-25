@@ -40,4 +40,17 @@ const createDirectConversationService = async (currentUserId, targetUserId) => {
   return directConversation;
 };
 
-export { createDirectConversationService };
+const getUserConversationsService = async (currentUserId) => {
+  validateRequired(currentUserId, "User id");
+
+  const conversation = await Conversation.find({
+    participants: currentUserId,
+  })
+    .populate("participants")
+    .populate("lastMessage")
+    .sort({ updatedAt: -1 });
+
+  return conversation;
+};
+
+export { createDirectConversationService, getUserConversationsService };
