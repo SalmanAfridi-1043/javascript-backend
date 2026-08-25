@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
   createDirectConversationService,
+  createGroupConversationService,
   getConversationService,
   getUserConversationsService,
 } from "../services/conversation.service.js";
@@ -55,4 +56,26 @@ const getConversation = asyncHandler(async (req, res) => {
     );
 });
 
-export { createDirectConversation, getUserConversations, getConversation };
+const createGroupConversation = asyncHandler(async (req, res) => {
+  const currentUserId = req.user?._id;
+  const { name, participants } = req.body;
+
+  const conversation = await createGroupConversationService(
+    currentUserId,
+    name,
+    participants,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, conversation, "Conversation fetched successfully"),
+    );
+});
+
+export {
+  createDirectConversation,
+  getUserConversations,
+  getConversation,
+  createGroupConversation,
+};
