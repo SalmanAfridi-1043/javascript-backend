@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { socketAuthMiddleware } from "../middleware/socketAuth.middleware.js";
 import { Conversation } from "../models/conversation.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { sendMessageService } from "../services/message.service.js";
 
 export const initializeSocket = (server) => {
   const io = new Server(server, {
@@ -60,6 +61,32 @@ export const initializeSocket = (server) => {
       }
     });
 
+    // Send a new message
+    socket.on("message:send", async (data) => {
+      try {
+        const { conversationId, content } = data;
+
+        const message = await sendMessageService({
+          conversationId,
+          content,
+          senderId: socket.user._id,
+        });
+
+        // create a new room for this conversation
+        const roomName = `conversation:${conversationId}`;
+
+        // pass the message to that new room (trigger the new message event in that new room)
+        io.to(roomName).emit("message:new", message);
+      } catch (error) {
+        console.error(`Failed to send message: ${error.message}`);
+
+        socket.emit("message:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to send message",
+        });
+      }
+    });
+
     // Fires when this socket disconnects
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}`);
@@ -112,3 +139,21 @@ export const initializeSocket = (server) => {
 // Rooms are temporary-A room exists only while sockets are connected and joined.
 // If a user disconnects:-> socket disconnects ->socket leaves room
 // But the conversation and messages remain in MongoDB.
+// Room = WHERE while Event = WHAT
+
+// The important terms
+// | Term                | What it is                                             | Direction       |
+// | ------------------- | ------------------------------------------------------ | --------------- |
+// | `conversation:123`  | **Room name** for conversation ID `123`                | Server-side     |
+// | `conversation:join` | Event asking server to join a conversation room        | Client → Server |
+// | `message:send`      | Event asking server to send/save a message             | Client → Server |
+// | `message:new`       | Event notifying clients that a new message was created | Server → Client |
+// | `message:error`     | Event sending a message-related error                  | Server → Client |
+// | `disconnect`        | Built-in Socket.IO event when a socket disconnects     | Socket.IO       |
+
+// io.to("conversation:123").emit("message:new", message) so ,
+//it means: In conversation 123, announce that a new message exists.
+
+// One architectural rule to remember
+// 1. Socket layer = communication.
+// 2. Service layer = business logic.
