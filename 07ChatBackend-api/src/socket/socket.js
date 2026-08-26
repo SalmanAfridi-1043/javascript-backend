@@ -68,3 +68,47 @@ export const initializeSocket = (server) => {
 
   return io;
 };
+
+// io represents the entire Socket.IO server.(io = whole Socket.IO system)
+// socket represents one specific connection/device.
+
+// emit() means simply:"Send/trigger this event."It can be used for messages, errors, typing, read receipts, notifications, etc.
+
+// | Code                     | Who receives it?                   |
+// | ------------------------ | ---------------------------------- |
+// | `socket.emit()`          | Only this socket/device/connection |
+// | `io.emit()`              | Everyone                           |
+// | `io.to(room).emit()`     | Everyone in room                   |
+// | `socket.to(room).emit()` | Everyone in room **except me**     |
+// | `io.on("connection")`    | Listen for new connections         |
+// | `socket.on()`            | Listen for an event                |
+// | `socket.join(room)`      | Put socket into room               |
+
+// emit()= SEND an event
+// on()= LISTEN for an event
+
+// Your server determines the destination using:
+// socket.emit()              // this client
+// io.emit()                  // everyone
+// io.to(room).emit()         // room
+// socket.to(room).emit()     // room except sender
+
+// So there is no conflict because:
+// socket.id   → identifies the connection
+// room ID     → identifies the conversation
+// user ID     → identifies the account
+// message ID  → identifies the message
+
+// userId-→ identifies the account
+// socket.id-→ identifies one active connection/device/socket
+
+// One user can have multiple connections/sockets/devices (like whtsap linked devices):
+// userId: Salman
+// ├── socket A → laptop
+// ├── socket B → phone
+// └── socket C → browser
+
+// A room is a virtual medium in whcih different devices/socket communicates
+// Rooms are temporary-A room exists only while sockets are connected and joined.
+// If a user disconnects:-> socket disconnects ->socket leaves room
+// But the conversation and messages remain in MongoDB.
