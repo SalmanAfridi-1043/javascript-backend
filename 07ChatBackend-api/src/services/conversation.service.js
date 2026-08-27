@@ -294,6 +294,88 @@ const removeGroupMemberService = async (adminId, conversationId, memberId) => {
   return conversation;
 };
 
+const leaveGroupConversationService = async (userId, conversationId) => {
+  validateRequired(userId, "User id");
+  validateRequired(conversationId, "conversation id");
+
+  validateObjectId(userId, "User");
+  validateObjectId(conversationId, "Conversation");
+
+  const conversation = await Conversation.findById(conversationId);
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  if (conversation.type !== "group") {
+    throw new ApiError(400, "Invalid conversation type");
+  }
+
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === userId.toString(),
+  );
+
+  if (!isParticipant) {
+    throw new ApiError(409, "User already removed from conversation");
+  }
+
+  // If user is admin: --→ prevent leaving and  transfer admin first
+  if (conversation.admin.toString() === userId.toString()) {
+    throw new ApiError(409, "User require to transfer admin rights first");
+  }
+
+  conversation.participants.pull(userId);
+  await conversation.save();
+
+  return { success: true };
+};
+
+const transferGroupAdminService = async (
+  currentAdminId,
+  conversationId,
+  newAdminId,
+) => {
+  validateRequired(currentAdminId, "current Admin Id ");
+  validateRequired(conversationId, "conversation id");
+  validateRequired(newAdminId, "new admin id");
+
+  validateObjectId(currentAdminId, "Current Admin");
+  validateObjectId(conversationId, "Conversation");
+  validateObjectId(newAdminId, "New admin");
+
+  const conversation = await Conversation.findById(conversationId);
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  if (conversation.type !== "group") {
+    throw new ApiError(400, "Invalid conversation type");
+  }
+
+  // Verify current user is the admin
+  if (conversation.admin.toString() !== currentAdminId.toString()) {
+    throw new ApiError(409, "User is not admin of conversation");
+  }
+
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === newAdminId.toString(),
+  );
+
+  if (!isParticipant) {
+    throw new ApiError(409, "User is not participant of conversation");
+  }
+
+  if (conversation.admin.toString() === newAdminId.toString()) {
+    throw new ApiError(409, "Existing admin cannot transfer to new admin");
+  }
+
+  conversation.admin = newAdminId;
+  await conversation.save();
+
+  return conversation;
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
@@ -303,4 +385,6 @@ export {
   getUnreadCountsService,
   addGroupMemberService,
   removeGroupMemberService,
+  leaveGroupConversationService,
+  transferGroupAdminService,
 };

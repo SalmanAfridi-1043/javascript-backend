@@ -9,7 +9,9 @@ import {
   getConversationService,
   getUnreadCountsService,
   getUserConversationsService,
+  leaveGroupConversationService,
   removeGroupMemberService,
+  transferGroupAdminService,
 } from "../services/conversation.service.js";
 
 const createDirectConversation = asyncHandler(async (req, res) => {
@@ -150,6 +152,33 @@ const removeGroupMember = asyncHandler(async (req, res) => {
     );
 });
 
+const leaveGroupConversation = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { conversationId } = req.params;
+
+  const response = await leaveGroupConversationService(userId, conversationId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Left conversation successfully"));
+});
+
+const transferGroupAdmin = asyncHandler(async (req, res) => {
+  const currentAdminId = req.user._id;
+  const { conversationId } = req.params;
+  const { newAdminId } = req.body;
+
+  const newAdmin = await transferGroupAdminService(
+    currentAdminId,
+    conversationId,
+    newAdminId,
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newAdmin, "Admin transfered successfully"));
+});
+
 export {
   createDirectConversation,
   getUserConversations,
@@ -159,4 +188,6 @@ export {
   getUnreadCounts,
   addGroupMember,
   removeGroupMember,
+  leaveGroupConversation,
+  transferGroupAdmin,
 };

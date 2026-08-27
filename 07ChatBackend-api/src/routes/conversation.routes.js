@@ -10,7 +10,9 @@ import {
   getConversationMessages,
   getUnreadCounts,
   getUserConversations,
+  leaveGroupConversation,
   removeGroupMember,
+  transferGroupAdmin,
 } from "../controllers/conversation.controller.js";
 
 const router = Router();
@@ -38,16 +40,32 @@ router.get(
 
 router.get("/unread", getUnreadCounts);
 
+// when admin want to add a member
 router.post(
   "/:conversationId/members",
   authorizeConversationMiddleware,
   addGroupMember,
 );
 
+// when admin want to remove a member
 router.delete(
   "/:conversationId/members/:memberId",
   authorizeConversationMiddleware,
   removeGroupMember,
+);
+
+// when a member want to leave the conversation
+router.delete(
+  "/:conversationId/leave",
+  authorizeConversationMiddleware,
+  leaveGroupConversation,
+);
+
+// when admin want to leave the conversation
+router.patch(
+  "/:conversationId/admin",
+  authorizeConversationMiddleware,
+  transferGroupAdmin,
 );
 
 export default router;
