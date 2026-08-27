@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import {
   sendMessageService,
   markMessageDeliveredService,
+  markMessageReadService,
 } from "../services/message.service.js";
 
 const initializeSocket = (server) => {
@@ -145,6 +146,33 @@ const initializeSocket = (server) => {
         socket.emit("message:error", {
           statusCode: error.statusCode || 500,
           message: error.message || "Failed to mark message as delivered",
+        });
+      }
+    });
+
+    // MESSAGE READBY HANDLER (event whcih handle message readibility)
+    socket.on("message:read", async ({ messageId }) => {
+      try {
+        const readMessage = await markMessageReadService({
+          messageId,
+          readerId: socket.user._id, //the user who actually read the message.
+        });
+
+        const senderId = readMessage.sender.toString();
+        const senderSockets = userSockets.get(senderId);
+
+        if (senderSockets) {
+          senderSockets.forEach((socketId) => {
+            io.to(socketId).emit("message:read", {
+              messageId: readMessage._id,
+              readBy: socket.user._id,
+            });
+          });
+        }
+      } catch (error) {
+        socket.emit("message:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to mark message as read",
         });
       }
     });

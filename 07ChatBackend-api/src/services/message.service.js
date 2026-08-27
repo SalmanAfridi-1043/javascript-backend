@@ -89,4 +89,44 @@ const markMessageDeliveredService = async ({ messageId, receiverId }) => {
   return updatedMessage;
 };
 
-export { sendMessageService, markMessageDeliveredService };
+const markMessageReadService = async ({ messageId, readerId }) => {
+  validateRequired(readerId, "User id");
+  validateRequired(messageId, "Message id");
+
+  validateObjectId(readerId, "User");
+  validateObjectId(messageId, "message");
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, "Message not found");
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === readerId.toString(),
+  );
+
+  if (!isParticipant) {
+    throw new ApiError(403, "Unauthorized access to conversation");
+  }
+
+  const updatedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $addToSet: { readBy: readerId },
+    },
+    { new: true },
+  );
+
+  return updaate;
+};
+
+export {
+  sendMessageService,
+  markMessageDeliveredService,
+  markMessageReadService,
+};
