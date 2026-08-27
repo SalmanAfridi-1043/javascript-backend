@@ -10,6 +10,7 @@ import {
   getConversationMessages,
   getUnreadCounts,
   getUserConversations,
+  removeGroupMember,
 } from "../controllers/conversation.controller.js";
 
 const router = Router();
@@ -41,6 +42,12 @@ router.post(
   "/:conversationId/members",
   authorizeConversationMiddleware,
   addGroupMember,
+);
+
+router.delete(
+  "/:conversationId/members/:memberId",
+  authorizeConversationMiddleware,
+  removeGroupMember,
 );
 
 export default router;

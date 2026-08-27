@@ -198,12 +198,12 @@ const getUnreadCountsService = async (userId) => {
   return { unreadCounts, totalUnread };
 };
 
-const addGroupMemberService = async (userId, conversationId, memberId) => {
-  validateRequired(userId, "User id");
+const addGroupMemberService = async (adminId, conversationId, memberId) => {
+  validateRequired(adminId, "User id");
   validateRequired(conversationId, "conversation id");
   validateRequired(memberId, "member id");
 
-  validateObjectId(userId, "User");
+  validateObjectId(adminId, "User");
   validateObjectId(conversationId, "Conversation");
   validateObjectId(memberId, "Member");
 
@@ -212,7 +212,7 @@ const addGroupMemberService = async (userId, conversationId, memberId) => {
     throw new ApiError(404, "Conversation not found");
   }
 
-  if (conversation.admin.toString() !== userId.toString()) {
+  if (conversation.admin.toString() !== adminId.toString()) {
     throw new ApiError(
       403,
       "Unauthorized access! Only admin can manage conversation",
@@ -249,6 +249,51 @@ const addGroupMemberService = async (userId, conversationId, memberId) => {
   return updatedConversation;
 };
 
+const removeGroupMemberService = async (adminId, conversationId, memberId) => {
+  validateRequired(adminId, "User id");
+  validateRequired(conversationId, "conversation id");
+  validateRequired(memberId, "member id");
+
+  validateObjectId(adminId, "User");
+  validateObjectId(conversationId, "Conversation");
+  validateObjectId(memberId, "Member");
+
+  const conversation = await Conversation.findById(conversationId);
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  if (conversation.type !== "group") {
+    throw new ApiError(400, "Invalid conversation type");
+  }
+
+  if (conversation.admin.toString() !== adminId.toString()) {
+    throw new ApiError(
+      403,
+      "Unauthorized access! Only admin can manage conversation",
+    );
+  }
+
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === memberId.toString(),
+  );
+
+  if (!isParticipant) {
+    throw new ApiError(409, "Member alread removed from conversation");
+  }
+
+  // Prevent admin from removing themselves
+  if (conversation.admin.toString() === memberId.toString()) {
+    throw new ApiError(409, "Admin cannot remove themselves from conversation");
+  }
+
+  conversation.participants.pull(memberId);
+  await conversation.save();
+
+  return conversation;
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
@@ -257,4 +302,5 @@ export {
   getConversationMessagesService,
   getUnreadCountsService,
   addGroupMemberService,
+  removeGroupMemberService,
 };
