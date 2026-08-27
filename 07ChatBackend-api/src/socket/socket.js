@@ -51,6 +51,66 @@ const initializeSocket = (server) => {
       }
     }
 
+    // Start Typing indicator
+    // user can type only in its conversation/room so first authenticate the user room
+    socket.on("typing:start", async ({ conversationId }) => {
+      try {
+        const conversation = await Conversation.findOne({
+          _id: conversationId,
+          participants: socket.user._id,
+        });
+
+        if (!conversation) {
+          throw new ApiError(
+            403,
+            "You are not authorized to access this conversation",
+          );
+        }
+
+        const roomName = `conversation:${conversationId}`;
+
+        // Send to everyone in the room except the socket/user that triggered the event.
+        socket.to(roomName).emit("typing:start", {
+          userId: socket.user._id,
+          conversationId,
+        });
+      } catch (error) {
+        socket.emit("typing:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to start typing indicator",
+        });
+      }
+    });
+
+    socket.on("typing:stop", async ({ conversationId }) => {
+      try {
+        const conversation = await Conversation.findOne({
+          _id: conversationId,
+          participants: socket.user._id,
+        });
+
+        if (!conversation) {
+          throw new ApiError(
+            403,
+            "You are not authorized to access this conversation",
+          );
+        }
+
+        const roomName = `conversation:${conversationId}`;
+
+        // Send to everyone in the room except the socket/user that triggered the event.
+        socket.to(roomName).emit("typing:stop", {
+          userId: socket.user._id,
+          conversationId,
+        });
+      } catch (error) {
+        socket.emit("typing:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to stop typing indicator",
+        });
+      }
+    });
+
     // Join a conversation room
     socket.on("conversation:join", async (conversationId) => {
       try {
