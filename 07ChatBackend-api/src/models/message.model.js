@@ -42,6 +42,10 @@ const messageSchema = new Schema(
         ref: "User",
       },
     ],
+
+    editedAt: {
+      type: Date,
+    },
   },
 
   { timestamps: true },

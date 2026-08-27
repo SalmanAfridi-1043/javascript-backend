@@ -8,6 +8,7 @@ import {
   sendMessageService,
   markMessageDeliveredService,
   markMessageReadService,
+  editMessageService,
 } from "../services/message.service.js";
 
 const initializeSocket = (server) => {
@@ -173,6 +174,39 @@ const initializeSocket = (server) => {
         socket.emit("message:error", {
           statusCode: error.statusCode || 500,
           message: error.message || "Failed to mark message as read",
+        });
+      }
+    });
+
+    // MESSAGE EDIT HANDLER
+    // Edit an existing/sent message
+    socket.on("message:edit", async (data) => {
+      try {
+        const { messageId, content } = data;
+
+        const updatedMessage = await editMessageService({
+          messageId,
+          content,
+          senderId: socket.user._id,
+        });
+
+        const senderId = updatedMessage.sender.toString();
+        const senderSockets = userSockets.get(senderId);
+
+        if (senderSockets) {
+          senderSockets.forEach((socketId) => {
+            io.to(socketId).emit("message:updated", {
+              messageId: updatedMessage._id,
+              content: updatedMessage.content,
+              editedAt: updatedMessage.editedAt,
+            });
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to edit message: ${error.message}`);
+        socket.emit("message:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to edit message",
         });
       }
     });

@@ -125,8 +125,54 @@ const markMessageReadService = async ({ messageId, readerId }) => {
   return updaate;
 };
 
+const editMessageService = async ({ messageId, content, senderId }) => {
+  const normalizedContent = content.trim();
+
+  validateRequired(senderId, "User id");
+  validateRequired(messageId, "Message id");
+  validateRequired(normalizedContent, "Content");
+
+  validateObjectId(senderId, "User");
+  validateObjectId(messageId, "message");
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, "Message not found");
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  const isSender = message.sender.toString() === senderId.toString();
+
+  if (!isSender) {
+    throw new ApiError(403, "You can only edit your own messages");
+  }
+
+  const editedAt = new Date();
+
+  const updatedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $set: {
+        content: normalizedContent,
+        editedAt,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return updatedMessage;
+};
+
 export {
   sendMessageService,
   markMessageDeliveredService,
   markMessageReadService,
+  editMessageService,
 };
