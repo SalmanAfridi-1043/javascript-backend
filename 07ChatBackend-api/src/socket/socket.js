@@ -3,8 +3,11 @@ import { socketAuthMiddleware } from "../middleware/socketAuth.middleware.js";
 import { Conversation } from "../models/conversation.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendMessageService } from "../services/message.service.js";
+import { User } from "../models/user.model.js";
 
-export const initializeSocket = (server) => {
+const initializeSocket = (server) => {
+  const userSockets = new Map(); // A JavaScript Map stores key → value pairs(userId → Set of socket IDs).
+
   const io = new Server(server, {
     cors: {
       origin: process.env.CORS_ORIGIN,
@@ -14,9 +17,39 @@ export const initializeSocket = (server) => {
   // Socket authentication middleware
   io.use(socketAuthMiddleware);
 
+  // USER CONNECTION HANDLER
   // Runs whenever a client successfully connects
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     console.log(`Socket connected: ${socket.id}`);
+
+    const userId = socket.user._id.toString();
+
+    // if no set/socket for user then create it
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set()); //Why a Set?: Because one user can have multiple connections, and a Set conveniently stores unique socket IDs.
+    }
+
+    // then get user existing/new socket and add this current socket as well
+    userSockets.get(userId).add(socket.id);
+
+    // size===1. means if there is even one (if this is the first socket/user) socket, then still user is online
+    if (userSockets.get(userId).size === 1) {
+      // using try/catch to handle the DB error if connection fails
+      try {
+        await User.findByIdAndUpdate(userId, {
+          $set: { isOnline: true },
+        });
+
+        // create custom event to represent user status to others
+        // let all connected members to know that user is online (used to reflect in UI)
+        io.emit("user:online", { userId });
+      } catch (error) {
+        console.error(
+          `Failed to update online status for ${userId}:`,
+          error.message,
+        );
+      }
+    }
 
     // Join a conversation room
     socket.on("conversation:join", async (conversationId) => {
@@ -61,6 +94,7 @@ export const initializeSocket = (server) => {
       }
     });
 
+    // MESSAGE SENDER/HANDLER
     // Send a new message
     socket.on("message:send", async (data) => {
       try {
@@ -87,14 +121,60 @@ export const initializeSocket = (server) => {
       }
     });
 
+    // USER DISCONNECT HANDLER
     // Fires when this socket disconnects
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
+      const userId = socket.user._id.toString();
+
+      const sockets = userSockets.get(userId);
+
+      // if there are no socket to delete then return
+      if (!sockets) {
+        return;
+      }
+
+      // delete the current disconnected socket from Map()/set
+      sockets.delete(socket.id);
+
+      // if User has no active connections/sockets anymore then delete the user
+      // (No socket = user is offline)
+
+      if (sockets.size === 0) {
+        userSockets.delete(userId);
+
+        // using try/catch to handle DB error
+        try {
+          const lastSeen = new Date();
+
+          await User.findByIdAndUpdate(userId, {
+            $set: {
+              isOnline: false,
+              lastSeen,
+            },
+          });
+
+          // custom event to show user status when offline
+          // This tells all connected clients:This user is now offline.
+          io.emit("user:offline", {
+            userId,
+            lastSeen,
+          });
+        } catch (error) {
+          console.error(
+            `Failed to update offline status for ${userId}:`,
+            error.message,
+          );
+        }
+      }
+
       console.log(`Socket disconnected: ${socket.id}`);
     });
   });
 
   return io;
 };
+
+export { initializeSocket };
 
 // io represents the entire Socket.IO server.(io = whole Socket.IO system)
 // socket represents one specific connection/device.
@@ -157,3 +237,14 @@ export const initializeSocket = (server) => {
 // One architectural rule to remember
 // 1. Socket layer = communication.
 // 2. Service layer = business logic.
+
+// Important distinction
+// MongoDB stores the persistent status:
+// isOnline
+// lastSeen
+
+// Socket.IO delivers the real-time notification:
+// user:online
+// user:offline
+
+// So:Database = source of stored state; Socket.IO = real-time state notification.
