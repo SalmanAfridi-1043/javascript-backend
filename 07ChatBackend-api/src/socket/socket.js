@@ -9,6 +9,7 @@ import {
   markMessageDeliveredService,
   markMessageReadService,
   editMessageService,
+  deleteMessageService,
 } from "../services/message.service.js";
 
 const initializeSocket = (server) => {
@@ -207,6 +208,28 @@ const initializeSocket = (server) => {
         socket.emit("message:error", {
           statusCode: error.statusCode || 500,
           message: error.message || "Failed to edit message",
+        });
+      }
+    });
+
+    // MESSAGE DELETE HANDLER
+    socket.on("message:delete", async ({ messageId, conversationId }) => {
+      const deletedMessage = await deleteMessageService({
+        messageId,
+        conversationId,
+        userId: socket.user._id,
+      });
+
+      const senderId = deletedMessage.sender.toString();
+      const senderSockets = userSockets.get(senderId);
+
+      if (senderSockets) {
+        senderSockets.forEach((socketId) => {
+          io.to(socketId).emit("message:deleted", {
+            messageId: deletedMessage._id,
+            content: deletedMessage.content,
+            deletedAt: deletedMessage.deletedAt,
+          });
         });
       }
     });

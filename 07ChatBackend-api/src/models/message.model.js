@@ -45,6 +45,12 @@ const messageSchema = new Schema(
 
     editedAt: {
       type: Date,
+      default: null,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
 

@@ -170,9 +170,67 @@ const editMessageService = async ({ messageId, content, senderId }) => {
   return updatedMessage;
 };
 
+const deleteMessageService = async ({ messageId, conversationId, userId }) => {
+  validateRequired(userId, "User id");
+  validateRequired(messageId, "Message id");
+  validateRequired(conversationId, "Conversation id");
+
+  validateObjectId(userId, "User");
+  validateObjectId(messageId, "message");
+  validateObjectId(conversationId, "conversation");
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, "Message not found");
+  }
+
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw new ApiError(404, "conversation not found");
+  }
+
+  if (message.conversation.toString() !== conversationId.toString()) {
+    throw new ApiError(403, "Unauthorized access to conversation");
+  }
+
+  if (message.sender.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized access to message");
+  }
+
+  const deletedAt = new Date();
+
+  // For this project, we'll use soft deletion rather than permanently removing the MongoDB document.
+  const deletedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $set: {
+        deletedAt,
+        content: null,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return deletedMessage;
+
+  // Why soft delete?
+  // Because the message may already be referenced by:
+  // - conversation history
+  // - delivery receipts
+  // - read receipts
+  // - other users' clients
+
+  // And it lets us represent:
+  // "This message was deleted" (like in whatsapp but still its in DB)
+  // rather than making the message completely disappear.
+};
+
 export {
   sendMessageService,
   markMessageDeliveredService,
   markMessageReadService,
   editMessageService,
+  deleteMessageService,
 };
