@@ -7,6 +7,7 @@ import {
   createGroupConversation,
   getConversation,
   getConversationMessages,
+  getUnreadCounts,
   getUserConversations,
 } from "../controllers/conversation.controller.js";
 
@@ -32,5 +33,7 @@ router.get(
   authorizeConversationMiddleware,
   getConversationMessages,
 );
+
+router.get("/unread", getUnreadCounts);
 
 export default router;

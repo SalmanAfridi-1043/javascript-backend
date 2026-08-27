@@ -6,6 +6,7 @@ import {
   createGroupConversationService,
   getConversationMessagesService,
   getConversationService,
+  getUnreadCountsService,
   getUserConversationsService,
 } from "../services/conversation.service.js";
 
@@ -90,10 +91,23 @@ const getConversationMessages = asyncHandler(async (req, res) => {
     );
 });
 
+const getUnreadCounts = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const response = await getUnreadCountsService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, response, "All unread counts fetched successfully"),
+    );
+});
+
 export {
   createDirectConversation,
   getUserConversations,
   getConversation,
   createGroupConversation,
   getConversationMessages,
+  getUnreadCounts,
 };

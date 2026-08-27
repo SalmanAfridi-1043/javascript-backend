@@ -162,10 +162,47 @@ const getConversationMessagesService = async (
   };
 };
 
+const getUnreadCountsService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const allConversations = await Conversation.find({
+    participants: userId,
+  });
+
+  const conversationIds = allConversations.map(
+    (conversation) => conversation._id,
+  );
+
+  const unreadCounts = await Message.aggregate([
+    {
+      // match the readCount also the current user will not be in sender/readBy
+      $match: {
+        conversation: { $in: conversationIds },
+        sender: { $ne: userId },
+        readBy: { $ne: userId },
+      },
+    },
+
+    {
+      $group: {
+        _id: "$conversation",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const totalUnread = unreadCounts.reduce(
+    (total, conversation) => total + conversation.count,
+    0,
+  );
+  return { unreadCounts, totalUnread };
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
   getConversationService,
   createGroupConversationService,
   getConversationMessagesService,
+  getUnreadCountsService,
 };
