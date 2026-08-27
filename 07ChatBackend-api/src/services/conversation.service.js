@@ -198,6 +198,57 @@ const getUnreadCountsService = async (userId) => {
   return { unreadCounts, totalUnread };
 };
 
+const addGroupMemberService = async (userId, conversationId, memberId) => {
+  validateRequired(userId, "User id");
+  validateRequired(conversationId, "conversation id");
+  validateRequired(memberId, "member id");
+
+  validateObjectId(userId, "User");
+  validateObjectId(conversationId, "Conversation");
+  validateObjectId(memberId, "Member");
+
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  if (conversation.admin.toString() !== userId.toString()) {
+    throw new ApiError(
+      403,
+      "Unauthorized access! Only admin can manage conversation",
+    );
+  }
+
+  if (conversation.type !== "group") {
+    throw new ApiError(400, "Invalid conversation type");
+  }
+
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === memberId.toString(),
+  );
+
+  if (isParticipant) {
+    throw new ApiError(409, "Member alread added to conversation");
+  }
+
+  const member = await User.findById(memberId);
+  if (!member) {
+    throw new ApiError(404, "Participant not found");
+  }
+
+  const updatedConversation = await Conversation.findByIdAndUpdate(
+    conversationId,
+    {
+      $addToSet: { participants: memberId },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return updatedConversation;
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
@@ -205,4 +256,5 @@ export {
   createGroupConversationService,
   getConversationMessagesService,
   getUnreadCountsService,
+  addGroupMemberService,
 };

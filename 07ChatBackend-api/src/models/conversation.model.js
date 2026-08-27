@@ -13,7 +13,7 @@ const conversationSchema = new Schema(
       type: String,
     },
 
-    // will contain all conversation members(like current user + target user)
+    // will contain all conversation members(like group members etc)
     participants: [
       {
         type: Schema.Types.ObjectId,

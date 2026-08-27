@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 import {
+  addGroupMemberService,
   createDirectConversationService,
   createGroupConversationService,
   getConversationMessagesService,
@@ -103,6 +104,29 @@ const getUnreadCounts = asyncHandler(async (req, res) => {
     );
 });
 
+const addGroupMember = asyncHandler(async (req, res) => {
+  // current user is group admin
+  const userId = req.user._id;
+  const { conversationId } = req.params;
+  const { memberId } = req.body;
+
+  const updatedConversation = await addGroupMemberService(
+    userId,
+    conversationId,
+    memberId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedConversation,
+        "Member added to conversation successfully",
+      ),
+    );
+});
+
 export {
   createDirectConversation,
   getUserConversations,
@@ -110,4 +134,5 @@ export {
   createGroupConversation,
   getConversationMessages,
   getUnreadCounts,
+  addGroupMember,
 };

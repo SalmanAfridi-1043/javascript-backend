@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { authorizeConversationMiddleware } from "../middleware/authorizeConversation.middleware.js";
 
 import {
+  addGroupMember,
   createDirectConversation,
   createGroupConversation,
   getConversation,
@@ -35,5 +36,11 @@ router.get(
 );
 
 router.get("/unread", getUnreadCounts);
+
+router.post(
+  "/:conversationId/members",
+  authorizeConversationMiddleware,
+  addGroupMember,
+);
 
 export default router;
