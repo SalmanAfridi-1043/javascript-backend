@@ -2,8 +2,12 @@ import { Server } from "socket.io";
 import { socketAuthMiddleware } from "../middleware/socketAuth.middleware.js";
 import { Conversation } from "../models/conversation.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { sendMessageService } from "../services/message.service.js";
 import { User } from "../models/user.model.js";
+
+import {
+  sendMessageService,
+  markMessageDeliveredService,
+} from "../services/message.service.js";
 
 const initializeSocket = (server) => {
   const userSockets = new Map(); // A JavaScript Map stores key → value pairs(userId → Set of socket IDs).
@@ -82,6 +86,7 @@ const initializeSocket = (server) => {
       }
     });
 
+    // Stop Typing indicator
     socket.on("typing:stop", async ({ conversationId }) => {
       try {
         const conversation = await Conversation.findOne({
@@ -107,6 +112,39 @@ const initializeSocket = (server) => {
         socket.emit("typing:error", {
           statusCode: error.statusCode || 500,
           message: error.message || "Failed to stop typing indicator",
+        });
+      }
+    });
+
+    // MESSAGE DELIVERY HANDLER (event whcih handle message delivery)
+    // it will fire auto when the user/reciever recieved it (reciever aknowledge the server that i got the message)
+    socket.on("message:delivered", async ({ messageId }) => {
+      try {
+        const deliveredMessage = await markMessageDeliveredService({
+          messageId,
+          receiverId: socket.user._id, // its the deliveredTo/reciever user id
+        });
+
+        // get sender id
+        const senderId = deliveredMessage.sender.toString();
+
+        // get all sockets for this sender/user (like laptop phone etc)
+        const senderSockets = userSockets.get(senderId);
+
+        // if any socket exists then
+        if (senderSockets) {
+          senderSockets.forEach((socketId) => {
+            // give aknowledgement to all sockets (laptop,phone)
+            io.to(socketId).emit("message:delivered", {
+              messageId: deliveredMessage._id,
+              deliveredBy: socket.user._id,
+            });
+          });
+        }
+      } catch (error) {
+        socket.emit("message:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to mark message as delivered",
         });
       }
     });
@@ -155,7 +193,7 @@ const initializeSocket = (server) => {
     });
 
     // MESSAGE SENDER/HANDLER
-    // Send a new message
+    // Send a new message (server create and send message to reciever)
     socket.on("message:send", async (data) => {
       try {
         const { conversationId, content } = data;
@@ -308,3 +346,7 @@ export { initializeSocket };
 // user:offline
 
 // So:Database = source of stored state; Socket.IO = real-time state notification.
+
+// Important distinction
+// message:new -→ Server tells recipient: "Here is a new message."
+// message:delivered -→ Recipient tells server: "I received it." (aknowledgement to server)

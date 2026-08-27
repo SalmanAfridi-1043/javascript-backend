@@ -42,4 +42,51 @@ const sendMessageService = async ({ conversationId, content, senderId }) => {
   return message;
 };
 
-export { sendMessageService };
+const markMessageDeliveredService = async ({ messageId, receiverId }) => {
+  // 1. Validate messageId
+  // 2. Find message
+  // 3. Check user is allowed to receive/access this message
+  // 4. Add userId to deliveredTo
+  // 5. Avoid duplicate userId
+  // 6. Return updated message
+
+  validateRequired(receiverId, "User id");
+  validateRequired(messageId, "Message id");
+
+  validateObjectId(receiverId, "User");
+  validateObjectId(messageId, "message");
+
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    throw new ApiError(404, "Message not found");
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+
+  if (!conversation) {
+    throw new ApiError(404, "conversation not found");
+  }
+
+  // map() return new array but we need to check only so some is good and it just help in traversing only
+  const isParticipant = conversation.participants.some(
+    (participant) => participant.toString() === receiverId.toString(),
+  );
+
+  if (!isParticipant) {
+    throw new ApiError(403, "Unauthorized access to conversation");
+  }
+
+  const updatedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      // $addToset: just add the userid to set and remove the duplicate
+      $addToSet: { deliveredTo: receiverId },
+    },
+    { new: true },
+  );
+
+  return updatedMessage;
+};
+
+export { sendMessageService, markMessageDeliveredService };

@@ -35,6 +35,13 @@ const messageSchema = new Schema(
         required: true,
       },
     ],
+
+    deliveredTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
 
   { timestamps: true },
