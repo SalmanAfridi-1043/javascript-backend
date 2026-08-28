@@ -61,8 +61,12 @@ const initializeSocket = (server) => {
 
     // Start Typing indicator
     // user can type only in its conversation/room so first authenticate the user room
-    socket.on("typing:start", async ({ conversationId }) => {
+    socket.on("typing:start", async (data) => {
       try {
+        const { conversationId } = data;
+
+        validateSocketPayload(data, ["conversationId"]);
+
         const conversation = await Conversation.findOne({
           _id: conversationId,
           participants: socket.user._id,
@@ -91,8 +95,12 @@ const initializeSocket = (server) => {
     });
 
     // Stop Typing indicator
-    socket.on("typing:stop", async ({ conversationId }) => {
+    socket.on("typing:stop", async (data) => {
       try {
+        const { conversationId } = data;
+
+        validateSocketPayload(data, ["conversationId"]);
+
         const conversation = await Conversation.findOne({
           _id: conversationId,
           participants: socket.user._id,
@@ -122,8 +130,12 @@ const initializeSocket = (server) => {
 
     // MESSAGE DELIVERY HANDLER (event whcih handle message delivery)
     // it will fire auto when the user/reciever recieved it (reciever aknowledge the server that i got the message)
-    socket.on("message:delivered", async ({ messageId }) => {
+    socket.on("message:deliverey", async (data) => {
       try {
+        const { messageId } = data;
+
+        validateSocketPayload(data, ["messageId"]);
+
         const deliveredMessage = await markMessageDeliveredService({
           messageId,
           receiverId: socket.user._id, // its the deliveredTo/reciever user id
@@ -154,8 +166,12 @@ const initializeSocket = (server) => {
     });
 
     // MESSAGE READBY HANDLER (event whcih handle message readibility)
-    socket.on("message:read", async ({ messageId }) => {
+    socket.on("message:read", async (data) => {
       try {
+        const { messageId } = data;
+
+        validateSocketPayload(data, ["messageId"]);
+
         const readMessage = await markMessageReadService({
           messageId,
           readerId: socket.user._id, //the user who actually read the message.
@@ -186,6 +202,8 @@ const initializeSocket = (server) => {
       try {
         const { messageId, content } = data;
 
+        validateSocketPayload(data, ["messageId", "content"]);
+
         const updatedMessage = await editMessageService({
           messageId,
           content,
@@ -214,30 +232,46 @@ const initializeSocket = (server) => {
     });
 
     // MESSAGE DELETE HANDLER
-    socket.on("message:delete", async ({ messageId, conversationId }) => {
-      const deletedMessage = await deleteMessageService({
-        messageId,
-        conversationId,
-        userId: socket.user._id,
-      });
+    socket.on("message:delete", async (data) => {
+      try {
+        const { messageId, conversationId } = data;
 
-      const senderId = deletedMessage.sender.toString();
-      const senderSockets = userSockets.get(senderId);
+        validateSocketPayload(data, ["messageId", "conversationId"]);
 
-      if (senderSockets) {
-        senderSockets.forEach((socketId) => {
-          io.to(socketId).emit("message:deleted", {
-            messageId: deletedMessage._id,
-            content: deletedMessage.content,
-            deletedAt: deletedMessage.deletedAt,
+        const deletedMessage = await deleteMessageService({
+          messageId,
+          conversationId,
+          userId: socket.user._id,
+        });
+
+        const senderId = deletedMessage.sender.toString();
+        const senderSockets = userSockets.get(senderId);
+
+        if (senderSockets) {
+          senderSockets.forEach((socketId) => {
+            io.to(socketId).emit("message:deleted", {
+              messageId: deletedMessage._id,
+              content: deletedMessage.content,
+              deletedAt: deletedMessage.deletedAt,
+            });
           });
+        }
+      } catch (error) {
+        console.error(`Failed to delete message: ${error.message}`);
+        socket.emit("message:error", {
+          statusCode: error.statusCode || 500,
+          message: error.message || "Failed to delete message",
         });
       }
     });
 
-    // Join a conversation room
-    socket.on("conversation:join", async (conversationId) => {
+    // Join a conversation/group room
+    socket.on("conversation:join", async (data) => {
       try {
+        const { conversationId } = data;
+
+        validateSocketPayload(data, ["conversationId"]);
+
         // Find conversation
         const conversation = await Conversation.findById(conversationId);
 

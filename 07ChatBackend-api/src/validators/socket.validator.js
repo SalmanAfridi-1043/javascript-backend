@@ -3,19 +3,19 @@ import { ApiError } from "../utils/ApiError.js";
 const validateSocketPayload = (payload, requiredFields) => {
   if (!payload || typeof payload !== "object") {
     throw new ApiError(400, "Invalid socket payload");
-
-    for (const field of requiredFields) {
-      if (
-        payload[field] === undefined ||
-        payload[field] === null ||
-        (typeof payload[field] === "string" && !payload[field].trim()) //empty string condition
-      ) {
-        throw new ApiError(400, `${field} is required`);
-      }
-    }
-
-    return true;
   }
+
+  for (const field of requiredFields) {
+    if (
+      payload[field] === undefined ||
+      payload[field] === null ||
+      (typeof payload[field] === "string" && !payload[field].trim()) //condition for empty string
+    ) {
+      throw new ApiError(400, `${field} is required`);
+    }
+  }
+
+  return true;
 };
 export { validateSocketPayload };
 
