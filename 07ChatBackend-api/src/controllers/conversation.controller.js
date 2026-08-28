@@ -11,6 +11,7 @@ import {
   getUserConversationsService,
   leaveGroupConversationService,
   removeGroupMemberService,
+  renameGroupService,
   transferGroupAdminService,
 } from "../services/conversation.service.js";
 
@@ -179,6 +180,29 @@ const transferGroupAdmin = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, newAdmin, "Admin transfered successfully"));
 });
 
+const renameGroup = asyncHandler(async (req, res) => {
+  // user igroup admin
+  const adminId = req.user._id;
+  const { conversationId } = req.params;
+  const { name } = req.body;
+
+  const renamedConversation = await renameGroupService(
+    adminId,
+    conversationId,
+    name,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        renamedConversation,
+        "Conversation renamed successfully",
+      ),
+    );
+});
+
 export {
   createDirectConversation,
   getUserConversations,
@@ -190,4 +214,5 @@ export {
   removeGroupMember,
   leaveGroupConversation,
   transferGroupAdmin,
+  renameGroup,
 };

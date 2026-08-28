@@ -12,6 +12,7 @@ import {
   getUserConversations,
   leaveGroupConversation,
   removeGroupMember,
+  renameGroup,
   transferGroupAdmin,
 } from "../controllers/conversation.controller.js";
 
@@ -67,5 +68,7 @@ router.patch(
   authorizeConversationMiddleware,
   transferGroupAdmin,
 );
+
+router.patch("/:conversationId", authorizeConversationMiddleware, renameGroup);
 
 export default router;

@@ -376,6 +376,40 @@ const transferGroupAdminService = async (
   return conversation;
 };
 
+const renameGroupService = async (adminId, conversationId, name) => {
+  const normalizedName = name?.trim();
+
+  validateRequired(conversationId, "conversation id");
+  validateRequired(adminId, "user id");
+  validateRequired(normalizedName, "name");
+
+  validateObjectId(conversationId, "Conversation");
+  validateObjectId(adminId, "user");
+
+  const conversation = await Conversation.findById(conversationId);
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found");
+  }
+
+  if (conversation.type !== "group") {
+    throw new ApiError(400, "Invalid conversation type");
+  }
+
+  // Verify current user is the admin
+  if (conversation.admin.toString() !== adminId.toString()) {
+    throw new ApiError(
+      409,
+      "Unauthorized access!. Only admin can rename group",
+    );
+  }
+
+  conversation.name = normalizedName;
+  await conversation.save();
+
+  return conversation;
+};
+
 export {
   createDirectConversationService,
   getUserConversationsService,
@@ -387,4 +421,5 @@ export {
   removeGroupMemberService,
   leaveGroupConversationService,
   transferGroupAdminService,
+  renameGroupService,
 };
