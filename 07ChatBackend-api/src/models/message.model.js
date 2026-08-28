@@ -21,9 +21,10 @@ const messageSchema = new Schema(
       trim: true,
     },
 
+    // type means: sms type like video , image , file
     type: {
       type: String,
-      enum: ["TEXT"], // This prevents invalid values like "VIDEO" or "random" from accidentally entering the database.
+      enum: ["TEXT", "IMAGE", "FILE"],
       default: "TEXT",
     },
 

@@ -4,21 +4,27 @@ import { ApiError } from "../utils/ApiError.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 import { validateRequired } from "../utils/validateRequired.js";
 
-const sendMessageService = async ({ conversationId, content, senderId }) => {
-  // 1. Validate input
-  // 2. Find conversation
-  // 3. Check sender is a participant
-  // 4. Create message
-  // 5. Update conversation.lastMessage
-  // 6. Return created message
-
+const sendMessageService = async ({
+  conversationId,
+  senderId,
+  content,
+  type,
+}) => {
   const normalizedContent = content?.trim();
+  const normalizedType = type?.trim().toUpperCase();
 
   validateRequired(conversationId, "Conversation id");
   validateObjectId(conversationId, "conversation");
+
   validateRequired(senderId, "sender id");
   validateObjectId(senderId, "sender");
+
   validateRequired(normalizedContent, "content");
+  validateRequired(normalizedType, "type");
+
+  if (!["TEXT", "IMAGE", "FILE"].includes(normalizedType)) {
+    throw new ApiError(400, "Invalid type. Type can be text,image or file");
+  }
 
   const conversation = await Conversation.findOne({
     _id: conversationId,
@@ -29,10 +35,17 @@ const sendMessageService = async ({ conversationId, content, senderId }) => {
     throw new ApiError(404, "Conversation not found");
   }
 
+  if (normalizedType === "TEXT" && !normalizedContent)
+    throw new ApiError(400, "Text content is required");
+
+  if (["IMAGE", "FILE"].includes(normalizedType) && !normalizedContent)
+    throw new ApiError(400, "File URL is required");
+
   const message = await Message.create({
     conversation: conversationId,
     sender: senderId,
     content: normalizedContent,
+    type: normalizedType,
   });
 
   conversation.lastMessage = message;

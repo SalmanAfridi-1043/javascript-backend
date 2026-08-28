@@ -281,12 +281,13 @@ const initializeSocket = (server) => {
     // Send a new message (server create and send message to reciever)
     socket.on("message:send", async (data) => {
       try {
-        const { conversationId, content } = data;
+        const { conversationId, content, type } = data;
 
         const message = await sendMessageService({
           conversationId,
-          content,
           senderId: socket.user._id,
+          content,
+          type,
         });
 
         // create a new room for this conversation
