@@ -130,7 +130,7 @@ const initializeSocket = (server) => {
 
     // MESSAGE DELIVERY HANDLER (event whcih handle message delivery)
     // it will fire auto when the user/reciever recieved it (reciever aknowledge the server that i got the message)
-    socket.on("message:deliverey", async (data) => {
+    socket.on("message:delivered", async (data) => {
       try {
         const { messageId } = data;
 
@@ -210,18 +210,14 @@ const initializeSocket = (server) => {
           senderId: socket.user._id,
         });
 
-        const senderId = updatedMessage.sender.toString();
-        const senderSockets = userSockets.get(senderId);
+        // show the updated message to all users in the room/conversation/group
+        const roomName = `conversation:${updatedMessage.conversation}`;
 
-        if (senderSockets) {
-          senderSockets.forEach((socketId) => {
-            io.to(socketId).emit("message:updated", {
-              messageId: updatedMessage._id,
-              content: updatedMessage.content,
-              editedAt: updatedMessage.editedAt,
-            });
-          });
-        }
+        io.to(roomName).emit("message:updated", {
+          messageId: updatedMessage._id,
+          content: updatedMessage.content,
+          editedAt: updatedMessage.editedAt,
+        });
       } catch (error) {
         console.error(`Failed to edit message: ${error.message}`);
         socket.emit("message:error", {
@@ -244,18 +240,14 @@ const initializeSocket = (server) => {
           userId: socket.user._id,
         });
 
-        const senderId = deletedMessage.sender.toString();
-        const senderSockets = userSockets.get(senderId);
+        // show deleted message to all users in room/conversation/group
+        const roomName = `conversation:${deletedMessage.conversation}`;
 
-        if (senderSockets) {
-          senderSockets.forEach((socketId) => {
-            io.to(socketId).emit("message:deleted", {
-              messageId: deletedMessage._id,
-              content: deletedMessage.content,
-              deletedAt: deletedMessage.deletedAt,
-            });
-          });
-        }
+        io.to(roomName).emit("message:deleted", {
+          messageId: deletedMessage._id,
+          content: deletedMessage.content,
+          deletedAt: deletedMessage.deletedAt,
+        });
       } catch (error) {
         console.error(`Failed to delete message: ${error.message}`);
         socket.emit("message:error", {
