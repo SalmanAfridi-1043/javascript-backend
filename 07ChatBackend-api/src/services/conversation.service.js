@@ -381,10 +381,15 @@ const renameGroupService = async (adminId, conversationId, name) => {
 
   validateRequired(conversationId, "conversation id");
   validateRequired(adminId, "user id");
-  validateRequired(normalizedName, "name");
 
   validateObjectId(conversationId, "Conversation");
   validateObjectId(adminId, "user");
+
+  validateRequired(normalizedName, "name");
+
+  if (normalizedName.length < 3 || normalizedName.length > 40) {
+    throw new ApiError(400, "Group name must be between 3 and 40 characters");
+  }
 
   const conversation = await Conversation.findById(conversationId);
 
