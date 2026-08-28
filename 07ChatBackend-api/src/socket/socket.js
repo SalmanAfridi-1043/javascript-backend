@@ -3,6 +3,7 @@ import { socketAuthMiddleware } from "../middleware/socketAuth.middleware.js";
 import { Conversation } from "../models/conversation.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { validateSocketPayload } from "../validators/socket.validator.js";
 
 import {
   sendMessageService,
@@ -282,6 +283,8 @@ const initializeSocket = (server) => {
     socket.on("message:send", async (data) => {
       try {
         const { conversationId, content, type } = data;
+
+        validateSocketPayload(data, ["conversationId", "content", "type"]);
 
         const message = await sendMessageService({
           conversationId,
