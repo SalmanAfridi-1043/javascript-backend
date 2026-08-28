@@ -4,6 +4,7 @@ import { Conversation } from "../models/conversation.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { validateSocketPayload } from "../validators/socket.validator.js";
+import { validateSocketRateLimit } from "../utils/socketRateLimiter.js";
 
 import {
   sendMessageService,
@@ -308,6 +309,12 @@ const initializeSocket = (server) => {
     // Send a new message (server create and send message to reciever)
     socket.on("message:send", async (data) => {
       try {
+        // validate the sms sending limit before sending new sms
+        // it returns false when limit exceed and true when under limit
+        if (!validateSocketRateLimit(socket.id)) {
+          throw new ApiError(429, "Too many messages. Please try again later.");
+        }
+
         const { conversationId, content, type } = data;
 
         validateSocketPayload(data, ["conversationId", "content", "type"]);
