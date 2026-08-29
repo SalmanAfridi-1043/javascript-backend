@@ -1,0 +1,32 @@
+{
+  "name": "08e-commerce-api",
+  "version": "1.0.0",
+  "description": "This project is a part of JS backend journey",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js"
+  },
+  "author": "Salman Afridi",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/jwt": "^10.2.2",
+    "@fastify/multipart": "^10.1.1",
+    "@fastify/rate-limit": "^11.2.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "fastify": "^5.12.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.4",
+    "multer": "^2.3.0",
+    "nodemailer": "^9.0.6",
+    "nodemon": "^3.1.14",
+    "stripe": "^22.6.0",
+    "zod": "^4.5.2"
+  }
+}
