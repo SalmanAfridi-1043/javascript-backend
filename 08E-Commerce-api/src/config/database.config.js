@@ -1,25 +1,14 @@
 import mongoose from "mongoose";
 import dns from "dns";
 import { DB_NAME } from "../constants.js";
+import env from "./env.config.js";
 
-// Force Node.js to use Google DNS to resolve MongoDB SRV records
 dns.setDefaultResultOrder("ipv4first");
 dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
 
 const connectDB = async () => {
   try {
-    const mongoUrl =
-      process.env.MONGODB_URL ||
-      process.env.MONGODB_URI ||
-      process.env.MONGO_URI;
-
-    if (!mongoUrl) {
-      throw new Error(
-        "Missing MongoDB connection string. Set MONGODB_URL in the .env file.",
-      );
-    }
-
-    const uri = new URL(mongoUrl);
+    const uri = new URL(env.mongoUri);
 
     if (uri.pathname === "/" || uri.pathname === "") {
       uri.pathname = `/${DB_NAME}`;
@@ -31,9 +20,12 @@ const connectDB = async () => {
 
     console.log(`\nMongoDB Connected: ${connect.connection.host}`);
   } catch (error) {
-    console.log("MONGO_DB connection error: ", error.message);
+    console.error("MongoDB connection error:", error.message);
     process.exit(1);
   }
 };
 
 export default connectDB;
+
+// now the DB configration doesnot know where is the .env keys. its just configured by .env file only
+// in previous project that secret was published. but now here its safe and ok
