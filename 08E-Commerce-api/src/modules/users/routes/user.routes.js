@@ -9,6 +9,7 @@ import {
   getUserOrder,
   getUserOrders,
   getUserProfile,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
   setDefaultAddress,
   updateUserProfile,
@@ -35,5 +36,7 @@ router.patch("/addresses/:addressId/default", setDefaultAddress);
 router.get("/notifications", getUserNotifications);
 
 router.patch("/notifications/:notificationId/read", markNotificationAsRead);
+
+router.patch("/notifications/read-all", markAllNotificationsAsRead);
 
 export default router;

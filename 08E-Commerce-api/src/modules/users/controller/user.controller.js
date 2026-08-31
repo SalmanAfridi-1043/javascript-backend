@@ -8,6 +8,7 @@ import {
   getUserNotificationsService,
   getUserOrdersService,
   getUserProfileService,
+  markAllNotificationsAsReadService,
   markNotificationAsReadService,
   setDefaultAddressService,
   updateUserProfileService,
@@ -149,6 +150,23 @@ const markNotificationAsRead = asyncHandler(async (req, res) => {
     );
 });
 
+const markAllNotificationsAsRead = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+
+  const markedAllNotifications =
+    await markAllNotificationsAsReadService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        markedAllNotifications,
+        "Notifications marked as read successfully",
+      ),
+    );
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -159,4 +177,5 @@ export {
   setDefaultAddress,
   getUserNotifications,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
 };

@@ -257,6 +257,25 @@ const markNotificationAsReadService = async (userId, notificationId) => {
   return markedNotification;
 };
 
+const markAllNotificationsAsReadService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const markedAllNotifications = await Notification.updateMany(
+    {
+      user: userId,
+      isRead: false,
+    },
+    {
+      $set: { isRead: true },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return markedAllNotifications;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -267,4 +286,5 @@ export {
   setDefaultAddressService,
   getUserNotificationsService,
   markNotificationAsReadService,
+  markAllNotificationsAsReadService,
 };
