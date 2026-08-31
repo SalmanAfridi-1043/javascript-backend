@@ -292,6 +292,25 @@ const deleteNotificationService = async (userId, notificationId) => {
   return { success: true };
 };
 
+const deleteReadNotificationsService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const result = await Notification.deleteMany({
+    user: userId,
+    isRead: true,
+  });
+
+  //deleteMany(): returns something like:{ acknowledged: true, deletedCount: 5 }
+
+  if (result.deletedCount === 0) {
+    throw new ApiError(404, "No read notifications found");
+  }
+
+  return {
+    deletedCount: result.deletedCount,
+  };
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -304,4 +323,5 @@ export {
   markNotificationAsReadService,
   markAllNotificationsAsReadService,
   deleteNotificationService,
+  deleteReadNotificationsService,
 };

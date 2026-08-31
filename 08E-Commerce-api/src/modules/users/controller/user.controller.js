@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 import {
   changePasswordService,
   deleteNotificationService,
+  deleteReadNotificationsService,
   deleteUserProfileService,
   getUserNotificationsService,
   getUserOrdersService,
@@ -179,6 +180,16 @@ const deleteNotification = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, response, "Notification deleted successfully"));
 });
 
+const deleteReadNotifications = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+
+  const response = await deleteReadNotificationsService(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Notifications deleted successfully"));
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -191,4 +202,5 @@ export {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
+  deleteReadNotifications,
 };

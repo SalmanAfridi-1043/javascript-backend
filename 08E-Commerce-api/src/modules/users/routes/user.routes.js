@@ -5,6 +5,7 @@ import { upload } from "../../../middleware/multer.middleware.js";
 import {
   changePassword,
   deleteNotification,
+  deleteReadNotifications,
   deleteUserProfile,
   getUserNotifications,
   getUserOrder,
@@ -41,5 +42,7 @@ router.patch("/notifications/:notificationId/read", markNotificationAsRead);
 router.patch("/notifications/read-all", markAllNotificationsAsRead);
 
 router.delete("/notifications/:notificationId", deleteNotification);
+
+router.delete("/notifications/read", deleteReadNotifications);
 
 export default router;
