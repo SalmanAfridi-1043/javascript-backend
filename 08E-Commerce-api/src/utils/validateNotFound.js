@@ -1,8 +1,8 @@
 import { ApiError } from "./ApiError.js";
 
-const validateNotFound = (entity) => {
-  if (!entity) {
-    throw new ApiError(404, `${entity} not found`);
+const validateNotFound = (field, value) => {
+  if (!field) {
+    throw new ApiError(404, `${value} not found`);
   }
 };
 
