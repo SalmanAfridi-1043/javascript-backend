@@ -276,6 +276,22 @@ const markAllNotificationsAsReadService = async (userId) => {
   return markedAllNotifications;
 };
 
+const deleteNotificationService = async (userId, notificationId) => {
+  validateRequired(userId, "User id");
+  validateRequired(notificationId, "Notification id");
+
+  validateObjectId(notificationId, "Notification");
+
+  const deletedNotification = await Notification.findOneAndDelete({
+    _id: notificationId,
+    user: userId,
+  });
+
+  validateNotFound(deletedNotification, "Notification");
+
+  return { success: true };
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -287,4 +303,5 @@ export {
   getUserNotificationsService,
   markNotificationAsReadService,
   markAllNotificationsAsReadService,
+  deleteNotificationService,
 };
