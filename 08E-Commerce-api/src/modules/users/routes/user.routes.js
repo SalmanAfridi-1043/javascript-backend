@@ -5,6 +5,7 @@ import { upload } from "../../../middleware/multer.middleware.js";
 import {
   changePassword,
   deleteUserProfile,
+  getUserOrder,
   getUserOrders,
   getUserProfile,
   updateUserProfile,
@@ -23,5 +24,7 @@ router.patch("/change-password", changePassword);
 router.delete("/profile", deleteUserProfile);
 
 router.get("/orders", getUserOrders);
+
+router.get("/orders/:orderId", getUserOrder);
 
 export default router;

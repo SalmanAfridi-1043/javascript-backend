@@ -82,10 +82,22 @@ const getUserOrders = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, allOrders, "User orders fetched successfully"));
 });
 
+const getUserOrder = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const orderId = req.params;
+
+  const order = await getUserOrdersService(userId, orderId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "Order fetched successfully"));
+});
+
 export {
   getUserProfile,
   updateUserProfile,
   changePassword,
   deleteUserProfile,
   getUserOrders,
+  getUserOrder,
 };

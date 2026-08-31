@@ -153,10 +153,25 @@ const getUserOrdersService = async (userId, paginationData) => {
   };
 };
 
+const getUserOrderService = async (userId, orderId) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "order");
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  }).populate("user", "-password -refreshToken");
+
+  return order;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
   changePasswordService,
   deleteUserProfileService,
   getUserOrdersService,
+  getUserOrderService,
 };
