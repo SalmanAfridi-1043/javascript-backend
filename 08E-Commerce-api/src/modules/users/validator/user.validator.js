@@ -78,4 +78,32 @@ const validateNewPassword = (incomingPasswords) => {
   };
 };
 
-export { validateUpdateData, validateNewPassword };
+const validatePaginateData = (paginationData) => {
+  const { page, limit } = paginationData;
+
+  const normalizedPage = Number(page) || 1;
+  const normalizedLimit = Number(limit) || 10;
+
+  if (
+    (normalizedPage && !Number.isFinite(normalizedPage)) ||
+    !Number.isInteger(normalizedPage) ||
+    normalizedPage < 1
+  ) {
+    throw new ApiError(400, "Enter a positive finite page value");
+  }
+
+  if (
+    (normalizedLimit && !Number.isFinite(normalizedLimit)) ||
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1
+  ) {
+    throw new ApiError(400, "Enter a positive finite limit value");
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
+export { validateUpdateData, validateNewPassword, validatePaginateData };

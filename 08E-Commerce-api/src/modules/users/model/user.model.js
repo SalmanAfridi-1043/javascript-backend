@@ -39,6 +39,8 @@ const userSchema = new Schema(
       type: String,
     },
 
+    // isActive will be used for soft delete so that the user entry remain in DB
+    // because we may need the user's historical:Orders,Payments,Reviews,etc
     isActive: {
       type: Boolean,
       default: true,

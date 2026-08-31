@@ -4,6 +4,8 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 
 import {
   changePasswordService,
+  deleteUserProfileService,
+  getUserOrdersService,
   getUserProfileService,
   updateUserProfileService,
 } from "../service/user.service.js";
@@ -55,12 +57,35 @@ const changePassword = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        updatedUserProfile,
-        "Passowrd updated successfully",
-      ),
+      new ApiResponse(200, updatedUserProfile, "Passowrd updated successfully"),
     );
 });
 
-export { getUserProfile, updateUserProfile, changePassword };
+const deleteUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+
+  const response = await deleteUserProfileService(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "User profile deleted successfully"));
+});
+
+const getUserOrders = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const paginationData = req.query;
+
+  const allOrders = await getUserOrdersService(userId, paginationData);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allOrders, "User orders fetched successfully"));
+});
+
+export {
+  getUserProfile,
+  updateUserProfile,
+  changePassword,
+  deleteUserProfile,
+  getUserOrders,
+};

@@ -4,6 +4,8 @@ import { upload } from "../../../middleware/multer.middleware.js";
 
 import {
   changePassword,
+  deleteUserProfile,
+  getUserOrders,
   getUserProfile,
   updateUserProfile,
 } from "../controller/user.controller.js";
@@ -16,6 +18,10 @@ router.get("/profile", getUserProfile);
 
 router.patch("/profile", upload.single("avatar"), updateUserProfile);
 
-    router.patch("/change-password", changePassword);
+router.patch("/change-password", changePassword);
+
+router.delete("/profile", deleteUserProfile);
+
+router.get("/orders", getUserOrders);
 
 export default router;

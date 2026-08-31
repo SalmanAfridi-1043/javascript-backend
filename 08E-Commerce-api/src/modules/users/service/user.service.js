@@ -1,5 +1,6 @@
 import { ApiError } from "../../../utils/ApiError.js";
 import { User } from "../model/user.model.js";
+import { Order } from "../../orders/model/order.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
@@ -7,6 +8,7 @@ import { createSafeUser } from "../../../utils/sanitizeUser.js";
 import bcrypt from "bcrypt";
 import {
   validateNewPassword,
+  validatePaginateData,
   validateUpdateData,
 } from "../validator/user.validator.js";
 
@@ -103,8 +105,58 @@ const changePasswordService = async (userId, incomingPasswords) => {
   return safeUser;
 };
 
+const deleteUserProfileService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  // soft delete so that the entry remain in DB for refrence
+  // because we may need the user's historical:Orders,Payments,Reviews,CouponUsage
+  // Your existing isActive field was designed for this purpose.
+  const user = await User.findByIdAndUpdate(userId, {
+    $set: {
+      isActive: false,
+      refreshToken: undefined,
+    },
+  });
+
+  validateNotFound(user, "User");
+
+  return { success: true };
+};
+
+const getUserOrdersService = async (userId, paginationData) => {
+  validateRequired(userId, "User id");
+
+  const { page, limit } = validatePaginateData(paginationData);
+
+  const skip = (page - 1) * limit;
+
+  const allOrders = await Order.find({
+    user: userId,
+  })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const totalOrders = await Order.countDocuments({ user: userId });
+
+  const pages = Math.ceil(totalOrders / limit);
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    allOrders,
+    total: totalOrders,
+    page,
+    limit,
+    previousPage,
+    nextPage,
+  };
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
   changePasswordService,
+  deleteUserProfileService,
+  getUserOrdersService,
 };
