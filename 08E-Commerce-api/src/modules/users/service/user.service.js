@@ -4,7 +4,11 @@ import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
 import { createSafeUser } from "../../../utils/sanitizeUser.js";
-import { validateUpdateData } from "../validator/validateUpdateData.js";
+import bcrypt from "bcrypt";
+import {
+  validateNewPassword,
+  validateUpdateData,
+} from "../validator/user.validator.js";
 
 const getUserProfileService = async (userId) => {
   validateRequired(userId, "User id");
@@ -62,4 +66,45 @@ const updateUserProfileService = async (userId, updateData) => {
   return safeProfile;
 };
 
-export { getUserProfileService, updateUserProfileService };
+const changePasswordService = async (userId, incomingPasswords) => {
+  validateRequired(userId, "User id");
+
+  const { currentPassword, newPassword } =
+    validateNewPassword(incomingPasswords);
+
+  const user = await User.findById(userId);
+  validateNotFound(user, "User");
+
+  const isCurrentPasswordCorrect = await bcrypt.compare(
+    currentPassword,
+    user.password,
+  );
+
+  if (!isCurrentPasswordCorrect) {
+    throw new ApiError(
+      401,
+      "Unauthorized access!. Current password is invalid",
+    );
+  }
+
+  const hashNewPassword = await bcrypt.hash(
+    newPassword,
+    process.env.BCRYPT_SALT_ROUNDS,
+  );
+
+  user.password = hashNewPassword;
+
+  // Null the refreshToken to log out existing sessions after a password change, so an old refresh token can't be used to generate a new access token.
+  user.refreshToken = undefined;
+  await user.save();
+
+  const safeUser = createSafeUser(user);
+
+  return safeUser;
+};
+
+export {
+  getUserProfileService,
+  updateUserProfileService,
+  changePasswordService,
+};

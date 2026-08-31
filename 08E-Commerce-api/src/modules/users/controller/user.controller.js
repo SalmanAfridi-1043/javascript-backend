@@ -3,6 +3,7 @@ import { asyncHandler } from "../../../utils/asyncHandler.js";
 import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 
 import {
+  changePasswordService,
   getUserProfileService,
   updateUserProfileService,
 } from "../service/user.service.js";
@@ -42,4 +43,24 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     );
 });
 
-export { getUserProfile, updateUserProfile };
+const changePassword = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const incomingPasswords = req.body;
+
+  const updatedUserProfile = await changePasswordService(
+    userId,
+    incomingPasswords,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedUserProfile,
+        "Passowrd updated successfully",
+      ),
+    );
+});
+
+export { getUserProfile, updateUserProfile, changePassword };

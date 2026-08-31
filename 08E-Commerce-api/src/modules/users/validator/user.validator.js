@@ -45,4 +45,37 @@ const validateUpdateData = (updateData) => {
   };
 };
 
-export { validateUpdateData };
+const validateNewPassword = (incomingPasswords) => {
+  const { currentPassword, newPassword } = incomingPasswords;
+
+  const normalizedCurrentPassword = currentPassword?.trim();
+  const normalizedNewPassword = newPassword?.trim();
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+
+  if (!normalizedCurrentPassword) {
+    throw new ApiError(400, "Current password is required");
+  }
+
+  if (!normalizedNewPassword) {
+    throw new ApiError(400, "New password is required");
+  }
+
+  if (normalizedNewPassword.length < 8) {
+    throw new ApiError(400, "password must be atleast 8 charactors long");
+  }
+
+  if (!passwordRegex.test(normalizedNewPassword)) {
+    throw new ApiError(
+      400,
+      "Password must contain uppercase, lowercase and digit",
+    );
+  }
+
+  return {
+    currentPassword: normalizedCurrentPassword,
+    newPassword: normalizedNewPassword,
+  };
+};
+
+export { validateUpdateData, validateNewPassword };
