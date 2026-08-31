@@ -1,6 +1,7 @@
 import { ApiError } from "../../../utils/ApiError.js";
 import { User } from "../model/user.model.js";
 import { Order } from "../../orders/model/order.model.js";
+import { Address } from "../../addresses/model/address.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
@@ -167,6 +168,38 @@ const getUserOrderService = async (userId, orderId) => {
   return order;
 };
 
+const setDefaultAddressService = async (userId, addressId) => {
+  validateRequired(userId, "User id");
+  validateRequired(addressId, "Address id");
+
+  validateObjectId(addressId, "Address");
+
+  // find the current address first
+  const address = await Address.findOne({
+    _id: addressId,
+    user: userId,
+  });
+
+  validateNotFound(address, "Address");
+
+  // before assigning the current address as default, set all the rest of addresses as isDefault=false, bcz only one address can de default address
+  await Address.updateMany(
+    {
+      user: userId,
+    },
+    {
+      $set: { isDefault: true },
+    },
+  );
+
+  // now set the current address as default address
+  address.isDefault = true;
+
+  await address.save();
+
+  return address;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -174,4 +207,5 @@ export {
   deleteUserProfileService,
   getUserOrdersService,
   getUserOrderService,
+  setDefaultAddressService,
 };

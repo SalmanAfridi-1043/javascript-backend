@@ -8,6 +8,7 @@ import {
   getUserOrder,
   getUserOrders,
   getUserProfile,
+  setDefaultAddress,
   updateUserProfile,
 } from "../controller/user.controller.js";
 
@@ -26,5 +27,7 @@ router.delete("/profile", deleteUserProfile);
 router.get("/orders", getUserOrders);
 
 router.get("/orders/:orderId", getUserOrder);
+
+router.patch("/addresses/:addressId/default", setDefaultAddress);
 
 export default router;

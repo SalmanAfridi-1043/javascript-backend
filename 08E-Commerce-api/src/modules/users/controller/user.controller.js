@@ -7,6 +7,7 @@ import {
   deleteUserProfileService,
   getUserOrdersService,
   getUserProfileService,
+  setDefaultAddressService,
   updateUserProfileService,
 } from "../service/user.service.js";
 
@@ -84,13 +85,26 @@ const getUserOrders = asyncHandler(async (req, res) => {
 
 const getUserOrder = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
-  const orderId = req.params;
+  const { orderId } = req.params;
 
   const order = await getUserOrdersService(userId, orderId);
 
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Order fetched successfully"));
+});
+
+const setDefaultAddress = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const { addressId } = req.params;
+
+  const defaultAddress = await setDefaultAddressService(userId, addressId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, defaultAddress, "Default address set successfully"),
+    );
 });
 
 export {
@@ -100,4 +114,5 @@ export {
   deleteUserProfile,
   getUserOrders,
   getUserOrder,
+  setDefaultAddress,
 };
