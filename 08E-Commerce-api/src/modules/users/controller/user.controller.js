@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 import {
   changePasswordService,
   deleteUserProfileService,
+  getUserNotificationsService,
   getUserOrdersService,
   getUserProfileService,
   setDefaultAddressService,
@@ -107,6 +108,26 @@ const setDefaultAddress = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserNotifications = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const paginationData = req.query;
+
+  const allNotifications = await getUserNotificationsService(
+    userId,
+    paginationData,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        allNotifications,
+        "Notifications fetched successfully",
+      ),
+    );
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -115,4 +136,5 @@ export {
   getUserOrders,
   getUserOrder,
   setDefaultAddress,
+  getUserNotifications,
 };

@@ -5,6 +5,7 @@ import { upload } from "../../../middleware/multer.middleware.js";
 import {
   changePassword,
   deleteUserProfile,
+  getUserNotifications,
   getUserOrder,
   getUserOrders,
   getUserProfile,
@@ -29,5 +30,7 @@ router.get("/orders", getUserOrders);
 router.get("/orders/:orderId", getUserOrder);
 
 router.patch("/addresses/:addressId/default", setDefaultAddress);
+
+router.get("/notifications", getUserNotifications);
 
 export default router;

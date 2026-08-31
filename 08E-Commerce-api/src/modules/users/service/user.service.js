@@ -2,6 +2,7 @@ import { ApiError } from "../../../utils/ApiError.js";
 import { User } from "../model/user.model.js";
 import { Order } from "../../orders/model/order.model.js";
 import { Address } from "../../addresses/model/address.model.js";
+import { Notification } from "../../notifications/model/notification.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
@@ -200,6 +201,38 @@ const setDefaultAddressService = async (userId, addressId) => {
   return address;
 };
 
+const getUserNotificationsService = async (userId, paginationData) => {
+  validateRequired(userId, "User id");
+
+  const { page, limit } = validatePaginateData(paginationData);
+
+  const skip = (page - 1) * limit;
+
+  const notifications = await Notification.find({
+    user: userId,
+  })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const totalNotifications = await Notification.countDocuments({
+    user: userId,
+  });
+
+  const pages = Math.ceil(totalNotifications / limit);
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    notifications,
+    total: totalNotifications,
+    page,
+    limit,
+    previousPage,
+    nextPage,
+  };
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -208,4 +241,5 @@ export {
   getUserOrdersService,
   getUserOrderService,
   setDefaultAddressService,
+  getUserNotificationsService,
 };
