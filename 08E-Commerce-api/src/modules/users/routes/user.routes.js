@@ -9,6 +9,7 @@ import {
   getUserOrder,
   getUserOrders,
   getUserProfile,
+  markNotificationAsRead,
   setDefaultAddress,
   updateUserProfile,
 } from "../controller/user.controller.js";
@@ -32,5 +33,7 @@ router.get("/orders/:orderId", getUserOrder);
 router.patch("/addresses/:addressId/default", setDefaultAddress);
 
 router.get("/notifications", getUserNotifications);
+
+router.patch("/notifications/:notificationId/read", markNotificationAsRead);
 
 export default router;

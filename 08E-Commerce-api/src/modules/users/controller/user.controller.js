@@ -8,6 +8,7 @@ import {
   getUserNotificationsService,
   getUserOrdersService,
   getUserProfileService,
+  markNotificationAsReadService,
   setDefaultAddressService,
   updateUserProfileService,
 } from "../service/user.service.js";
@@ -128,6 +129,26 @@ const getUserNotifications = asyncHandler(async (req, res) => {
     );
 });
 
+const markNotificationAsRead = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const { notificationId } = req.params;
+
+  const markedNotification = await markNotificationAsReadService(
+    userId,
+    notificationId,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        markedNotification,
+        "Notification marked as read successfully",
+      ),
+    );
+});
+
 export {
   getUserProfile,
   updateUserProfile,
@@ -137,4 +158,5 @@ export {
   getUserOrder,
   setDefaultAddress,
   getUserNotifications,
+  markNotificationAsRead,
 };

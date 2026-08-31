@@ -233,6 +233,30 @@ const getUserNotificationsService = async (userId, paginationData) => {
   };
 };
 
+const markNotificationAsReadService = async (userId, notificationId) => {
+  validateRequired(userId, "User id");
+  validateRequired(notificationId, "Notification id");
+
+  validateObjectId(notificationId, "Notification");
+
+  const markedNotification = await Notification.findOneAndUpdate(
+    {
+      _id: notificationId,
+      user: userId,
+    },
+    {
+      $set: { isRead: true },
+    },
+    {
+      new: true,
+    },
+  );
+
+  validateNotFound(markedNotification, "Notification");
+
+  return markedNotification;
+};
+
 export {
   getUserProfileService,
   updateUserProfileService,
@@ -242,4 +266,5 @@ export {
   getUserOrderService,
   setDefaultAddressService,
   getUserNotificationsService,
+  markNotificationAsReadService,
 };
