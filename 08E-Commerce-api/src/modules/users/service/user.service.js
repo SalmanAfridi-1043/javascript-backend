@@ -8,6 +8,7 @@ import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
 import { createSafeUser } from "../../../utils/sanitizeUser.js";
 import bcrypt from "bcrypt";
+
 import {
   validateNewPassword,
   validatePaginateData,
