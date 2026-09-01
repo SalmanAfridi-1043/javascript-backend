@@ -4,6 +4,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 
 import {
   createCategoryService,
+  deleteCategoryService,
   getAllCategoriesService,
   getCategoryByIdService,
   updateCategoryService,
@@ -70,4 +71,20 @@ const updateCategory = asyncHandler(async (req, res) => {
     );
 });
 
-export { createCategory, getAllCategories, getCategoryById, updateCategory };
+const deleteCategory = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+
+  const response = await deleteCategoryService(categoryId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Category deleted successfully"));
+});
+
+export {
+  createCategory,
+  getAllCategories,
+  getCategoryById,
+  updateCategory,
+  deleteCategory,
+};

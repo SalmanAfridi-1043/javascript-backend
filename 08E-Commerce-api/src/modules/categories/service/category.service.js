@@ -4,6 +4,7 @@ import { Order } from "../../orders/model/order.model.js";
 import { Address } from "../../addresses/model/address.model.js";
 import { Notification } from "../../notifications/model/notification.model.js";
 import { Category } from "../../categories/model/category.model.js";
+import { Product } from "../../products/model/product.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
@@ -122,9 +123,35 @@ const updateCategoryService = async (categoryId, updateData) => {
   return updateCategory;
 };
 
+const deleteCategoryService = async (categoryId) => {
+  validateRequired(categoryId, "Category id");
+  validateObjectId(categoryId, "Category");
+
+  const category = await Category.findById(categoryId);
+
+  validateNotFound(category, "category");
+
+  const isCategoryProductExists = await Product.findOne({
+    category: categoryId,
+  });
+
+  if (isCategoryProductExists) {
+    throw new ApiError(
+      409,
+      "Deletion rejected!. Product is associated with category",
+    );
+  }
+
+  category.isActive = false;
+  await category.save();
+
+  return { success: true };
+};
+
 export {
   createCategoryService,
   getAllCategoriesService,
   getCategoryByIdService,
   updateCategoryService,
+  deleteCategoryService,
 };

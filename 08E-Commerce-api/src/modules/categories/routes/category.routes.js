@@ -4,6 +4,7 @@ import { upload } from "../../../middleware/multer.middleware.js";
 
 import {
   createCategory,
+  deleteCategory,
   getAllCategories,
   getCategoryById,
   updateCategory,
@@ -20,5 +21,7 @@ router.get("/", getAllCategories);
 router.get("/:categoryId", getCategoryById);
 
 router.patch("/:categoryId", updateCategory);
+
+router.delete("/:categoryId", deleteCategory);
 
 export default router;
