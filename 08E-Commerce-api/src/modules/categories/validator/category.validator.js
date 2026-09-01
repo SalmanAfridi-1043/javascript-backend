@@ -20,4 +20,23 @@ const validateCategoryInputData = (categoryData) => {
   };
 };
 
-export { validateCategoryInputData };
+const validateCategoryUpdateData = (updateData) => {
+  const { name, description, isActive } = updateData;
+
+  const normalizedName = name?.trim();
+  const normalizedDescription = description?.trim();
+
+  validateRequired(normalizedName, "Category name");
+
+  if (isActive !== undefined && typeof isActive !== "boolean") {
+    throw new ApiError(400, "Enter a boolean value");
+  }
+
+  return {
+    name: normalizedName,
+    description: normalizedDescription,
+    isActive,
+  };
+};
+
+export { validateCategoryInputData, validateCategoryUpdateData };

@@ -6,6 +6,7 @@ import {
   createCategory,
   getAllCategories,
   getCategoryById,
+  updateCategory,
 } from "../controller/category.controller.js";
 
 const router = Router();
@@ -17,5 +18,7 @@ router.post("/create", upload.single("category"), createCategory);
 router.get("/", getAllCategories);
 
 router.get("/:categoryId", getCategoryById);
+
+router.patch("/:categoryId", updateCategory);
 
 export default router;
