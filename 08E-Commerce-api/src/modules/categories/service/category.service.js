@@ -49,4 +49,22 @@ const getAllCategoriesService = async () => {
   };
 };
 
-export { createCategoryService, getAllCategoriesService };
+const getCategoryByIdService = async (categoryId) => {
+  validateRequired(categoryId, "Category id");
+  validateObjectId(categoryId, "Category");
+
+  const category = await Category.findOne({
+    _id: categoryId,
+    isActive: true,
+  });
+
+  validateNotFound(category, "Category");
+
+  return category;
+};
+
+export {
+  createCategoryService,
+  getAllCategoriesService,
+  getCategoryByIdService,
+};

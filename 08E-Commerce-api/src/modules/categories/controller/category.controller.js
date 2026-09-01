@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 import {
   createCategoryService,
   getAllCategoriesService,
+  getCategoryByIdService,
 } from "../service/category.service.js";
 
 const createCategory = asyncHandler(async (req, res) => {
@@ -35,4 +36,14 @@ const getAllCategories = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, categories, "Categories fetched successfully"));
 });
 
-export { createCategory, getAllCategories };
+const getCategoryById = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+
+  const category = await getCategoryByIdService(categoryId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, category, "Category fetched successfully"));
+});
+
+export { createCategory, getAllCategories, getCategoryById };
