@@ -1,14 +1,9 @@
 import { ApiError } from "../../../utils/ApiError.js";
-import { User } from "../model/user.model.js";
-import { Order } from "../../orders/model/order.model.js";
-import { Address } from "../../addresses/model/address.model.js";
-import { Notification } from "../../notifications/model/notification.model.js";
 import { Category } from "../../categories/model/category.model.js";
 import { Product } from "../../products/model/product.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
-import bcrypt from "bcrypt";
 
 import {
   validateCategoryInputData,
