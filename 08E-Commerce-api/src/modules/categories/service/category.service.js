@@ -34,4 +34,19 @@ const createCategoryService = async (categoryData) => {
   return category;
 };
 
-export { createCategoryService };
+const getAllCategoriesService = async () => {
+  const categories = await Category.find({ isActive: true }).sort({ name: 1 });
+
+  if (categories.length === 0) {
+    throw new ApiError(404, "No category found");
+  }
+
+  const totalCount = categories.length;
+
+  return {
+    categories,
+    total: totalCount,
+  };
+};
+
+export { createCategoryService, getAllCategoriesService };
