@@ -8,6 +8,7 @@ import {
   getAllProductsService,
   getProductByIdService,
   updateProductService,
+  updateProductStatusService,
 } from "../service/product.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -104,10 +105,31 @@ const deleteProduct = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, response, "Product deleted successfully"));
 });
 
+const updateProductStatus = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { status } = req.body;
+
+  const updatedProductStatus = await updateProductStatusService(
+    productId,
+    status,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedProductStatus,
+        "Product status updated successfully",
+      ),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
   getProductById,
   updateProduct,
   deleteProduct,
+  updateProductStatus,
 };

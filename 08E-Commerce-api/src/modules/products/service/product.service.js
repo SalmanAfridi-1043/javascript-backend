@@ -143,7 +143,7 @@ const getProductByIdService = async (productId) => {
   const product = await Product.findOne({
     _id: productId,
     isActive: true,
-  });
+  }).populate("category");
 
   return product;
 };
@@ -248,10 +248,37 @@ const deleteProductService = async (productId) => {
   return { success: true };
 };
 
+const updateProductStatusService = async (productId, status) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  const normalizedStatus = status?.trim().toUpperCase();
+
+  if (!["ACTIVE", "INACTIVE", "OUT_OF_STOCK"].includes(normalizedStatus)) {
+    throw new ApiError(400, "Invalid status value");
+  }
+
+  const product = await Product.findByIdAndUpdate(
+    productId,
+    {
+      $set: { status: normalizedStatus },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  validateNotFound(product, "Product");
+
+  return product;
+};
+
 export {
   createProductService,
   getAllProductsService,
   getProductByIdService,
   updateProductService,
   deleteProductService,
+  updateProductStatusService,
 };
