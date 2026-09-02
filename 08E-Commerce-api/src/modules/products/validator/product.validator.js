@@ -54,6 +54,7 @@ const validateQueryParameters = (queryParams) => {
     minPrice,
     maxPrice,
     inStock,
+    status,
     sort,
     page,
     limit,
@@ -61,8 +62,14 @@ const validateQueryParameters = (queryParams) => {
 
   const normalizedSearch = search?.trim();
   const normalizedBrand = brand?.trim();
-  const normalizedMinPrice = Number(minPrice) || undefined;
-  const normalizedMaxPrice = Number(maxPrice) || undefined;
+
+  const normalizedMinPrice =
+    minPrice !== undefined ? Number(minPrice) : undefined;
+
+  const normalizedMaxPrice =
+    maxPrice !== undefined ? Number(maxPrice) : undefined;
+
+  const normalizedStatus = status?.trim().toUpperCase();
   const normalizedSort = sort?.trim().toLowerCase();
   const normalizedPage = page !== undefined ? Number(page) : 1;
   const normalizedLimit = limit !== undefined ? Number(limit) : 10;
@@ -80,6 +87,12 @@ const validateQueryParameters = (queryParams) => {
   if (normalizedMaxPrice !== undefined) {
     if (normalizedMaxPrice < 0 || !Number.isFinite(normalizedMaxPrice)) {
       throw new ApiError(400, "Enter positive finite maximum price value");
+    }
+  }
+
+  if (normalizedStatus !== undefined) {
+    if (!["ACTIVE", "INACTIVE", "OUT_OF_STOCK"].includes(normalizedStatus)) {
+      throw new ApiError(400, "Invalid status value");
     }
   }
 
@@ -110,6 +123,7 @@ const validateQueryParameters = (queryParams) => {
     brand: normalizedBrand,
     minPrice: normalizedMinPrice,
     maxPrice: normalizedMaxPrice,
+    status: normalizedStatus,
     inStock: normalizedInstock,
     sort: normalizedSort,
     page: normalizedPage,

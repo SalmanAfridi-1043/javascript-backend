@@ -4,6 +4,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 
 import {
   createProductService,
+  createProductVariantService,
   deleteProductService,
   getAllProductsService,
   getProductByIdService,
@@ -125,6 +126,26 @@ const updateProductStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const createProductVariant = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const variantData = req.body;
+
+  const createdVariant = await createProductVariantService(
+    productId,
+    variantData,
+  );
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        createdVariant,
+        "Product variant created successfully",
+      ),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
@@ -132,4 +153,5 @@ export {
   updateProduct,
   deleteProduct,
   updateProductStatus,
+  createProductVariant,
 };

@@ -1,6 +1,7 @@
 import { ApiError } from "../../../utils/ApiError.js";
 import { Category } from "../../categories/model/category.model.js";
 import { Product } from "../../products/model/product.model.js";
+import { ProductVariant } from "../../products/model/productVariant.model.js";
 import { Order } from "../../orders/model/order.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
@@ -11,6 +12,8 @@ import {
   validateProductUpdateData,
   validateQueryParameters,
 } from "../validator/product.validator.js";
+
+import { validateVariantInputData } from "../validator/productVariant.validator.js";
 
 const createProductService = async (productData) => {
   const { name, description, brand, categoryId, price, sku, stock } =
@@ -55,6 +58,7 @@ const getAllProductsService = async (queryParams) => {
     minPrice,
     maxPrice,
     inStock,
+    status,
     sort,
     page,
     limit,
@@ -93,6 +97,10 @@ const getAllProductsService = async (queryParams) => {
     if (maxPrice !== undefined) {
       filterObject.price.$lte = maxPrice;
     }
+  }
+
+  if (status !== undefined) {
+    filterObject.status = status;
   }
 
   if (brand !== undefined) {
@@ -274,6 +282,35 @@ const updateProductStatusService = async (productId, status) => {
   return product;
 };
 
+const createProductVariantService = async (productId, variantData) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  const { sku, attributes, price, stock } =
+    validateVariantInputData(variantData);
+
+  const isProductExists = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateNotFound(isProductExists, "Product");
+
+  const isSkuAlreadyExists = await ProductVariant.findOne({ sku });
+  if (isSkuAlreadyExists) {
+    throw new ApiError(409, "Sku already exists for product variant");
+  }
+
+  const productVariant = await ProductVariant.create({
+    product: productId,
+    sku,
+    attributes,
+    price: price ?? undefined,
+    stock,
+  });
+
+  return productVariant;
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -281,4 +318,5 @@ export {
   updateProductService,
   deleteProductService,
   updateProductStatusService,
+  createProductVariantService,
 };
