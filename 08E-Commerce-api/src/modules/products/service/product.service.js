@@ -7,6 +7,7 @@ import { validateNotFound } from "../../../utils/validateNotFound.js";
 
 import {
   validateProductInputData,
+  validateProductUpdateData,
   validateQueryParameters,
 } from "../validator/product.validator.js";
 
@@ -141,4 +142,85 @@ const getProductByIdService = async (productId) => {
   return product;
 };
 
-export { createProductService, getAllProductsService, getProductByIdService };
+const updateProductService = async (productId, productUpdateData) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  const { name, description, brand, categoryId, price, sku, stock } =
+    validateProductUpdateData(productUpdateData);
+
+  const { productImages } = productUpdateData;
+
+  if (categoryId !== undefined) {
+    const isCategoryExists = await Category.findOne({
+      _id: categoryId,
+      isActive: true,
+    });
+    validateNotFound(isCategoryExists, "Category");
+  }
+
+  // sku = a unique code to represent product in stock
+  if (sku !== undefined) {
+    const isSkuExists = await Product.findOne({
+      _id: { $ne: productId },
+      sku,
+    });
+    if (isSkuExists) {
+      throw new ApiError(409, "Sku alread exists");
+    }
+  }
+
+  const updateObject = {};
+
+  if (name !== undefined) {
+    updateObject.name = name;
+  }
+
+  if (description !== undefined) {
+    updateObject.description = description;
+  }
+
+  if (brand !== undefined) {
+    updateObject.brand = brand;
+  }
+
+  if (categoryId !== undefined) {
+    updateObject.category = categoryId;
+  }
+
+  if (price !== undefined) {
+    updateObject.price = price;
+  }
+
+  if (sku !== undefined) {
+    updateObject.sku = sku;
+  }
+
+  if (stock !== undefined) {
+    updateObject.stock = stock;
+  }
+
+  if (productImages !== undefined) {
+    updateObject.productImages = productImages;
+  }
+
+  const updatedProduct = await Product.findByIdAndUpdate(
+    productId,
+    {
+      $set: updateObject,
+    },
+    {
+      new: true,
+    },
+  );
+  validateNotFound(updatedProduct, "Product");
+
+  return updatedProduct;
+};
+
+export {
+  createProductService,
+  getAllProductsService,
+  getProductByIdService,
+  updateProductService,
+};

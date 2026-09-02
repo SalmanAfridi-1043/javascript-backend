@@ -117,4 +117,48 @@ const validateQueryParameters = (queryParams) => {
   };
 };
 
-export { validateProductInputData, validateQueryParameters };
+const validateProductUpdateData = (productUpdateData) => {
+  const { name, description, brand, categoryId, price, sku, stock } =
+    productUpdateData;
+
+  const normalizedName = name?.trim();
+  const normalizedDescription = description?.trim();
+  const normalizedBrand = brand?.trim();
+  const normalizedPrice = price !== undefined ? Number(price) : undefined;
+  const normalizedSku = sku?.trim().toUpperCase();
+  const normalizedStock = stock !== undefined ? Number(stock) : undefined;
+
+  if (categoryId !== undefined) {
+    validateObjectId(categoryId, "category");
+  }
+
+  if (normalizedPrice !== undefined)
+    if (normalizedPrice < 0 || !Number.isFinite(normalizedPrice)) {
+      throw new ApiError(400, "Enter positive finite price value");
+    }
+
+  if (normalizedStock !== undefined)
+    if (
+      normalizedStock < 0 ||
+      !Number.isFinite(normalizedStock) ||
+      !Number.isInteger(normalizedStock)
+    ) {
+      throw new ApiError(400, "Enter positive finite stock value");
+    }
+
+  return {
+    name: normalizedName,
+    description: normalizedDescription,
+    brand: normalizedBrand,
+    categoryId,
+    price: normalizedPrice,
+    sku: normalizedSku,
+    stock: normalizedStock,
+  };
+};
+
+export {
+  validateProductInputData,
+  validateQueryParameters,
+  validateProductUpdateData,
+};
