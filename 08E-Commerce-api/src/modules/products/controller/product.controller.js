@@ -6,6 +6,7 @@ import {
   createProductService,
   createProductVariantService,
   deleteProductService,
+  deleteProductVariantService,
   getAllProductsService,
   getProductByIdService,
   getProductVariantByIdService,
@@ -205,6 +206,18 @@ const updateProductVariant = asyncHandler(async (req, res) => {
     );
 });
 
+const deleteProductVariant = asyncHandler(async (req, res) => {
+  const { productId, variantId } = req.params;
+
+  const response = await deleteProductVariantService(productId, variantId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, response, "Product variant deleted successfully"),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
@@ -216,4 +229,5 @@ export {
   getProductVariants,
   getProductVariantById,
   updateProductVariant,
+  deleteProductVariant,
 };

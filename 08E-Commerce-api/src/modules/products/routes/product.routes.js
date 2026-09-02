@@ -6,6 +6,7 @@ import {
   createProduct,
   createProductVariant,
   deleteProduct,
+  deleteProductVariant,
   getAllProducts,
   getProductById,
   getProductVariantById,
@@ -39,5 +40,7 @@ router.get("/:productId/variants", getProductVariants);
 router.get("/:productId/variants/:variantId", getProductVariantById);
 
 router.patch("/:productId/variants/:variantId", updateProductVariant);
+
+router.delete("/:productId/variants/:variantId", deleteProductVariant);
 
 export default router;

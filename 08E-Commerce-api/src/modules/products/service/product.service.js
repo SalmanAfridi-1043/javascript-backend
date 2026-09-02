@@ -437,6 +437,38 @@ const updateProductVariantService = async (
   return updatedVariant;
 };
 
+const deleteProductVariantService = async (productId, variantId) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  validateRequired(variantId, "variant id");
+  validateObjectId(variantId, "variant");
+
+  const isProductExists = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateNotFound(isProductExists, "Product");
+
+  const variant = await ProductVariant.findOneAndDelete(
+    {
+      _id: variantId,
+      product: productId,
+      isActive: true, // we should only the delete active/non-deleted variant
+    },
+    {
+      $set: { isActive: false },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+  validateNotFound(variant, "Variant");
+
+  return { success: true };
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -448,4 +480,5 @@ export {
   getProductVariantsService,
   getProductVariantByIdService,
   updateProductVariantService,
+  deleteProductVariantService,
 };
