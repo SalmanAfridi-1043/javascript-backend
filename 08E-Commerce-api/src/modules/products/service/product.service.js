@@ -132,4 +132,13 @@ const getAllProductsService = async (queryParams) => {
   };
 };
 
-export { createProductService, getAllProductsService };
+const getProductByIdService = async (productId) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  const product = await Product.findById(productId);
+
+  return product;
+};
+
+export { createProductService, getAllProductsService, getProductByIdService };

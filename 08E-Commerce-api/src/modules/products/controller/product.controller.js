@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 import {
   createProductService,
   getAllProductsService,
+  getProductByIdService,
 } from "../service/product.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -47,4 +48,14 @@ const getAllProducts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, allProducts, "Products fetched successfully"));
 });
 
-export { createProduct, getAllProducts };
+const getProductById = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  const product = await getProductByIdService(productId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, product, "Products fetched successfully"));
+});
+
+export { createProduct, getAllProducts, getProductById };
