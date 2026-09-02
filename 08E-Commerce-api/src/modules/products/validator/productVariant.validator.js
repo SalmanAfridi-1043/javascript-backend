@@ -81,4 +81,24 @@ const validateVariantUpdateData = (variantUpdateData) => {
   };
 };
 
-export { validateVariantInputData, validateVariantUpdateData };
+const validateVariantStock = (stock) => {
+  const normalizedStock = stock !== undefined ? Number(stock) : undefined;
+
+  validateRequired(normalizedStock, "Stock value");
+
+  if (
+    !Number.isFinite(normalizedStock) ||
+    !Number.isInteger(normalizedStock) ||
+    normalizedStock < 0
+  ) {
+    throw new ApiError(400, "Enter positive finite stock value");
+  }
+
+  return { stock: normalizedStock };
+};
+
+export {
+  validateVariantInputData,
+  validateVariantUpdateData,
+  validateVariantStock,
+};

@@ -15,6 +15,7 @@ import {
 
 import {
   validateVariantInputData,
+  validateVariantStock,
   validateVariantUpdateData,
 } from "../validator/productVariant.validator.js";
 
@@ -469,6 +470,44 @@ const deleteProductVariantService = async (productId, variantId) => {
   return { success: true };
 };
 
+const updateVariantStockService = async (productId, variantId, stock) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  validateRequired(variantId, "variant id");
+  validateObjectId(variantId, "variant");
+
+  // using newStock coz we already have stock variable as parameter
+  const { newStock } = validateVariantStock(stock);
+
+  const product = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateNotFound(product, "Product");
+
+  // add the stock value here
+  const variant = await ProductVariant.findOneAndUpdate(
+    {
+      _id: variantId,
+      product: productId,
+      isActive: true,
+    },
+    {
+      $set: {
+        stock: newStock,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+  validateNotFound(variant, "Variant");
+
+  return variant;
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -481,4 +520,5 @@ export {
   getProductVariantByIdService,
   updateProductVariantService,
   deleteProductVariantService,
+  updateVariantStockService,
 };

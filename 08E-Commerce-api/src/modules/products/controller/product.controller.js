@@ -14,6 +14,7 @@ import {
   updateProductService,
   updateProductStatusService,
   updateProductVariantService,
+  updateVariantStockService,
 } from "../service/product.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -218,6 +219,23 @@ const deleteProductVariant = asyncHandler(async (req, res) => {
     );
 });
 
+const updateVariantStock = asyncHandler(async (req, res) => {
+  const { productId, variantId } = req.params;
+  const { stock } = req.body;
+
+  const updatedStock = await updateVariantStockService(
+    productId,
+    variantId,
+    stock,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedStock, "Variant stock updated successfully"),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
@@ -230,4 +248,5 @@ export {
   getProductVariantById,
   updateProductVariant,
   deleteProductVariant,
+  updateVariantStock,
 };

@@ -14,6 +14,7 @@ import {
   updateProduct,
   updateProductStatus,
   updateProductVariant,
+  updateVariantStock,
 } from "../controller/product.controller.js";
 
 const router = Router();
@@ -42,5 +43,8 @@ router.get("/:productId/variants/:variantId", getProductVariantById);
 router.patch("/:productId/variants/:variantId", updateProductVariant);
 
 router.delete("/:productId/variants/:variantId", deleteProductVariant);
+
+// Inventory/Stock Management
+router.patch("/:productId/variants/:variantId/stock", updateVariantStock);
 
 export default router;
