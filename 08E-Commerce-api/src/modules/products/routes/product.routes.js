@@ -8,6 +8,7 @@ import {
   deleteProduct,
   getAllProducts,
   getProductById,
+  getProductVariantById,
   getProductVariants,
   updateProduct,
   updateProductStatus,
@@ -33,5 +34,7 @@ router.patch("/:productId/status", updateProductStatus);
 router.post("/:productId/variants", createProductVariant);
 
 router.get("/:productId/variants", getProductVariants);
+
+router.get("/:productId/variants/:variantId", getProductVariantById);
 
 export default router;

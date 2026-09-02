@@ -336,6 +336,30 @@ const getProductVariantsService = async (productId) => {
   return productVariants;
 };
 
+const getProductVariantByIdService = async (productId, variantId) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  validateRequired(variantId, "variant id");
+  validateObjectId(variantId, "variant");
+
+  const isProductExists = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateNotFound(isProductExists, "Product");
+
+  const variant = await ProductVariant.findOne({
+    _id: variantId,
+    product: productId,
+    isActive: true,
+  }).populate("product");
+
+  validateNotFound(variant, "Product variant");
+
+  return variant;
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -345,4 +369,5 @@ export {
   updateProductStatusService,
   createProductVariantService,
   getProductVariantsService,
+  getProductVariantByIdService,
 };
