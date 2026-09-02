@@ -12,6 +12,7 @@ import {
   getProductVariants,
   updateProduct,
   updateProductStatus,
+  updateProductVariant,
 } from "../controller/product.controller.js";
 
 const router = Router();
@@ -36,5 +37,7 @@ router.post("/:productId/variants", createProductVariant);
 router.get("/:productId/variants", getProductVariants);
 
 router.get("/:productId/variants/:variantId", getProductVariantById);
+
+router.patch("/:productId/variants/:variantId", updateProductVariant);
 
 export default router;

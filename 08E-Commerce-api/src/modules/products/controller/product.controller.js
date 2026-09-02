@@ -12,6 +12,7 @@ import {
   getProductVariantsService,
   updateProductService,
   updateProductStatusService,
+  updateProductVariantService,
 } from "../service/product.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -183,6 +184,27 @@ const getProductVariantById = asyncHandler(async (req, res) => {
     );
 });
 
+const updateProductVariant = asyncHandler(async (req, res) => {
+  const { productId, variantId } = req.params;
+  const variantUpdateData = req.body;
+
+  const updatedVariant = await updateProductVariantService(
+    productId,
+    variantId,
+    variantUpdateData,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedVariant,
+        "Product variant updated successfully",
+      ),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
@@ -193,4 +215,5 @@ export {
   createProductVariant,
   getProductVariants,
   getProductVariantById,
+  updateProductVariant,
 };

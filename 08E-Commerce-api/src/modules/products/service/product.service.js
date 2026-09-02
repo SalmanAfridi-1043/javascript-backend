@@ -13,7 +13,10 @@ import {
   validateQueryParameters,
 } from "../validator/product.validator.js";
 
-import { validateVariantInputData } from "../validator/productVariant.validator.js";
+import {
+  validateVariantInputData,
+  validateVariantUpdateData,
+} from "../validator/productVariant.validator.js";
 
 const createProductService = async (productData) => {
   const { name, description, brand, categoryId, price, sku, stock } =
@@ -360,6 +363,80 @@ const getProductVariantByIdService = async (productId, variantId) => {
   return variant;
 };
 
+const updateProductVariantService = async (
+  productId,
+  variantId,
+  variantUpdateData,
+) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  validateRequired(variantId, "variant id");
+  validateObjectId(variantId, "variant");
+
+  const { sku, attributes, price, stock } =
+    validateVariantUpdateData(variantUpdateData);
+
+  const isProductExists = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateNotFound(isProductExists, "Product");
+
+  const isVariantExists = await ProductVariant.findOne({
+    _id: variantId,
+    product: productId,
+    isActive: true,
+  });
+  validateNotFound(isVariantExists, "Variant");
+
+  // if sku is updated, then check for duplication sku code
+  if (sku !== undefined) {
+    const isSkuAlreadyExists = await ProductVariant.findOne({
+      sku,
+      _id: { $ne: variantId },
+    });
+    if (isSkuAlreadyExists) {
+      throw new ApiError(409, "Sku for variant already exists");
+    }
+  }
+
+  const updateObject = {};
+
+  if (sku !== undefined) {
+    updateObject.sku = sku;
+  }
+
+  if (attributes !== undefined) {
+    updateObject.attributes = attributes;
+  }
+
+  if (price !== undefined) {
+    updateObject.price = price;
+  }
+
+  if (stock !== undefined) {
+    updateObject.stock = stock;
+  }
+
+  const updatedVariant = await ProductVariant.findOneAndUpdate(
+    {
+      _id: variantId,
+      product: productId,
+      isActive: true,
+    },
+    {
+      $set: updateObject,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  return updatedVariant;
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -370,4 +447,5 @@ export {
   createProductVariantService,
   getProductVariantsService,
   getProductVariantByIdService,
+  updateProductVariantService,
 };
