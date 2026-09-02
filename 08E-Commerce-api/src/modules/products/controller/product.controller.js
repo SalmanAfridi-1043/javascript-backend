@@ -2,7 +2,10 @@ import { ApiResponse } from "../../../utils/ApiResponse.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
 import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 
-import { createProductService } from "../service/product.service.js";
+import {
+  createProductService,
+  getAllProductsService,
+} from "../service/product.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
   const productData = { ...req.body };
@@ -34,4 +37,14 @@ const createProduct = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdProduct, "Product created successfully"));
 });
 
-export { createProduct };
+const getAllProducts = asyncHandler(async (req, res) => {
+  const queryParams = req.query;
+
+  const allProducts = await getAllProductsService(queryParams);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allProducts, "Products fetched successfully"));
+});
+
+export { createProduct, getAllProducts };

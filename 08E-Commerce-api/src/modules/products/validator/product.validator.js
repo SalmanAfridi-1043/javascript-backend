@@ -46,4 +46,75 @@ const validateProductInputData = (productData) => {
   };
 };
 
-export { validateProductInputData };
+const validateQueryParameters = (queryParams) => {
+  const {
+    search,
+    categoryId,
+    brand,
+    minPrice,
+    maxPrice,
+    inStock,
+    sort,
+    page,
+    limit,
+  } = queryParams;
+
+  const normalizedSearch = search?.trim();
+  const normalizedBrand = brand?.trim();
+  const normalizedMinPrice = Number(minPrice) || undefined;
+  const normalizedMaxPrice = Number(maxPrice) || undefined;
+  const normalizedSort = sort?.trim().toLowerCase();
+  const normalizedPage = page !== undefined ? Number(page) : 1;
+  const normalizedLimit = limit !== undefined ? Number(limit) : 10;
+
+  if (categoryId !== undefined) {
+    validateObjectId(categoryId, "category");
+  }
+
+  if (normalizedMinPrice !== undefined) {
+    if (normalizedMinPrice < 0 || !Number.isFinite(normalizedMinPrice)) {
+      throw new ApiError(400, "Enter positive finite minimum price value");
+    }
+  }
+
+  if (normalizedMaxPrice !== undefined) {
+    if (normalizedMaxPrice < 0 || !Number.isFinite(normalizedMaxPrice)) {
+      throw new ApiError(400, "Enter positive finite maximum price value");
+    }
+  }
+
+  let normalizedInstock;
+  if (inStock !== undefined) {
+    if (inStock !== "true" && inStock !== "false") {
+      throw new ApiError(400, "inStock must be true or false");
+    }
+
+    normalizedInstock = inStock === "true";
+  }
+
+  if (!Number.isInteger(normalizedPage) || normalizedPage < 1) {
+    throw new ApiError(400, "Page must be a positive integer");
+  }
+
+  if (
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1 ||
+    normalizedLimit > 100
+  ) {
+    throw new ApiError(400, "Limit must be between 1 and 100");
+  }
+
+  return {
+    search: normalizedSearch,
+    categoryId,
+    brand: normalizedBrand,
+    minPrice: normalizedMinPrice,
+    maxPrice: normalizedMaxPrice,
+    inStock: normalizedInstock,
+    sort: normalizedSort,
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
+export { validateProductInputData, validateQueryParameters };

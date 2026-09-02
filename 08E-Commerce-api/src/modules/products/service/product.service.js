@@ -5,7 +5,10 @@ import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
 
-import { validateProductInputData } from "../validator/product.validator.js";
+import {
+  validateProductInputData,
+  validateQueryParameters,
+} from "../validator/product.validator.js";
 
 const createProductService = async (productData) => {
   const { name, description, brand, categoryId, price, sku, stock } =
@@ -42,4 +45,91 @@ const createProductService = async (productData) => {
   return product;
 };
 
-export { createProductService };
+const getAllProductsService = async (queryParams) => {
+  const {
+    search,
+    categoryId,
+    brand,
+    minPrice,
+    maxPrice,
+    inStock,
+    sort,
+    page,
+    limit,
+  } = validateQueryParameters(queryParams);
+
+  const filterObject = {};
+
+  if (search !== undefined) {
+    filterObject.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+      { brand: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  if (categoryId !== undefined) {
+    const isCategoryExists = await Category.findOne({
+      _id: categoryId,
+      isActive: true,
+    });
+    validateNotFound(isCategoryExists, "Category");
+
+    filterObject.category = categoryId;
+  }
+
+  // set price range
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    filterObject.price = {};
+
+    if (minPrice !== undefined) {
+      filterObject.price.$gte = minPrice;
+    }
+
+    if (maxPrice !== undefined) {
+      filterObject.price.$lte = maxPrice;
+    }
+  }
+
+  if (brand !== undefined) {
+    filterObject.brand = brand;
+  }
+
+  if (inStock !== undefined) {
+    filterObject.stock = inStock ? { $gt: 0 } : { $eq: 0 };
+  }
+
+  const sortingObject = {};
+  if (sort === "price") sortingObject.price = 1;
+  if (sort === "-price") sortingObject.price = -1;
+  if (sort === "brand") sortingObject.brand = 1;
+  if (sort === "-brand") sortingObject.brand = -1;
+
+  const skip = (page - 1) * limit;
+
+  const allProducts = await Product.find(filterObject)
+    .sort(sortingObject)
+    .skip(skip)
+    .limit(limit);
+
+  const totalProducts = await Product.countDocuments(filterObject);
+
+  const pages = Math.ceil(totalProducts / limit);
+
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    allProducts,
+    pagination: {
+      totalProducts,
+      pages,
+      page,
+      limit,
+      previousPage,
+      nextPage,
+    },
+  };
+};
+
+export { createProductService, getAllProductsService };
