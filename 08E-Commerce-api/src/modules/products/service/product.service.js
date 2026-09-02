@@ -311,6 +311,31 @@ const createProductVariantService = async (productId, variantData) => {
   return productVariant;
 };
 
+const getProductVariantsService = async (productId) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  // check if the product exists
+  const isProductExists = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
+  validateRequired(isProductExists, "product");
+
+  // check if the product properties/variants exists
+  // get all the product properties/variants
+  const productVariants = await ProductVariant.find({
+    product: productId,
+    isActive: true,
+  });
+
+  if (productVariants.length === 0) {
+    throw new ApiError(404, "Product variant not found");
+  }
+
+  return productVariants;
+};
+
 export {
   createProductService,
   getAllProductsService,
@@ -319,4 +344,5 @@ export {
   deleteProductService,
   updateProductStatusService,
   createProductVariantService,
+  getProductVariantsService,
 };

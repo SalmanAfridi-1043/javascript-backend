@@ -8,6 +8,7 @@ import {
   deleteProductService,
   getAllProductsService,
   getProductByIdService,
+  getProductVariantsService,
   updateProductService,
   updateProductStatusService,
 } from "../service/product.service.js";
@@ -146,6 +147,22 @@ const createProductVariant = asyncHandler(async (req, res) => {
     );
 });
 
+const getProductVariants = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  const productVariant = await getProductVariantsService(productId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        productVariant,
+        "Product variant fetched successfully",
+      ),
+    );
+});
+
 export {
   createProduct,
   getAllProducts,
@@ -154,4 +171,5 @@ export {
   deleteProduct,
   updateProductStatus,
   createProductVariant,
+  getProductVariants,
 };
