@@ -32,6 +32,7 @@ const productSchema = new Schema(
     },
 
     // sku → unique identifier for inventory/product tracking.
+    // SKU = Stock Keeping Unit — a unique code used internally to identify and track a specific product/variant in inventory.
     sku: {
       type: String,
       required: true,
@@ -40,7 +41,7 @@ const productSchema = new Schema(
       uppercase: true,
     },
 
-    images: [
+    productImages: [
       {
         type: String,
         trim: true,
