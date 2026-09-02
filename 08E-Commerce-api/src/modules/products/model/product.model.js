@@ -60,6 +60,11 @@ const productSchema = new Schema(
       enum: ["ACTIVE", "INACTIVE", "OUT_OF_STOCK"],
       default: "ACTIVE",
     },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true },
 );

@@ -1,6 +1,7 @@
 import { ApiError } from "../../../utils/ApiError.js";
 import { Category } from "../../categories/model/category.model.js";
 import { Product } from "../../products/model/product.model.js";
+import { Order } from "../../orders/model/order.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
@@ -59,7 +60,9 @@ const getAllProductsService = async (queryParams) => {
     limit,
   } = validateQueryParameters(queryParams);
 
-  const filterObject = {};
+  const filterObject = {
+    isActive: true,
+  };
 
   if (search !== undefined) {
     filterObject.$or = [
@@ -137,7 +140,10 @@ const getProductByIdService = async (productId) => {
   validateRequired(productId, "product id");
   validateObjectId(productId, "product");
 
-  const product = await Product.findById(productId);
+  const product = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  });
 
   return product;
 };
@@ -211,6 +217,7 @@ const updateProductService = async (productId, productUpdateData) => {
     },
     {
       new: true,
+      runValidators: true,
     },
   );
   validateNotFound(updatedProduct, "Product");
@@ -218,9 +225,33 @@ const updateProductService = async (productId, productUpdateData) => {
   return updatedProduct;
 };
 
+const deleteProductService = async (productId) => {
+  validateRequired(productId, "product id");
+  validateObjectId(productId, "product");
+
+  // check if this product is used by any order actively
+  const isProductUsedByOrder = await Order.findOne({
+    "items.product": productId,
+    orderStatus: {
+      $in: ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED"],
+    },
+  });
+  if (isProductUsedByOrder) {
+    throw new ApiError(409, "Product is used by active order");
+  }
+
+  const product = await Product.findByIdAndUpdate(productId, {
+    $set: { isActive: false },
+  });
+  validateNotFound(product, "Product");
+
+  return { success: true };
+};
+
 export {
   createProductService,
   getAllProductsService,
   getProductByIdService,
   updateProductService,
+  deleteProductService,
 };

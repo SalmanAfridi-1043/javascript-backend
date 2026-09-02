@@ -4,6 +4,7 @@ import { upload } from "../../../middleware/multer.middleware.js";
 
 import {
   createProduct,
+  deleteProduct,
   getAllProducts,
   getProductById,
   updateProduct,
@@ -21,5 +22,7 @@ router.get("/", getAllProducts);
 router.get("/:productId", getProductById);
 
 router.patch("/:productId", upload.array("images", 5), updateProduct);
+
+router.delete("/:productId", deleteProduct);
 
 export default router;
