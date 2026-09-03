@@ -138,4 +138,30 @@ const updateCartItemService = async (userId, itemId, itemQuantity) => {
   return cart;
 };
 
-export { addToCartService, getCartService, updateCartItemService };
+const removeCartItemService = async (userId, itemId) => {
+  validateRequired(userId, "User id");
+  validateRequired(itemId, "Item id");
+
+  validateObjectId(itemId, "Item");
+
+  const cart = await Cart.findOne({ user: userId });
+
+  validateNotFound(cart, "Cart");
+
+  const cartItem = cart.items.id(itemId);
+
+  validateNotFound(cartItem, "Cart item");
+
+  cart.items.pull(cartItem);
+
+  await cart.save();
+
+  return cart;
+};
+
+export {
+  addToCartService,
+  getCartService,
+  updateCartItemService,
+  removeCartItemService,
+};
