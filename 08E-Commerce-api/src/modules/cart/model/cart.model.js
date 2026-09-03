@@ -28,6 +28,7 @@ const cartItemSchema = new Schema(
   // unique id for each details here
   // it tells Mongoose to give each cart item its own _id.
   { _id: true },
+  // So { _id: true } means each object inside items gets its own MongoDB/Mongoose _id, allowing you to identify a specific cart item with itemId.
 
   // so cartSchema object will ve _id from mongoose. but after this , we forcefully say to mongoose that give _id to cartItemSchema object as well . coz its a field having array of objects
 );

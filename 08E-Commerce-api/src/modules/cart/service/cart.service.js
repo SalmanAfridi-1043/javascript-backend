@@ -8,7 +8,10 @@ import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
 
-import { validateCartInputData } from "../validator/cart.validator.js";
+import {
+  validateCartInputData,
+  validateCartQuantity,
+} from "../validator/cart.validator.js";
 
 const addToCartService = async (userId, cartData) => {
   validateRequired(userId, "user id");
@@ -98,4 +101,41 @@ const getCartService = async (userId) => {
   return cart;
 };
 
-export { addToCartService, getCartService };
+const updateCartItemService = async (userId, itemId, itemQuantity) => {
+  validateRequired(userId, "User id");
+  validateRequired(itemId, "Item id");
+
+  validateObjectId(itemId, "Item");
+
+  const { quantity } = validateCartQuantity(itemQuantity);
+
+  const cart = await Cart.findOne({ user: userId });
+
+  validateNotFound(cart, "Cart");
+
+  // Find embedded cart item using its generated _id in model
+  const existingItem = cart.items.id(itemId);
+
+  if (!existingItem) {
+    throw new ApiError(404, "No item found in cart");
+  }
+
+  const itemVariant = await ProductVariant.findOne({
+    _id: existingItem.variant,
+    isActive: true,
+  });
+
+  validateNotFound(itemVariant, "Item variant");
+
+  if (quantity > itemVariant.stock) {
+    throw new ApiError(409, "Quantity exceed the stock limit");
+  }
+
+  existingItem.quantity = quantity;
+
+  await cart.save();
+
+  return cart;
+};
+
+export { addToCartService, getCartService, updateCartItemService };

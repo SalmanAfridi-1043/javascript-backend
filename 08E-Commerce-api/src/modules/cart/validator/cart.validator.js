@@ -31,4 +31,23 @@ const validateCartInputData = (cartData) => {
   };
 };
 
-export { validateCartInputData };
+const validateCartQuantity = (itemQuantity) => {
+  const normalizedQuantity =
+    itemQuantity !== undefined ? Number(quantity) : undefined;
+
+  validateRequired(itemQuantity, "Item Quantity");
+
+  if (
+    !Number.isFinite(normalizedQuantity) ||
+    !Number.isInteger(normalizedQuantity) ||
+    normalizedQuantity < 1
+  ) {
+    throw new ApiError(400, "Enter positive finite quantity value");
+  }
+
+  return {
+    quantity: normalizedQuantity,
+  };
+};
+
+export { validateCartInputData, validateCartQuantity };
