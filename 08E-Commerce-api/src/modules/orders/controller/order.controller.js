@@ -4,6 +4,7 @@ import { asyncHandler } from "../../../utils/asyncHandler.js";
 import {
   createOrderService,
   getMyOrdersService,
+  getOrderByIdService,
 } from "../service/order.service.js";
 
 const createOrder = asyncHandler(async (req, res) => {
@@ -25,8 +26,19 @@ const getMyOrders = asyncHandler(async (req, res) => {
   const orders = await getMyOrdersService(userId, queryParams);
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, orders, "Orders fetched successfully"));
+    .status(200)
+    .json(new ApiResponse(200, orders, "Orders fetched successfully"));
 });
 
-export { createOrder, getMyOrders };
+const getOrderById = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId } = req.params;
+
+  const userOrder = await getOrderByIdService(userId, orderId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, userOrder, "Order fetched successfully"));
+});
+
+export { createOrder, getMyOrders, getOrderById };

@@ -142,4 +142,22 @@ const getMyOrdersService = async (userId, queryParams) => {
   };
 };
 
-export { createOrderService, getMyOrdersService };
+const getOrderByIdService = async (userId, orderId) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  })
+    .populate("items.variant")
+    .populate("items.product");
+
+  validateNotFound(order, "Order");
+
+  return order;
+};
+
+export { createOrderService, getMyOrdersService, getOrderByIdService };
