@@ -6,6 +6,7 @@ import {
   createOrderService,
   getMyOrdersService,
   getOrderByIdService,
+  updateOrderStatusService,
 } from "../service/order.service.js";
 
 const createOrder = asyncHandler(async (req, res) => {
@@ -53,4 +54,23 @@ const cancelOrder = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, canceledOrder, "Order canceled successfully"));
 });
 
-export { createOrder, getMyOrders, getOrderById, cancelOrder };
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+
+  const updatedOrder = await updateOrderStatusService(orderId, status);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedOrder, "Order status updated successfully"),
+    );
+});
+
+export {
+  createOrder,
+  getMyOrders,
+  getOrderById,
+  cancelOrder,
+  updateOrderStatus,
+};

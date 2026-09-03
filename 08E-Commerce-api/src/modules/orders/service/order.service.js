@@ -11,6 +11,7 @@ import { generateOrderNumber } from "../../../utils/orderNumberGenerator.js";
 import {
   validateOrderInputAddress,
   validateOrderParams,
+  validateOrderStatus,
 } from "../validator/order.validator.js";
 
 const createOrderService = async (userId, shippingAddress) => {
@@ -202,9 +203,83 @@ const cancelOrderService = async (userId, orderId) => {
   return order;
 };
 
+const updateOrderStatusService = async (orderId, status) => {
+  validateRequired(orderId, "Order id");
+  validateObjectId(orderId, "Order");
+
+  const { orderStatus } = validateOrderStatus(status);
+
+  const order = await Order.findById(orderId);
+
+  validateNotFound(order, "Order");
+
+  if (order.orderStatus === "PENDING") {
+    if (orderStatus === "CONFIRMED" || orderStatus === "CANCELLED") {
+      order.orderStatus = orderStatus;
+    } else {
+      throw new ApiError(400, "Invalid status transition");
+    }
+  }
+
+  if (order.orderStatus === "CONFIRMED") {
+    if (orderStatus === "PROCESSING" || orderStatus === "CANCELLED") {
+      order.orderStatus = orderStatus;
+    } else {
+      throw new ApiError(400, "Invalid status transition");
+    }
+  }
+
+  if (order.orderStatus === "PROCESSING") {
+    if (orderStatus === "SHIPPED") {
+      order.orderStatus = orderStatus;
+    } else {
+      throw new ApiError(400, "Invalid status transition");
+    }
+  }
+
+  if (order.orderStatus === "SHIPPED") {
+    if (orderStatus === "DELIVERED") {
+      order.orderStatus = orderStatus;
+    } else {
+      throw new ApiError(400, "Invalid status transition");
+    }
+  }
+
+  if (order.orderStatus === "RETURN_REQUESTED") {
+    if (orderStatus === "RETURNED") {
+      order.orderStatus = orderStatus;
+    } else {
+      throw new ApiError(400, "Invalid status transition");
+    }
+  }
+
+  // below is shorter method of the above one
+  /*
+  const allowedTransitions = {
+    PENDING: ["CONFIRMED", "CANCELLED"],
+    CONFIRMED: ["PROCESSING", "CANCELLED"],
+    PROCESSING: ["SHIPPED"],
+    SHIPPED: ["DELIVERED"],
+    DELIVERED: [],
+    CANCELLED: [],
+    RETURN_REQUESTED: ["RETURNED"],
+    RETURNED: [],
+  };
+
+  if (!allowedTransitions[order.status].includes(orderStatus)) {
+    throw new ApiError(409, "Invalid status transition");
+  }
+  order.orderStatus = orderStatus;*/
+
+  await order.save();
+
+  return order;
+};
+
 export {
   createOrderService,
   getMyOrdersService,
   getOrderByIdService,
   cancelOrderService,
+  updateOrderStatusService,
 };

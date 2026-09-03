@@ -62,4 +62,29 @@ const validateOrderParams = (queryParams) => {
   };
 };
 
-export { validateOrderInputAddress, validateOrderParams };
+const validateOrderStatus = (status) => {
+  const normalizedStatus = status?.trim().toUpperCase();
+
+  validateRequired(normalizedStatus, "Status");
+
+  if (
+    ![
+      "PENDING",
+      "CONFIRMED",
+      "PROCESSING",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+      "RETURN_REQUESTED",
+      "RETURNED",
+    ].includes(normalizedStatus)
+  ) {
+    throw new ApiError(400, "Enter a valid order status");
+  }
+
+  return {
+    orderStatus: normalizedStatus,
+  };
+};
+
+export { validateOrderInputAddress, validateOrderParams, validateOrderStatus };
