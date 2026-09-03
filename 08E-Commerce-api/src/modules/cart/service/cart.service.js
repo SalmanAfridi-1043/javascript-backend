@@ -86,4 +86,16 @@ const addToCartService = async (userId, cartData) => {
   return cart;
 };
 
-export { addToCartService };
+const getCartService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const cart = await Cart.findById(userId)
+    .populate("items.product")
+    .populate("items.variant");
+
+  validateNotFound(cart, "User cart");
+
+  return cart;
+};
+
+export { addToCartService, getCartService };
