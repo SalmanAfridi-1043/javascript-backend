@@ -8,7 +8,10 @@ import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
 import { generateOrderNumber } from "../../../utils/orderNumberGenerator.js";
 
-import { validateOrderInputAddress } from "../validator/order.validator.js";
+import {
+  validateOrderInputAddress,
+  validateOrderParams,
+} from "../validator/order.validator.js";
 
 const createOrderService = async (userId, shippingAddress) => {
   validateRequired(userId, "User id");
@@ -106,4 +109,37 @@ const createOrderService = async (userId, shippingAddress) => {
   return order;
 };
 
-export { createOrderService };
+const getMyOrdersService = async (userId, queryParams) => {
+  validateRequired(userId, "user id ");
+
+  const { page, limit } = validateOrderParams(queryParams);
+
+  const skip = (page - 1) * limit;
+
+  const orders = await Order.find({ user: userId })
+    .populate("items.variant")
+    .populate("items.product")
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  if (orders.length === 0) {
+    throw new ApiError(404, "No order found");
+  }
+
+  const totalOrders = await Order.countDocuments({ user: userId });
+  const pages = Math.ceil(totalOrders / limit);
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    orders,
+    total: totalOrders,
+    page,
+    limit,
+    previousPage,
+    nextPage,
+  };
+};
+
+export { createOrderService, getMyOrdersService };

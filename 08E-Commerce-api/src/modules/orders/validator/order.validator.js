@@ -30,4 +30,36 @@ const validateOrderInputAddress = (shippingAddress) => {
   };
 };
 
-export { validateOrderInputAddress };
+const validateOrderParams = (queryParams) => {
+  const { page, limit } = queryParams;
+
+  const normalizedPage = page !== undefined ? Number(page) : 1;
+  const normalizedLimit = limit !== undefined ? Number(limit) : 10;
+
+  if (normalizedPage !== undefined) {
+    if (
+      !Number.isFinite(normalizedPage) ||
+      !Number.isInteger(normalizedPage) ||
+      normalizedPage < 1
+    ) {
+      throw new ApiError(400, "Enter positive finite page value");
+    }
+  }
+
+  if (normalizedLimit !== undefined) {
+    if (
+      !Number.isFinite(normalizedLimit) ||
+      !Number.isInteger(normalizedLimit) ||
+      normalizedLimit < 1
+    ) {
+      throw new ApiError(400, "Enter positive finite limit value");
+    }
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
+export { validateOrderInputAddress, validateOrderParams };
