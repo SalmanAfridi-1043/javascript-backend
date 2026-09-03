@@ -210,6 +210,42 @@ const getCartSummaryService = async (userId) => {
   };
 };
 
+const validateCartService = async (userId) => {
+  validateNotFound(userId, "user id");
+
+  const cart = await Cart.findOne({ user: userId });
+
+  validateNotFound(cart, "Cart");
+
+  if (cart.items.length === 0) {
+    throw new ApiError(400, "Cart is empty");
+  }
+
+  for (const item of cart.items) {
+    const isProductExists = await Product.findOne({
+      _id: item.product,
+      isActive: true,
+    });
+
+    validateNotFound(isProductExists, "product");
+
+    const isVariantExists = await ProductVariant.findOne({
+      _id: item.variant,
+      isActive: true,
+    });
+
+    validateNotFound(isVariantExists, "Variant");
+
+    if (item.quantity > isVariantExists.stock) {
+      throw new ApiError(409, "Quantity exceed stock limit");
+    }
+  }
+
+  return {
+    valid: true,
+  };
+};
+
 export {
   addToCartService,
   getCartService,
@@ -217,4 +253,5 @@ export {
   removeCartItemService,
   clearCartService,
   getCartSummaryService,
+  validateCartService,
 };

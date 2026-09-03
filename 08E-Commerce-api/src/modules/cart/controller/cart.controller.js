@@ -8,6 +8,7 @@ import {
   getCartSummaryService,
   removeCartItemService,
   updateCartItemService,
+  validateCartService,
 } from "../service/cart.service.js";
 
 const addToCart = asyncHandler(async (req, res) => {
@@ -27,8 +28,8 @@ const getCart = asyncHandler(async (req, res) => {
   const userCart = await getCartService(userId);
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, userCart, "User cart fetched successfully"));
+    .status(200)
+    .json(new ApiResponse(200, userCart, "User cart fetched successfully"));
 });
 
 const updateCartItem = asyncHandler(async (req, res) => {
@@ -39,8 +40,8 @@ const updateCartItem = asyncHandler(async (req, res) => {
   const updatedCart = await updateCartItemService(userId, itemId, itemQuantity);
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, updatedCart, "Card updated successfully"));
+    .status(200)
+    .json(new ApiResponse(200, updatedCart, "Card updated successfully"));
 });
 
 const removeCartItem = asyncHandler(async (req, res) => {
@@ -50,8 +51,8 @@ const removeCartItem = asyncHandler(async (req, res) => {
   const updatedCart = await removeCartItemService(userId, itemId);
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, updatedCart, "Cart item removed successfully"));
+    .status(200)
+    .json(new ApiResponse(200, updatedCart, "Cart item removed successfully"));
 });
 
 const clearCart = asyncHandler(async (req, res) => {
@@ -60,8 +61,8 @@ const clearCart = asyncHandler(async (req, res) => {
   const response = await clearCartService(userId);
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, response, "Cart cleared successfully"));
+    .status(200)
+    .json(new ApiResponse(200, response, "Cart cleared successfully"));
 });
 
 const getCartSummary = asyncHandler(async (req, res) => {
@@ -70,10 +71,20 @@ const getCartSummary = asyncHandler(async (req, res) => {
   const cartSummary = await getCartSummaryService(userId);
 
   return res
-    .status(201)
+    .status(200)
     .json(
-      new ApiResponse(201, cartSummary, "Cart summary created successfully"),
+      new ApiResponse(200, cartSummary, "Cart summary created successfully"),
     );
+});
+
+const validateCart = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  const validatedCart = await validateCartService(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, validatedCart, "Cart validated successfully"));
 });
 
 export {
@@ -83,4 +94,5 @@ export {
   removeCartItem,
   clearCart,
   getCartSummary,
+  validateCart,
 };

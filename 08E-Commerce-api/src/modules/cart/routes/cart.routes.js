@@ -9,6 +9,7 @@ import {
   getCartSummary,
   removeCartItem,
   updateCartItem,
+  validateCart,
 } from "../controller/cart.controller.js";
 
 const router = Router();
@@ -26,5 +27,8 @@ router.delete("/:itemId", removeCartItem);
 router.delete("/", clearCart);
 
 router.get("/summary", getCartSummary);
+
+// This task ensures the cart is still valid before creating an order.
+router.get("/validate", validateCart);
 
 export default router;
