@@ -246,6 +246,49 @@ const validateCartService = async (userId) => {
   };
 };
 
+const syncCartService = async (userId) => {
+  validateNotFound(userId, "user id");
+
+  const cart = await Cart.findOne({ user: userId });
+
+  validateNotFound(cart, "Cart");
+
+  // store only the valid and active store items in cart
+  let cartItems = [];
+
+  for (const item of cart.items) {
+    // check product is active
+    const product = await Product.findOne({
+      _id: item.product,
+      isActive: true,
+    });
+
+    // check variant is active
+    const variant = await ProductVariant.findOne({
+      _id: item.variant,
+      isActive: true,
+    });
+
+    // if stock is 0 then dont add this item but instead continue
+    if (!product || !variant || variant.stock === 0) {
+      continue;
+    }
+
+    // if stock has reduced and the quantity is greater then reset it to stock level
+    if (item.quantity > variant.stock) {
+      item.quantity = variant.stock;
+    }
+
+    cartItems.push(item);
+  }
+
+  cart.items = cartItems;
+
+  await cart.save();
+
+  return cart;
+};
+
 export {
   addToCartService,
   getCartService,
@@ -254,4 +297,5 @@ export {
   clearCartService,
   getCartSummaryService,
   validateCartService,
+  syncCartService,
 };

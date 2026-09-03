@@ -8,6 +8,7 @@ import {
   getCart,
   getCartSummary,
   removeCartItem,
+  syncCart,
   updateCartItem,
   validateCart,
 } from "../controller/cart.controller.js";
@@ -30,5 +31,8 @@ router.get("/summary", getCartSummary);
 
 // This task ensures the cart is still valid before creating an order.
 router.get("/validate", validateCart);
+
+// Now handle cases where products/variants became inactive or unavailable after they were added to the cart (Sync/Remove Invalid Cart Items).
+router.patch("/sync", syncCart);
 
 export default router;

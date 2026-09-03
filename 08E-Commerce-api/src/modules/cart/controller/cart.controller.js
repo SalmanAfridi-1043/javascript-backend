@@ -7,6 +7,7 @@ import {
   getCartService,
   getCartSummaryService,
   removeCartItemService,
+  syncCartService,
   updateCartItemService,
   validateCartService,
 } from "../service/cart.service.js";
@@ -87,6 +88,16 @@ const validateCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, validatedCart, "Cart validated successfully"));
 });
 
+const syncCart = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  const syncedCart = await syncCartService(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, syncedCart, "Cart synced successfully"));
+});
+
 export {
   addToCart,
   getCart,
@@ -95,4 +106,5 @@ export {
   clearCart,
   getCartSummary,
   validateCart,
+  syncCart,
 };
