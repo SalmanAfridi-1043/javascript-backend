@@ -55,10 +55,11 @@ const cancelOrder = asyncHandler(async (req, res) => {
 });
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
+  const adminId = req.user?.id;
   const { orderId } = req.params;
   const { status } = req.body;
 
-  const updatedOrder = await updateOrderStatusService(orderId, status);
+  const updatedOrder = await updateOrderStatusService(adminId, orderId, status);
 
   return res
     .status(200)
