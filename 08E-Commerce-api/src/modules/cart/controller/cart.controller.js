@@ -1,6 +1,6 @@
 import { ApiResponse } from "../../../utils/ApiResponse.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
-import uploadOnCloudinary from "../../../config/cloudinary.config.js";
+
 import {
   addToCartService,
   clearCartService,

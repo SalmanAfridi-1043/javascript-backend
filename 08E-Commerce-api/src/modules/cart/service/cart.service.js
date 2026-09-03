@@ -1,8 +1,6 @@
 import { ApiError } from "../../../utils/ApiError.js";
-import { Category } from "../../categories/model/category.model.js";
 import { Product } from "../../products/model/product.model.js";
 import { ProductVariant } from "../../products/model/productVariant.model.js";
-import { Order } from "../../orders/model/order.model.js";
 import { Cart } from "../../cart/model/cart.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
