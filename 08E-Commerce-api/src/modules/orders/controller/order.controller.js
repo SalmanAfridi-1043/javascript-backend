@@ -2,6 +2,7 @@ import { ApiResponse } from "../../../utils/ApiResponse.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
 
 import {
+  cancelOrderService,
   createOrderService,
   getMyOrdersService,
   getOrderByIdService,
@@ -41,4 +42,15 @@ const getOrderById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, userOrder, "Order fetched successfully"));
 });
 
-export { createOrder, getMyOrders, getOrderById };
+const cancelOrder = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId } = req.params;
+
+  const canceledOrder = await cancelOrderService(userId, orderId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, canceledOrder, "Order canceled successfully"));
+});
+
+export { createOrder, getMyOrders, getOrderById, cancelOrder };

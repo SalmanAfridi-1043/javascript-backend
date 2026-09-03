@@ -160,4 +160,51 @@ const getOrderByIdService = async (userId, orderId) => {
   return order;
 };
 
-export { createOrderService, getMyOrdersService, getOrderByIdService };
+const cancelOrderService = async (userId, orderId) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  });
+
+  validateNotFound(order, "Order");
+
+  // only PENDING CONFIRMED status are allowed if order has placed and user wana cancel it
+  if (!["PENDING", "CONFIRMED"].includes(order.orderStatus)) {
+    throw new ApiError(409, "Order cannot be canceled");
+  }
+
+  // update the order status
+  order.orderStatus = "CANCELLED";
+
+  // update the payment status
+  if (order.paymentStatus === "PAID") {
+    order.paymentStatus = "REFUNDED"; // refunding logic will be later
+  }
+
+  // now update the stock for each item coz if order - canceled then stock should be incresed
+  for (const item of order.items) {
+    const variant = await ProductVariant.findById(item.variant);
+
+    if (variant) {
+      variant.stock += item.quantity;
+
+      await variant.save();
+    }
+  }
+
+  await order.save();
+
+  return order;
+};
+
+export {
+  createOrderService,
+  getMyOrdersService,
+  getOrderByIdService,
+  cancelOrderService,
+};
