@@ -159,9 +159,62 @@ const removeCartItemService = async (userId, itemId) => {
   return cart;
 };
 
+const clearCartService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const cart = await Cart.findOne({ user: userId });
+
+  validateNotFound(cart, "Cart");
+
+  cart.items = [];
+
+  await cart.save();
+
+  return { success: true };
+};
+
+const getCartSummaryService = async (userId) => {
+  validateNotFound(userId, "user id");
+
+  const cart = await Cart.findOne({ user: userId })
+    .populate("items.product")
+    .populate("items.variant");
+
+  validateNotFound(cart, "Cart");
+
+  if (cart.items.length === 0) {
+    return [];
+  }
+
+  // it ll retrun an array of objects
+  const cartItems = cart.items.map((item) => {
+    const price = item.variant.price;
+
+    const subtotal = price * item.quantity;
+
+    // converting to object
+    return {
+      ...item.toObject(), // destructuring all its field + new fields
+      price,
+      subtotal,
+    };
+  });
+
+  const totalItems = cartItems.length;
+  const subtotal = cartItems.reduce((total, item) => total + item.subtotal, 0);
+
+  return {
+    cartItems,
+    totalItems,
+    subtotal,
+  };
+};
+
 export {
   addToCartService,
   getCartService,
   updateCartItemService,
   removeCartItemService,
+  clearCartService,
+  getCartSummaryService,
 };

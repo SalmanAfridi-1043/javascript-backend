@@ -3,7 +3,9 @@ import { asyncHandler } from "../../../utils/asyncHandler.js";
 import uploadOnCloudinary from "../../../config/cloudinary.config.js";
 import {
   addToCartService,
+  clearCartService,
   getCartService,
+  getCartSummaryService,
   removeCartItemService,
   updateCartItemService,
 } from "../service/cart.service.js";
@@ -52,4 +54,33 @@ const removeCartItem = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, updatedCart, "Cart item removed successfully"));
 });
 
-export { addToCart, getCart, updateCartItem, removeCartItem };
+const clearCart = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  const response = await clearCartService(userId);
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, response, "Cart cleared successfully"));
+});
+
+const getCartSummary = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  const cartSummary = await getCartSummaryService(userId);
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, cartSummary, "Cart summary created successfully"),
+    );
+});
+
+export {
+  addToCart,
+  getCart,
+  updateCartItem,
+  removeCartItem,
+  clearCart,
+  getCartSummary,
+};

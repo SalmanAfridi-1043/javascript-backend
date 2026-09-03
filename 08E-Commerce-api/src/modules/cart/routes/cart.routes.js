@@ -4,7 +4,9 @@ import { upload } from "../../../middleware/multer.middleware.js";
 
 import {
   addToCart,
+  clearCart,
   getCart,
+  getCartSummary,
   removeCartItem,
   updateCartItem,
 } from "../controller/cart.controller.js";
@@ -20,5 +22,9 @@ router.get("/", getCart);
 router.patch("/:itemId", updateCartItem);
 
 router.delete("/:itemId", removeCartItem);
+
+router.delete("/", clearCart);
+
+router.get("/summary", getCartSummary);
 
 export default router;
