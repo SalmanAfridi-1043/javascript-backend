@@ -87,4 +87,30 @@ const validateOrderStatus = (status) => {
   };
 };
 
-export { validateOrderInputAddress, validateOrderParams, validateOrderStatus };
+const validateOrderReturnData = (returnData) => {
+  const { status, note } = returnData;
+
+  const normalizedStatus = status.trim().toUpperCase();
+  const normalizedNote = note !== undefined ? note.trim() : undefined;
+
+  validateRequired(normalizedStatus, "Status");
+
+  if (!["APPROVED", "REJECTED"].includes(normalizedStatus)) {
+    throw new ApiError(
+      400,
+      "Invalid status!. Only APPROVED or REJECTED is allowed",
+    );
+  }
+
+  return {
+    status: normalizedStatus,
+    note: normalizedNote,
+  };
+};
+
+export {
+  validateOrderInputAddress,
+  validateOrderParams,
+  validateOrderStatus,
+  validateOrderReturnData,
+};

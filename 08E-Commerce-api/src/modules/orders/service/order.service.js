@@ -12,6 +12,7 @@ import { generateOrderNumber } from "../../../utils/orderNumberGenerator.js";
 import {
   validateOrderInputAddress,
   validateOrderParams,
+  validateOrderReturnData,
   validateOrderStatus,
 } from "../validator/order.validator.js";
 
@@ -330,6 +331,59 @@ const requestReturnService = async (userId, orderId, note) => {
   return order;
 };
 
+const updateReturnStatusService = async (adminId, orderId, returnData) => {
+  validateRequired(adminId, "Admin id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "order");
+
+  const { status, note } = validateOrderReturnData(returnData);
+
+  const order = await Order.findById(orderId);
+
+  validateNotFound(order, "Order");
+
+  if (order.orderStatus !== "RETURN_REQUESTED") {
+    throw new ApiError(
+      409,
+      "Invalid status!. Order has not been requested to return",
+    );
+  }
+
+  // if admin reject the order to return, then keep the status as Delivered as client has already recieved the order. So no need to reorder again.
+  if (status === "REJECTED") {
+    order.orderStatus = "DELIVERED";
+  }
+
+  // if admin accept the order to return, then take the order back and restore the stock to include the current return product
+  if (status === "APPROVED") {
+    order.orderStatus = "RETURNED";
+
+    // update the variant/inventory stock to add the return order product as well
+    // variant stock is the main inventory not the product stock
+    for (const item of order.items) {
+      const variant = await ProductVariant.findById(item.variant);
+
+      validateNotFound(variant, "Variant");
+
+      variant.stock += item.quantity;
+
+      await variant.save();
+    }
+  }
+
+  await order.save();
+
+  await OrderStatusHistory.create({
+    order: orderId,
+    status: order.orderStatus,
+    note,
+    changedBy: adminId,
+  });
+
+  return order;
+};
+
 export {
   createOrderService,
   getMyOrdersService,
@@ -337,4 +391,5 @@ export {
   cancelOrderService,
   updateOrderStatusService,
   requestReturnService,
+  updateReturnStatusService,
 };

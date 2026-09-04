@@ -8,6 +8,7 @@ import {
   getOrderById,
   requestReturn,
   updateOrderStatus,
+  updateReturnStatus,
 } from "../controller/order.controller.js";
 
 const router = Router();
@@ -27,5 +28,9 @@ router.patch("/:orderId/status", updateOrderStatus);
 
 // Customer can request a return only for a delivered order.
 router.patch("/:orderId/return", requestReturn);
+
+// Create one endpoint for the admin to decide on a RETURN_REQUESTED order.
+// so that Admin may Approve/Reject Return
+router.patch("/:orderId/return-status", updateReturnStatus);
 
 export default router;
