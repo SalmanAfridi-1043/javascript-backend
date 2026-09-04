@@ -6,6 +6,7 @@ import {
   createOrder,
   getMyOrders,
   getOrderById,
+  requestReturn,
   updateOrderStatus,
 } from "../controller/order.controller.js";
 
@@ -23,5 +24,8 @@ router.patch("/:orderId/cancel", cancelOrder);
 
 // Now we introduce admin-only order management - (Update Order Status (Admin))
 router.patch("/:orderId/status", updateOrderStatus);
+
+// Customer can request a return only for a delivered order.
+router.patch("/:orderId/return", requestReturn);
 
 export default router;

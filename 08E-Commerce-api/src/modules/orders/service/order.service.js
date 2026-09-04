@@ -294,10 +294,47 @@ const updateOrderStatusService = async (adminId, orderId, status) => {
   return order;
 };
 
+const requestReturnService = async (userId, orderId, note) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "order");
+
+  const normalizedNote = note !== undefined ? note?.trim() : undefined;
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  });
+
+  validateNotFound(order, "Order");
+
+  if (order.orderStatus !== "DELIVERED") {
+    throw new ApiError(
+      409,
+      "Invalid current status!. Order cannot be returned",
+    );
+  }
+
+  order.orderStatus = "RETURN_REQUESTED";
+
+  await order.save();
+
+  await OrderStatusHistory.create({
+    order: orderId,
+    status: order.orderStatus,
+    note: normalizedNote ?? null,
+    changedBy: userId,
+  });
+
+  return order;
+};
+
 export {
   createOrderService,
   getMyOrdersService,
   getOrderByIdService,
   cancelOrderService,
   updateOrderStatusService,
+  requestReturnService,
 };

@@ -6,6 +6,7 @@ import {
   createOrderService,
   getMyOrdersService,
   getOrderByIdService,
+  requestReturnService,
   updateOrderStatusService,
 } from "../service/order.service.js";
 
@@ -55,7 +56,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
 });
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const adminId = req.user?.id;
+  const adminId = req.user?._id;
   const { orderId } = req.params;
   const { status } = req.body;
 
@@ -68,10 +69,29 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const requestReturn = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId } = req.params;
+  const { note } = req.body;
+
+  const returnedOrder = await requestReturnService(userId, orderId, note);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        returnedOrder,
+        "Order requested to return successfully",
+      ),
+    );
+});
+
 export {
   createOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,
   updateOrderStatus,
+  requestReturn,
 };
