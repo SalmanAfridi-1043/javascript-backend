@@ -75,9 +75,11 @@ const createPaymentService = async (userId, orderId) => {
 
 const handleStripeWebhookService = async (event) => {
   // event - used to show the type of stripe event
+
+  // check if event type is success
   if (event.type !== "payment_intent.succeeded") {
     // now this intent has the stripe transaction info like id,signature
-    const paymentIntent = event.data.object;
+    const paymentIntent = event.data.object; // get the body data like id etc
 
     // using stripe transaction id to find the payment.
     const payment = await Payment.findOne({
@@ -86,7 +88,7 @@ const handleStripeWebhookService = async (event) => {
 
     validateNotFound(payment, "Payment");
 
-    // this will protect mutliple stripe event for same payment. if payment is succeeded then reject the rest of stripes for same order payment
+    // this will protect mutliple stripe event for same payment. if payment is succeeded then reject the rest of stripes tries for same order payment
     if (payment.status === "SUCCEEDED") {
       return;
     }
@@ -107,6 +109,7 @@ const handleStripeWebhookService = async (event) => {
     return;
   }
 
+  // chec if event type is failed
   if (event.type === "payment_intent.payment_failed") {
     const paymentIntent = event.data.object;
 
@@ -116,7 +119,7 @@ const handleStripeWebhookService = async (event) => {
 
     validateNotFound(payment, "Payment");
 
-    // if payment status is failed the no need to set to failed again. just return
+    // if payment status is failed then no need to set to failed again. just return
     if (payment.status === "FAILED") {
       return;
     }
@@ -126,7 +129,80 @@ const handleStripeWebhookService = async (event) => {
     await payment.save();
 
     return;
+
+    // also, if stripe payment fails then order status must be same/pending so that user/client can try again or use an alternate way to pay
   }
 };
 
-export { createPaymentService, handleStripeWebhookService };
+const retryPaymentService = async (userId, orderId) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  });
+
+  validateNotFound(order, "Order");
+
+  // A cancelled/returned order cannot be paid:
+  if (order.orderStatus === "CANCELLED") {
+    throw new ApiError(409, "Order has been canceled");
+  }
+
+  if (order.orderStatus === "RETURNED") {
+    throw new ApiError(409, "Order has been returned");
+  }
+
+  // Also don't retry an already-paid order:
+  if (order.paymentStatus === "PAID") {
+    throw new ApiError(409, "Order is already paid");
+  }
+
+  // find the existing payment for which the payment process was failed. coz it has been created in createPaymentService when we try to make payment. so no need to duplicate payment again but instead find the existing payment document
+  const payment = await Payment.findOne({
+    order: orderId,
+    user: userId,
+  });
+
+  validateNotFound(payment, "Payment not found");
+
+  // A failed payment can be retried to complete the payment process
+  if (payment.status !== "FAILED") {
+    throw new ApiError(409, "Only failed payments can be retried");
+  }
+
+  // recreate the paymentIntent for the existing payment document
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: Math.round(order.total * 100),
+    currency: "usd",
+    automatic_payment_methods: {
+      enabled: true,
+    },
+    metadata: {
+      orderId: order._id.toString(),
+      paymentId: payment._id.toString(),
+      userId: userId.toString(),
+    },
+  });
+
+  // now update the existing failed payment for this new payment process
+  payment.providerPaymentId = paymentIntent.id;
+  payment.status = "PENDING";
+  payment.paidAt = undefined;
+
+  await payment.save();
+
+  return {
+    payment,
+    clientSecret: paymentIntent.client_secret,
+  };
+};
+
+export {
+  createPaymentService,
+  handleStripeWebhookService,
+  retryPaymentService,
+};

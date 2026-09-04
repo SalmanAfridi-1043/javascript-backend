@@ -6,6 +6,7 @@ import env from "../../../config/env.config.js";
 import {
   createPaymentService,
   handleStripeWebhookService,
+  retryPaymentService,
 } from "../service/payment.service.js";
 
 const createPayment = asyncHandler(async (req, res) => {
@@ -29,19 +30,30 @@ const stripeWebhook = asyncHandler(async (req, res) => {
 
   const signature = req.headers["stripe-signature"];
 
+  // event helps us to find the type of stripe event
   const event = stripe.webhooks.constructEvent(
     req.rawBody,
     signature,
-    env.stripeWebhookSecret,
+    env.stripeWebhookSecret, // key in .env - used by our server to verifies that the webhook actually came from Stripe
   );
 
+  // handle the business logic using service layer
   await handleStripeWebhookService(event);
-
-  // console.log(event.type);
 
   return res.status(200).json({
     received: true,
   });
 });
 
-export { createPayment, stripeWebhook };
+const retryPayment = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { orderId } = req.params;
+
+  const payment = await retryPaymentService(userId, orderId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, payment, "Payment confirmed successfully"));
+});
+
+export { createPayment, stripeWebhook, retryPayment };
