@@ -1,13 +1,10 @@
 import Stripe from "stripe";
+import env from "./env.config.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export default stripe;
+export const stripe = new Stripe(env.stripeSecretKey);
 
 // payment configuration is not just calculations.
-
 // The calculations (subtotal, tax, discount, total) happen in your backend.
-
 // payment.js is needed because we'll later connect the backend to a real payment provider such as Stripe:
 
 // Your Backend

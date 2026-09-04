@@ -4,6 +4,7 @@ import { Payment } from "../model/payment.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
+import { stripe } from "../../../config/stripe.config.js";
 
 const createPaymentService = async (userId, orderId) => {
   validateRequired(userId, "User id");
@@ -48,7 +49,28 @@ const createPaymentService = async (userId, orderId) => {
     status: "PENDING",
   });
 
-  return payment;
+  const paymentIntent = await stripe.paymentIntents.create({
+    // Why * 100? - Stripe expects USD in cents. (1$ = 100 cents)
+    amount: Math.round(order.total * 100),
+    currency: "usd",
+    automatic_payment_methods: {
+      enabled: true,
+    },
+    metadata: {
+      orderId: order._id.toString(),
+      paymentId: payment._id.toString(),
+      userId: userId.toString(),
+    },
+  });
+
+  payment.providerPaymentId = paymentIntent.id;
+
+  await payment.save();
+
+  return {
+    payment,
+    clientSecret: paymentIntent.client_secret,
+  };
 };
 
 export { createPaymentService };

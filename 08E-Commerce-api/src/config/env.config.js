@@ -4,7 +4,7 @@ dotenv.config({ path: "./.env" });
 
 import { ApiError } from "../utils/ApiError.js";
 
-const requiredEnv = ["MONGODB_URL", "CORS_ORIGIN"];
+const requiredEnv = ["MONGODB_URL", "CORS_ORIGIN", "STRIPE_SECRET_KEY"];
 
 for (const key of requiredEnv) {
   if (!process.env[key]) {
@@ -16,6 +16,7 @@ export default {
   port: process.env.PORT || 3000,
   mongoUri: process.env.MONGODB_URL,
   corsOrigin: process.env.CORS_ORIGIN,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY,
 };
 
 // Now environment variables have one central entry point. we can use this poin to access our .env variables everywhere in the project
