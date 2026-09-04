@@ -15,12 +15,23 @@ const paymentSchema = new Schema(
       required: true,
     },
 
+    // Stripe = the payment service/provider that actually processes the card payment.
     provider: {
       type: String,
       enum: ["STRIPE"],
       required: true,
     },
 
+    // Example:
+    // Your Order: ORD-123
+    //  ↓
+    // Stripe processes payment (using card etc)
+    //  ↓
+    // Stripe Payment ID: pi_3AbC123... (id of card while processing)
+
+    // You store pi_3AbC123... in providerPaymentId so your system can identify that exact Stripe payment.
+
+    // providerPaymentId = Stripe's unique ID for that payment, so you can track/verify it later.Actually stripe payment generates unique id, so we store it here.
     // sparse: true ---> allows multiple documents where providerPaymentId is missing, while still enforcing uniqueness when a value exists.
     providerPaymentId: {
       type: String,
@@ -65,10 +76,8 @@ const paymentSchema = new Schema(
   { timestamps: true },
 );
 
-// unique user for one payment
+// indexes for faster queries
 paymentSchema.index({ user: 1 });
-
-// unique status for one payment
 paymentSchema.index({ status: 1 });
 
 // if providerPayment id is given then it must be unique for payment
