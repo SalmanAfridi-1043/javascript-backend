@@ -73,4 +73,60 @@ const createPaymentService = async (userId, orderId) => {
   };
 };
 
-export { createPaymentService };
+const handleStripeWebhookService = async (event) => {
+  // event - used to show the type of stripe event
+  if (event.type !== "payment_intent.succeeded") {
+    // now this intent has the stripe transaction info like id,signature
+    const paymentIntent = event.data.object;
+
+    // using stripe transaction id to find the payment.
+    const payment = await Payment.findOne({
+      providerPaymentId: paymentIntent.id,
+    });
+
+    validateNotFound(payment, "Payment");
+
+    // this will protect mutliple stripe event for same payment. if payment is succeeded then reject the rest of stripes for same order payment
+    if (payment.status === "SUCCEEDED") {
+      return;
+    }
+
+    payment.status = "SUCCEEDED";
+    payment.paidAt = new Date();
+
+    await payment.save();
+
+    const order = await Order.findById(payment.order);
+
+    validateNotFound(order, "Order");
+
+    order.paymentStatus = "PAID";
+
+    await order.save();
+
+    return;
+  }
+
+  if (event.type === "payment_intent.payment_failed") {
+    const paymentIntent = event.data.object;
+
+    const payment = await Payment.findOne({
+      providerPaymentId: paymentIntent.id,
+    });
+
+    validateNotFound(payment, "Payment");
+
+    // if payment status is failed the no need to set to failed again. just return
+    if (payment.status === "FAILED") {
+      return;
+    }
+
+    payment.status = "FAILED";
+
+    await payment.save();
+
+    return;
+  }
+};
+
+export { createPaymentService, handleStripeWebhookService };

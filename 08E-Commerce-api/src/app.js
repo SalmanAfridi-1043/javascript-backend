@@ -28,7 +28,19 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "16kb" }));
+// this middleware will parse all the raw body to json except the stripe webhook body which will remain in raw buffer/body
+// This will keep the normal req.body too, but importantly it will preserve the original bytes in req.rawBody for Stripe signature verification.
+app.use(
+  express.json({
+    limit: "16kb",
+    verify: (req, res, buf) => {
+      if (req.originalUrl === "/api/v1/payments/webhook") {
+        req.rawBody = buf;
+      }
+    },
+  }),
+);
+
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public")); // a temp place for image to be stored
 app.use(cookieParser());
