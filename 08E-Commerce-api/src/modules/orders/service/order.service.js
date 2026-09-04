@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { ApiError } from "../../../utils/ApiError.js";
 import { Product } from "../../products/model/product.model.js";
 import { ProductVariant } from "../../products/model/productVariant.model.js";
@@ -17,105 +18,152 @@ import {
 } from "../validator/order.validator.js";
 
 const createOrderService = async (userId, shippingAddress) => {
-  validateRequired(userId, "User id");
+  // MongoDB transaction session: groups multiple database operations into one
+  // atomic unit — either all operations succeed (commit) or all changes are
+  // undone (rollback). The same session must be passed to every DB operation
+  // that belongs to this transaction.
+  const session = await mongoose.startSession();
 
-  const validatedShippingAddress = validateOrderInputAddress(shippingAddress);
+  session.startTransaction();
 
-  const cart = await Cart.findOne({ user: userId });
+  try {
+    validateRequired(userId, "User id");
 
-  validateNotFound(cart, "Cart");
+    const validatedShippingAddress = validateOrderInputAddress(shippingAddress);
 
-  if (cart.items.length === 0) {
-    throw new ApiError(400, "Cart is empty");
-  }
+    const cart = await Cart.findOne({ user: userId });
 
-  const orderItems = [];
-  let subtotal = 0;
+    validateNotFound(cart, "Cart");
 
-  for (const item of cart.items) {
-    const product = await Product.findOne({
-      _id: item.product,
-      isActive: true,
-    });
-
-    validateNotFound(product, "Product");
-
-    const variant = await ProductVariant.findOne({
-      _id: item.variant,
-      product: item.product,
-      isActive: true,
-    });
-
-    validateNotFound(variant, "variant");
-
-    if (item.quantity > variant.stock) {
-      throw new ApiError(409, "Quantity exceed stock limit");
+    if (cart.items.length === 0) {
+      throw new ApiError(400, "Cart is empty");
     }
 
-    const price = variant.price;
-    const itemSubtotal = price * item.quantity;
+    const orderItems = [];
+    let subtotal = 0;
 
-    // Create an Order Item snapshot
-    orderItems.push({
-      product: product._id,
-      variant: variant._id,
-      productName: product.name,
-      sku: variant.sku,
-      priceAtPurchase: price,
-      quantity: item.quantity,
-      subtotal: itemSubtotal,
+    for (const item of cart.items) {
+      const product = await Product.findOne({
+        _id: item.product,
+        isActive: true,
+      });
+
+      validateNotFound(product, "Product");
+
+      const variant = await ProductVariant.findOne({
+        _id: item.variant,
+        product: item.product,
+        isActive: true,
+      });
+
+      validateNotFound(variant, "variant");
+
+      if (item.quantity > variant.stock) {
+        throw new ApiError(409, "Quantity exceed stock limit");
+      }
+
+      const price = variant.price;
+      const itemSubtotal = price * item.quantity;
+
+      // Create an Order Item snapshot
+      orderItems.push({
+        product: product._id,
+        variant: variant._id,
+        productName: product.name,
+        sku: variant.sku,
+        priceAtPurchase: price,
+        quantity: item.quantity,
+        subtotal: itemSubtotal,
+      });
+
+      // combine subtotal price of all items
+      subtotal += itemSubtotal;
+    }
+
+    const discount = 0;
+    const shippingFee = 0;
+    const tax = 0;
+
+    // total after chargers
+    const total = subtotal - discount + shippingFee + tax;
+
+    const orderNumber = generateOrderNumber();
+
+    // Create the order inside the current MongoDB transaction.
+    // Using the session ensures this order creation is committed or rolled back
+    // together with the other database operations in this transaction.
+    // Why [order] - Mongoose's Model.create() uses the options object with the session when creating documents as an array.
+    const [order] = await Order.create(
+      [
+        {
+          orderNumber,
+          user: userId,
+          items: orderItems,
+          shippingAddress: validatedShippingAddress,
+          subtotal,
+          discount,
+          shippingFee,
+          tax,
+          total,
+        },
+      ],
+      { session },
+    );
+
+    // just need to be stored in mongoDB for history tracking
+    await OrderStatusHistory.create({
+      order: order._id,
+      status: order.orderStatus, //PENDING by default
     });
 
-    // combine subtotal price of all items
-    subtotal += itemSubtotal;
+    for (const item of cart.items) {
+      const variant = await ProductVariant.findOne({
+        _id: item.variant,
+        isActive: true,
+      });
+
+      validateNotFound(variant, "Variant");
+
+      // reduce the stock by quantity coz if order places, then stock will reduce
+      variant.stock -= item.quantity;
+
+      // now with session, the variant will update/save only when the session/transaction become successfull . Else the processes will be reversed.
+      await variant.save({ session });
+    }
+
+    cart.items = [];
+
+    await cart.save({ session });
+
+    await session.commitTransaction();
+
+    return order;
+
+    /* 
+  TRANSACTION: "Do everything, or do nothing if any fails"
+  Order creation performs multiple related database writes:
+    1. Create the order
+    2. Reduce variant stock
+    3. Clear the user's cart
+
+  All these writes must succeed together. If any operation fails,
+  the transaction rolls back all previous changes, keeping the database
+  consistent (no order without stock reduction, and no stock reduction
+  without clearing the cart).
+
+  session → represents the transaction context.
+  startTransaction() → starts the transaction.
+  { session } → attaches database writes to the transaction.
+  commitTransaction() → permanently saves all changes when everything succeeds.
+  abortTransaction() → rolls back all changes if any operation fails.
+  endSession() → closes the MongoDB session after completion/failure.
+    */
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
   }
-
-  const discount = 0;
-  const shippingFee = 0;
-  const tax = 0;
-
-  // total after chargers
-  const total = subtotal - discount + shippingFee + tax;
-
-  const orderNumber = generateOrderNumber();
-
-  const order = await Order.create({
-    orderNumber,
-    user: userId,
-    items: orderItems,
-    shippingAddress: validatedShippingAddress,
-    subtotal,
-    discount,
-    shippingFee,
-    tax,
-    total,
-  });
-
-  // just need to be stored in mongoDB for history tracking
-  await OrderStatusHistory.create({
-    order: order._id,
-    status: order.orderStatus, //PENDING by default
-  });
-
-  for (const item of cart.items) {
-    const variant = await ProductVariant.findOne({
-      _id: item.variant,
-      isActive: true,
-    });
-
-    validateNotFound(variant, "Variant");
-
-    // reduce the stock by quantity coz if order places, then stock will reduce
-    variant.stock -= item.quantity;
-
-    await variant.save();
-  }
-
-  cart.items = [];
-
-  await cart.save();
-
-  return order;
 };
 
 const getMyOrdersService = async (userId, queryParams) => {
