@@ -3,6 +3,7 @@ import { authMiddleware } from "../../../middleware/auth.middleware.js";
 
 import {
   createPayment,
+  refundPayment,
   retryPayment,
   stripeWebhook,
 } from "../controller/payment.controller.js";
@@ -19,5 +20,7 @@ router.post("/webhook", stripeWebhook);
 
 // if payment fails then customer can retry, this endpoint handle this task
 router.post("/retry/:orderId", retryPayment);
+
+router.post("/refund/:orderId", refundPayment);
 
 export default router;

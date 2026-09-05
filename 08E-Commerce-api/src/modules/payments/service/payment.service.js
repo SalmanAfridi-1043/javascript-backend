@@ -209,8 +209,63 @@ const retryPaymentService = async (userId, orderId) => {
   };
 };
 
+const refundPaymentService = async (adminId, orderId) => {
+  validateRequired(adminId, "Admin id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  const order = await Order.findById(orderId);
+
+  validateNotFound(order, "Order");
+
+  if (order.orderStatus !== "RETURNED") {
+    throw new ApiError(409, "Only returned orders can be refunded");
+  }
+
+  const payment = await Payment.findOne({
+    order: order._id,
+  });
+
+  validateNotFound(payment, "Payment");
+
+  if (payment.status !== "SUCCEEDED") {
+    throw new ApiError(409, "Only successful payments can be refunded");
+  }
+
+  // create a refund stripe so that payment can be refunded
+  // Stripe uses the original PaymentIntent to know which payment to refund.
+  let refund;
+  // using trycatch to handle the failer
+  try {
+    refund = await stripe.refunds.create({
+      payment_intent: payment.providerPaymentId,
+    });
+  } catch (error) {
+    throw new ApiError(502, "Refund failed with Stripe");
+  }
+
+  // Stripe handles the actual money movement and refund automatically.
+  // Our backend only tells Stripe:"Refund this PaymentIntent"
+  // Stripe processes refund
+  // Money goes back to customer's card
+
+  payment.status = "REFUNDED";
+  await payment.save();
+
+  order.paymentStatus = "REFUNDED";
+  await order.save();
+
+  return {
+    payment,
+    order,
+    refundId: refund._id,
+  };
+};
+
 export {
   createPaymentService,
   handleStripeWebhookService,
   retryPaymentService,
+  refundPaymentService,
 };
