@@ -3,6 +3,7 @@ import { authMiddleware } from "../../../middleware/auth.middleware.js";
 
 import {
   createPayment,
+  getPaymentDetails,
   refundPayment,
   retryPayment,
   stripeWebhook,
@@ -22,5 +23,7 @@ router.post("/webhook", stripeWebhook);
 router.post("/retry/:orderId", retryPayment);
 
 router.post("/refund/:orderId", refundPayment);
+
+router.get("/:orderId", getPaymentDetails);
 
 export default router;

@@ -229,6 +229,11 @@ const refundPaymentService = async (adminId, orderId) => {
 
   validateNotFound(payment, "Payment");
 
+  // if payment is refunded, then no need to do it again. it avoid admins to repeatedly tries to refund the payment serveral times
+  if (payment.status === "REFUNDED") {
+    throw new ApiError(409, "Payment has already been refunded");
+  }
+
   if (payment.status !== "SUCCEEDED") {
     throw new ApiError(409, "Only successful payments can be refunded");
   }
@@ -263,9 +268,33 @@ const refundPaymentService = async (adminId, orderId) => {
   };
 };
 
+const getPaymentDetailsService = async (userId, orderId) => {
+  validateRequired(userId, "User id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  });
+
+  validateNotFound(order, "Order");
+
+  const payment = await Payment.findOne({
+    order: orderId,
+    user: userId,
+  }).populate("order");
+
+  validateNotFound(payment, "Payment");
+
+  return payment;
+};
+
 export {
   createPaymentService,
   handleStripeWebhookService,
   retryPaymentService,
   refundPaymentService,
+  getPaymentDetailsService,
 };
