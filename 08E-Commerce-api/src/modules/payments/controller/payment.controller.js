@@ -5,6 +5,7 @@ import env from "../../../config/env.config.js";
 
 import {
   createPaymentService,
+  getAllPaymentsService,
   getMyPaymentsService,
   getPaymentDetailsService,
   handleStripeWebhookService,
@@ -76,6 +77,17 @@ const refundPayment = asyncHandler(async (req, res) => {
     );
 });
 
+const getAllPayments = asyncHandler(async (req, res) => {
+  // no Admin id here. coz adminMiddleware already verifies its role.
+  const queryData = req.query;
+
+  const payments = await getAllPaymentsService({ queryData });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, payments, "Payments fetched successfully"));
+});
+
 const getPaymentDetails = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { orderId } = req.params;
@@ -110,6 +122,7 @@ export {
   stripeWebhook,
   retryPayment,
   refundPayment,
+  getAllPayments,
   getPaymentDetails,
   getMyPayments,
 };

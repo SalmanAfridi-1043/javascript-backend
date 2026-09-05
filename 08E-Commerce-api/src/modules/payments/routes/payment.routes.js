@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { authMiddleware } from "../../../middleware/auth.middleware.js";
+import { adminMiddleware } from "../../../middleware/admin.middleware.js";
 
 import {
   createPayment,
+  getAllPayments,
   getMyPayments,
   getPaymentDetails,
   refundPayment,
@@ -24,6 +26,9 @@ router.post("/webhook", stripeWebhook);
 router.post("/retry/:orderId", retryPayment);
 
 router.post("/refund/:orderId", refundPayment);
+
+// this endpoint shows all the payments details to admin for management. Only admin can read this
+router.get("/admin", adminMiddleware, getAllPayments);
 
 router.get("/:orderId", getPaymentDetails);
 

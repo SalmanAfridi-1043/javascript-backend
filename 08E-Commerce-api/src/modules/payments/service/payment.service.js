@@ -4,7 +4,10 @@ import { Payment } from "../model/payment.model.js";
 import { validateRequired } from "../../../utils/validateRequired.js";
 import { validateObjectId } from "../../../utils/validateObjectId.js";
 import { validateNotFound } from "../../../utils/validateNotFound.js";
+import { createSafePayment } from "../../../utils/sanitizePayment.js";
 import { stripe } from "../../../config/stripe.config.js";
+
+import { validateQueryParams } from "../validator/payment.validator.js";
 
 const createPaymentService = async (userId, orderId) => {
   validateRequired(userId, "User id");
@@ -268,6 +271,41 @@ const refundPaymentService = async (adminId, orderId) => {
   };
 };
 
+const getAllPaymentsService = async (queryData) => {
+  const { page, limit, status } = validateQueryParams(queryData);
+
+  const queryObject = {};
+
+  if (status !== undefined) {
+    queryObject.status = status;
+  }
+
+  const skip = (page - 1) * limit;
+
+  // get all payments we have in our DB so that admin can check the record
+  const allPayments = await Payment.find(queryObject)
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const totalPayments = await Payment.countDocuments(queryObject);
+
+  const pages = Math.ceil(totalPayments / limit);
+
+  const previousPage = page > 1;
+  const nextPage = page < pages;
+
+  return {
+    allPayments,
+    total: totalPayments,
+    pages,
+    page,
+    limit,
+    previousPage,
+    nextPage,
+  };
+};
+
 const getPaymentDetailsService = async (userId, orderId) => {
   validateRequired(userId, "User id");
   validateRequired(orderId, "Order id");
@@ -288,7 +326,9 @@ const getPaymentDetailsService = async (userId, orderId) => {
 
   validateNotFound(payment, "Payment");
 
-  return payment;
+  const safePayment = createSafePayment(payment);
+
+  return safePayment;
 };
 
 const getMyPaymentsService = async (userId) => {
@@ -296,15 +336,15 @@ const getMyPaymentsService = async (userId) => {
 
   const payments = await Payment.find({
     user: userId,
-  })
-    .populate("order")
-    .sort({ createdAt: -1 });
+  }).sort({ createdAt: -1 });
 
   if (payments.length == 0) {
     throw new ApiError(404, "No payment found");
   }
 
-  return payments;
+  const safePayment = createSafePayment(payments);
+
+  return safePayment;
 };
 
 export {
@@ -312,6 +352,7 @@ export {
   handleStripeWebhookService,
   retryPaymentService,
   refundPaymentService,
+  getAllPaymentsService,
   getPaymentDetailsService,
   getMyPaymentsService,
 };
