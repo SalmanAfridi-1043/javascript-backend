@@ -25,7 +25,7 @@ router.post("/webhook", stripeWebhook);
 // if payment fails then customer can retry, this endpoint handle this task
 router.post("/retry/:orderId", retryPayment);
 
-router.post("/refund/:orderId", refundPayment);
+router.post("/refund/:orderId", adminMiddleware, refundPayment);
 
 // this endpoint shows all the payments details to admin for management. Only admin can read this
 router.get("/admin", adminMiddleware, getAllPayments);
