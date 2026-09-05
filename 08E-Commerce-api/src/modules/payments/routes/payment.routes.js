@@ -3,6 +3,7 @@ import { authMiddleware } from "../../../middleware/auth.middleware.js";
 
 import {
   createPayment,
+  getMyPayments,
   getPaymentDetails,
   refundPayment,
   retryPayment,
@@ -25,5 +26,7 @@ router.post("/retry/:orderId", retryPayment);
 router.post("/refund/:orderId", refundPayment);
 
 router.get("/:orderId", getPaymentDetails);
+
+router.get("/", getMyPayments);
 
 export default router;

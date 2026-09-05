@@ -291,10 +291,27 @@ const getPaymentDetailsService = async (userId, orderId) => {
   return payment;
 };
 
+const getMyPaymentsService = async (userId) => {
+  validateRequired(userId, "User id");
+
+  const payments = await Payment.find({
+    user: userId,
+  })
+    .populate("order")
+    .sort({ createdAt: -1 });
+
+  if (payments.length == 0) {
+    throw new ApiError(404, "No payment found");
+  }
+
+  return payments;
+};
+
 export {
   createPaymentService,
   handleStripeWebhookService,
   retryPaymentService,
   refundPaymentService,
   getPaymentDetailsService,
+  getMyPaymentsService,
 };

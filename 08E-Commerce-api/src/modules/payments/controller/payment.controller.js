@@ -5,6 +5,7 @@ import env from "../../../config/env.config.js";
 
 import {
   createPaymentService,
+  getMyPaymentsService,
   getPaymentDetailsService,
   handleStripeWebhookService,
   refundPaymentService,
@@ -92,10 +93,23 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
     );
 });
 
+const getMyPayments = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const allPayments = await getMyPaymentsService(userId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, allPayments, "All payments fetched successfully"),
+    );
+});
+
 export {
   createPayment,
   stripeWebhook,
   retryPayment,
   refundPayment,
   getPaymentDetails,
+  getMyPayments,
 };
