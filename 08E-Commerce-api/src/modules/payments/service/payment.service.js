@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { ApiError } from "../../../utils/ApiError.js";
 import { Order } from "../../orders/model/order.model.js";
 import { Payment } from "../model/payment.model.js";
@@ -9,11 +10,19 @@ import { stripe } from "../../../config/stripe.config.js";
 
 import { validateQueryParams } from "../validator/payment.validator.js";
 
-const createPaymentService = async (userId, orderId) => {
+const createPaymentService = async (userId, orderId, provider) => {
   validateRequired(userId, "User id");
   validateRequired(orderId, "Order id");
 
   validateObjectId(orderId, "Order");
+
+  const normalizedProvider = provider.trim().toUpperCase();
+
+  validateRequired(normalizedProvider, "Payment provider");
+
+  if (!["STRIPE", "COD"].includes(normalizedProvider)) {
+    throw new ApiError(400, "Invalid payment provider");
+  }
 
   const order = await Order.findOne({
     _id: orderId,
@@ -46,11 +55,18 @@ const createPaymentService = async (userId, orderId) => {
   const payment = await Payment.create({
     order: orderId,
     user: userId,
-    provider: "STRIPE",
+    provider: normalizedProvider,
     amount: order.total,
     currency: "USD",
     status: "PENDING",
   });
+
+  // if customer want to pay on Cash On Delivery, then no need to create stripe for online payment
+  if (normalizedProvider === "COD") {
+    return {
+      payment,
+    };
+  }
 
   // if paymentIntent fails then we'll delete the payment document in catch() so that Database will be consistant. This will handle the Stripe API failer only. so if stripe api fails to pay, then we ll delete the payment document.
   try {
@@ -284,6 +300,7 @@ const getAllPaymentsService = async (queryData) => {
 
   // get all payments we have in our DB so that admin can check the record
   const allPayments = await Payment.find(queryObject)
+    .populate("user", "fullName email")
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
@@ -347,6 +364,68 @@ const getMyPaymentsService = async (userId) => {
   return safePayment;
 };
 
+const confirmCODPaymentService = async (adminId, orderId) => {
+  validateRequired(adminId, "Admin id");
+  validateRequired(orderId, "Order id");
+
+  validateObjectId(orderId, "Order");
+
+  // Transaction: All database changes succeed together.
+  // If any operation fails, all changes are rolled back.
+  // Transaction = all-or-nothing: commit on success, rollback on failure.
+  const session = await mongoose.startSession();
+
+  session.startTransaction();
+
+  // using try catch to implement Transaction feature
+  try {
+    // order will also wait to finalize the changes if all successfully
+    const order = await Order.findById(orderId).session(session);
+
+    validateNotFound(order, "Order");
+
+    if (order.orderStatus !== "DELIVERED") {
+      throw new ApiError(409, "Only delivered order payment can be verified");
+    }
+
+    // payment will also wait to finalize the changes if all successfully
+    const payment = await Payment.findOne({
+      order: order._id,
+    }).session(session);
+
+    validateNotFound(payment, "Payment");
+
+    if (payment.provider !== "COD") {
+      throw new ApiError(409, "Only COD provider can be verified");
+    }
+
+    if (payment.status !== "PENDING") {
+      throw new ApiError(409, "Only pending payment can be verified");
+    }
+
+    payment.status = "SUCCEEDED";
+    payment.paidAt = new Date();
+    order.paymentStatus = "PAID";
+
+    // now wait for any failer before finalizing the changes.
+    // so till here.. all are ok. so update the document
+    await payment.save({ session });
+    await order.save({ session });
+
+    // commit/finalize the changes
+    await session.commitTransaction();
+
+    const safePayment = createSafePayment(payment);
+
+    return safePayment;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+};
+
 export {
   createPaymentService,
   handleStripeWebhookService,
@@ -355,4 +434,5 @@ export {
   getAllPaymentsService,
   getPaymentDetailsService,
   getMyPaymentsService,
+  confirmCODPaymentService,
 };

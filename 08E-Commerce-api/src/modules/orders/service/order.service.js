@@ -238,11 +238,6 @@ const cancelOrderService = async (userId, orderId) => {
   // update the order status
   order.orderStatus = "CANCELLED";
 
-  // update the payment status
-  if (order.paymentStatus === "PAID") {
-    order.paymentStatus = "REFUNDED"; // refunding logic will be later
-  }
-
   // now update the stock for each item coz if order - canceled then stock should be incresed
   for (const item of order.items) {
     const variant = await ProductVariant.findById(item.variant);

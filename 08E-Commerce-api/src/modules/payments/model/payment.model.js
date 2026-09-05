@@ -18,7 +18,7 @@ const paymentSchema = new Schema(
     // Stripe = the payment service/provider that actually processes the card payment.
     provider: {
       type: String,
-      enum: ["STRIPE"],
+      enum: ["STRIPE", "COD"],
       required: true,
     },
 

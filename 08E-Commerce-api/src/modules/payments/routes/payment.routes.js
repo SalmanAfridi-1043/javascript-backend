@@ -3,6 +3,7 @@ import { authMiddleware } from "../../../middleware/auth.middleware.js";
 import { adminMiddleware } from "../../../middleware/admin.middleware.js";
 
 import {
+  confirmCODPayment,
   createPayment,
   getAllPayments,
   getMyPayments,
@@ -33,5 +34,8 @@ router.get("/admin", adminMiddleware, getAllPayments);
 router.get("/:orderId", getPaymentDetails);
 
 router.get("/", getMyPayments);
+
+// this end point handles the COD (Cash On Delivery) privider
+router.patch("/cod/:orderId/confirm", adminMiddleware, confirmCODPayment);
 
 export default router;

@@ -4,6 +4,7 @@ import { stripe } from "../../../config/stripe.config.js";
 import env from "../../../config/env.config.js";
 
 import {
+  confirmCODPaymentService,
   createPaymentService,
   getAllPaymentsService,
   getMyPaymentsService,
@@ -16,8 +17,9 @@ import {
 const createPayment = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { orderId } = req.params;
+  const { provider } = req.body;
 
-  const payment = await createPaymentService(userId, orderId);
+  const payment = await createPaymentService(userId, orderId, provider);
 
   return res
     .status(201)
@@ -117,6 +119,20 @@ const getMyPayments = asyncHandler(async (req, res) => {
     );
 });
 
+const confirmCODPayment = asyncHandler(async (req, res) => {
+  // only admin can confirm the COD payment
+  const adminId = req.user._id;
+  const { orderId } = req.params;
+
+  const codPayment = await confirmCODPaymentService(adminId, orderId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, codPayment, "COD payment confirmed successfully"),
+    );
+});
+
 export {
   createPayment,
   stripeWebhook,
@@ -125,4 +141,5 @@ export {
   getAllPayments,
   getPaymentDetails,
   getMyPayments,
+  confirmCODPayment,
 };
