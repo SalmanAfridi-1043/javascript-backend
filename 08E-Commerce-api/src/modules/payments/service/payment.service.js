@@ -49,28 +49,36 @@ const createPaymentService = async (userId, orderId) => {
     status: "PENDING",
   });
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    // Why * 100? - Stripe expects USD in cents. (1$ = 100 cents)
-    amount: Math.round(order.total * 100),
-    currency: "usd",
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    metadata: {
-      orderId: order._id.toString(),
-      paymentId: payment._id.toString(),
-      userId: userId.toString(),
-    },
-  });
+  // if paymentIntent fails then we'll delete the payment document in catch() so that Database will be consistant. This will handle the Stripe API failer only. so if stripe api fails to pay, then we ll delete the payment document.
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      // Why * 100? - Stripe expects USD in cents. (1$ = 100 cents)
+      amount: Math.round(order.total * 100),
+      currency: "usd",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        orderId: order._id.toString(),
+        paymentId: payment._id.toString(),
+        userId: userId.toString(),
+      },
+    });
 
-  payment.providerPaymentId = paymentIntent.id;
+    payment.providerPaymentId = paymentIntent.id;
 
-  await payment.save();
+    await payment.save();
 
-  return {
-    payment,
-    clientSecret: paymentIntent.client_secret,
-  };
+    return {
+      payment,
+      clientSecret: paymentIntent.client_secret,
+    };
+  } catch (error) {
+    // delete the stripe failer API payment document so that customer may later can retry to pay again
+    await Payment.findByIdAndDelete(payment._id);
+
+    throw error;
+  }
 };
 
 const handleStripeWebhookService = async (event) => {

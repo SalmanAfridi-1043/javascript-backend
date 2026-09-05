@@ -11,9 +11,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
+// this endpoint manages the payment creating for online processing using stripe transactions
 router.post("/create/:orderId", createPayment);
 
-// this routes manage the stripe transactions using card for order
+// this routes manage the online stripe transactions using card detail (like exp,cvc etc)for order to pay
 router.post("/webhook", stripeWebhook);
 
 // if payment fails then customer can retry, this endpoint handle this task
