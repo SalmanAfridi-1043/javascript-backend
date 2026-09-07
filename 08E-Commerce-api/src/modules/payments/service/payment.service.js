@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 import { ApiError } from "../../../utils/ApiError.js";
 import { Order } from "../../orders/model/order.model.js";
 import { Payment } from "../model/payment.model.js";
@@ -16,9 +17,9 @@ const createPaymentService = async (userId, orderId, provider) => {
 
   validateObjectId(orderId, "Order");
 
-  const normalizedProvider = provider.trim().toUpperCase();
+  validateRequired(provider, "Payment provider");
 
-  validateRequired(normalizedProvider, "Payment provider");
+  const normalizedProvider = provider.trim().toUpperCase();
 
   if (!["STRIPE", "COD"].includes(normalizedProvider)) {
     throw new ApiError(400, "Invalid payment provider");
@@ -37,6 +38,10 @@ const createPaymentService = async (userId, orderId, provider) => {
 
   if (order.orderStatus === "RETURNED") {
     throw new ApiError(409, "Order has been returned");
+  }
+
+  if (order.orderStatus === "DELIVERED") {
+    throw new ApiError(409, "Cannot create payment for a delivered order");
   }
 
   if (order.paymentStatus === "PAID") {
@@ -201,6 +206,11 @@ const retryPaymentService = async (userId, orderId) => {
     throw new ApiError(409, "Only failed payments can be retried");
   }
 
+  // its a check to allow only stripe payment to retry online. COD payment can't retry online os this check will validate the retry method
+  if (payment.provider !== "STRIPE") {
+    throw new ApiError(409, "Only Stripe payments can be retried");
+  }
+
   // recreate the paymentIntent for the existing payment document
   const paymentIntent = await stripe.paymentIntents.create({
     amount: Math.round(order.total * 100),
@@ -259,14 +269,26 @@ const refundPaymentService = async (adminId, orderId) => {
 
   // create a refund stripe so that payment can be refunded
   // Stripe uses the original PaymentIntent to know which payment to refund.
-  let refund;
+  let refundId;
+
   // using trycatch to handle the failer
-  try {
-    refund = await stripe.refunds.create({
-      payment_intent: payment.providerPaymentId,
-    });
-  } catch (error) {
-    throw new ApiError(502, "Refund failed with Stripe");
+  if (payment.provider === "STRIPE") {
+    // Stripe refund: actual money is refunded through Stripe.
+    try {
+      const refund = await stripe.refunds.create({
+        payment_intent: payment.providerPaymentId,
+      });
+
+      refundId = refund.id;
+    } catch (error) {
+      throw new ApiError(502, "Refund failed with Stripe");
+    }
+  } else if (payment.provider === "COD") {
+    // COD refund: no online provider exists, so we record
+    // our own transaction reference for the manual cash refund.
+    refundId = `COD-REFUND-${crypto.randomUUID()}`;
+  } else {
+    throw new ApiError(400, "Unsupported payment provider");
   }
 
   // Stripe handles the actual money movement and refund automatically.
@@ -274,10 +296,15 @@ const refundPaymentService = async (adminId, orderId) => {
   // Stripe processes refund
   // Money goes back to customer's card
 
+  // the COD refunds is actually physical process, so only need id  to have record in DB
+  // One important note: this records a COD refund as processed in your system; it does not physically transfer cash to the customer.
+
   payment.status = "REFUNDED";
+  payment.transactionId = refundId; // transactionId = COD refund id
   await payment.save();
 
   order.paymentStatus = "REFUNDED";
+
   await order.save();
 
   return {
@@ -386,6 +413,10 @@ const confirmCODPaymentService = async (adminId, orderId) => {
 
     if (order.orderStatus !== "DELIVERED") {
       throw new ApiError(409, "Only delivered order payment can be verified");
+    }
+
+    if (order.paymentStatus === "PAID") {
+      throw new ApiError(409, "Order payment is already confirmed");
     }
 
     // payment will also wait to finalize the changes if all successfully
